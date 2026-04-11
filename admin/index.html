@@ -6,13 +6,122 @@
   <title>Content Manager — Florez Florez</title>
 </head>
 <body>
+  <script>
+    // Prevent auto-init so we can pass config manually
+    window.CMS_MANUAL_INIT = true;
+  </script>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script>
-    // Decap CMS looks for config.yml at the page root by default.
-    // This ensures it finds it in /admin/config.yml.
-    if (window.CMS) {
-      window.CMS.init({ config: { load_config_file: true, config_url: '/admin/config.yml' } });
-    }
+    var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+    var config = {
+      backend: isLocal
+        ? { name: 'git-gateway' }
+        : {
+            name: 'github',
+            repo: 'taoofdre/florezflorez',
+            branch: 'main',
+            base_url: 'https://florezflorez.vercel.app',
+            auth_endpoint: '/api/auth'
+          },
+      local_backend: isLocal,
+      media_folder: 'uploads',
+      public_folder: '/uploads',
+      collections: [
+        {
+          name: 'art',
+          label: 'Art',
+          files: [{
+            name: 'art-pieces',
+            label: 'Art Pieces',
+            file: 'content/art.json',
+            format: 'json',
+            fields: [{
+              name: 'pieces',
+              label: 'Art Pieces',
+              widget: 'list',
+              fields: [
+                { name: 'id', label: 'ID (lowercase, no spaces)', widget: 'string' },
+                { name: 'title', label: 'Title', widget: 'string' },
+                { name: 'description', label: 'Description', widget: 'text' },
+                {
+                  name: 'images',
+                  label: 'Images',
+                  widget: 'list',
+                  fields: [
+                    { name: 'src', label: 'Image', widget: 'image' },
+                    { name: 'alt', label: 'Alt Text', widget: 'string' }
+                  ]
+                }
+              ]
+            }]
+          }]
+        },
+        {
+          name: 'jewelry',
+          label: 'Jewelry',
+          files: [{
+            name: 'jewelry-pieces',
+            label: 'Jewelry Pieces',
+            file: 'content/jewelry.json',
+            format: 'json',
+            fields: [{
+              name: 'pieces',
+              label: 'Jewelry Pieces',
+              widget: 'list',
+              fields: [
+                { name: 'id', label: 'ID (lowercase, no spaces)', widget: 'string' },
+                { name: 'title', label: 'Title', widget: 'string' },
+                { name: 'description', label: 'Description', widget: 'text' },
+                { name: 'price_display', label: 'Display Price (e.g. $120)', widget: 'string' },
+                { name: 'stripe_price_id', label: 'Stripe Price ID (from Stripe dashboard)', widget: 'string' },
+                {
+                  name: 'images',
+                  label: 'Images',
+                  widget: 'list',
+                  fields: [
+                    { name: 'src', label: 'Image', widget: 'image' },
+                    { name: 'alt', label: 'Alt Text', widget: 'string' }
+                  ]
+                }
+              ]
+            }]
+          }]
+        },
+        {
+          name: 'consulting',
+          label: 'Consulting',
+          files: [{
+            name: 'consulting-page',
+            label: 'Consulting Page',
+            file: 'content/consulting.json',
+            format: 'json',
+            fields: [
+              { name: 'heading', label: 'Heading', widget: 'string' },
+              { name: 'message', label: 'Message', widget: 'text' },
+              { name: 'background_image', label: 'Background Image', widget: 'image', required: false }
+            ]
+          }]
+        },
+        {
+          name: 'homepage',
+          label: 'Homepage',
+          files: [{
+            name: 'homepage-settings',
+            label: 'Homepage Settings',
+            file: 'content/homepage.json',
+            format: 'json',
+            fields: [
+              { name: 'art_background', label: 'Art Panel Background', widget: 'image', required: false },
+              { name: 'jewelry_background', label: 'Jewelry Panel Background', widget: 'image', required: false },
+              { name: 'consulting_background', label: 'Consulting Panel Background', widget: 'image', required: false }
+            ]
+          }]
+        }
+      ]
+    };
+
+    CMS.init({ config: config });
   </script>
 </body>
 </html>

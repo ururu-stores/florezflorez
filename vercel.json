@@ -1,5 +1,5 @@
 {
-  "buildCommand": "grep -v '^local_backend' admin/config.yml > admin/config.tmp && mv admin/config.tmp admin/config.yml",
+  "buildCommand": "",
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" }
