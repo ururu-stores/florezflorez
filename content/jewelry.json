@@ -1,0 +1,34 @@
+{
+  "pieces": [
+    {
+      "id": "ring-i",
+      "title": "Ring I",
+      "description": "Sterling silver, hand-forged.",
+      "price_display": "$120",
+      "stripe_price_id": "",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Ring I" }
+      ]
+    },
+    {
+      "id": "necklace-i",
+      "title": "Necklace I",
+      "description": "Gold-filled chain, pendant.",
+      "price_display": "$180",
+      "stripe_price_id": "",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Necklace I" }
+      ]
+    },
+    {
+      "id": "bracelet-i",
+      "title": "Bracelet I",
+      "description": "Oxidized silver cuff.",
+      "price_display": "$95",
+      "stripe_price_id": "",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Bracelet I" }
+      ]
+    }
+  ]
+}

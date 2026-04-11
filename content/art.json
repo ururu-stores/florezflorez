@@ -1,0 +1,36 @@
+{
+  "pieces": [
+    {
+      "id": "untitled-series-i",
+      "title": "Untitled Series I",
+      "description": "Mixed media on canvas, 2024. An exploration of texture and negative space.",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Untitled Series I" }
+      ]
+    },
+    {
+      "id": "fragments",
+      "title": "Fragments",
+      "description": "Charcoal and ink on paper, 2023. Deconstructed forms, reassembled.",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Fragments" }
+      ]
+    },
+    {
+      "id": "still-life-study",
+      "title": "Still Life Study",
+      "description": "Oil on linen, 2023. Light and shadow in ordinary objects.",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Still Life Study" }
+      ]
+    },
+    {
+      "id": "landscapes",
+      "title": "Landscapes",
+      "description": "Acrylic on wood panel, 2022. Memory of place.",
+      "images": [
+        { "src": "/images/placeholder.svg", "alt": "Landscapes" }
+      ]
+    }
+  ]
+}

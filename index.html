@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Florez Florez</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- HOMEPAGE: Triptych -->
+  <div id="home" class="home">
+    <div class="panel" data-section="art">
+      <div class="panel-bg" id="panel-bg-art"></div>
+      <div class="panel-overlay"></div>
+      <span class="panel-label">ART</span>
+    </div>
+    <div class="panel" data-section="jewelry">
+      <div class="panel-bg" id="panel-bg-jewelry"></div>
+      <div class="panel-overlay"></div>
+      <span class="panel-label">JEWELRY</span>
+    </div>
+    <div class="panel" data-section="consulting">
+      <div class="panel-bg" id="panel-bg-consulting"></div>
+      <div class="panel-overlay"></div>
+      <span class="panel-label">CONSULTING</span>
+    </div>
+  </div>
+
+  <!-- TOP HEADER NAV (visible when a section is open) -->
+  <header id="header" class="header">
+    <nav class="header-nav">
+      <a href="#" class="header-link" data-section="art">ART</a>
+      <a href="#" class="header-link" data-section="jewelry">JEWELRY</a>
+      <a href="#" class="header-link" data-section="consulting">CONSULTING</a>
+    </nav>
+  </header>
+
+  <!-- SECTION: ART (populated by JS) -->
+  <section id="section-art" class="section">
+    <div class="art-layout">
+      <aside class="art-sidebar">
+        <h2 class="sidebar-title">Works</h2>
+        <ul class="art-nav" id="art-nav"></ul>
+      </aside>
+      <main class="art-content" id="art-content"></main>
+    </div>
+  </section>
+
+  <!-- SECTION: JEWELRY (populated by JS) -->
+  <section id="section-jewelry" class="section">
+    <div class="art-layout">
+      <aside class="art-sidebar">
+        <h2 class="sidebar-title">Collection</h2>
+        <ul class="art-nav" id="jewelry-nav"></ul>
+      </aside>
+      <main class="art-content" id="jewelry-content"></main>
+    </div>
+  </section>
+
+  <!-- SECTION: CONSULTING (populated by JS) -->
+  <section id="section-consulting" class="section section-consulting">
+    <div class="consulting-inner" id="consulting-inner">
+      <div class="consulting-bg" id="consulting-bg"></div>
+      <div class="consulting-overlay"></div>
+      <div class="consulting-text" id="consulting-text"></div>
+    </div>
+  </section>
+
+  <!-- FULLSCREEN LIGHTBOX -->
+  <div id="lightbox" class="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img class="lightbox-img" src="" alt="">
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

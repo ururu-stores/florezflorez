@@ -1,0 +1,439 @@
+/* ===== RESET & BASE ===== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ===== HOMEPAGE: TRIPTYCH ===== */
+.home {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  z-index: 100;
+  transition: opacity 0.5s ease;
+}
+
+.home.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Each panel */
+.panel {
+  position: relative;
+  flex: 1;
+  cursor: pointer;
+  overflow: hidden;
+  transition: flex 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.panel-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a1a;
+  transition: transform 0.5s ease;
+}
+
+.panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  transition: background 0.4s ease;
+}
+
+.panel:hover .panel-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.panel:hover .panel-bg {
+  transform: scale(1.03);
+}
+
+.panel-label {
+  position: absolute;
+  top: 10%;
+  left: 1.5rem;
+  writing-mode: vertical-lr;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #fff;
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Panel borders */
+.panel + .panel {
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Hover: expand hovered, shrink others */
+.home:hover .panel {
+  flex: 0.85;
+}
+.home:hover .panel:hover {
+  flex: 1.3;
+}
+
+/* ===== HEADER NAV ===== */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #000;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.header.visible {
+  transform: translateY(0);
+}
+
+.header-nav {
+  display: flex;
+  gap: 3rem;
+}
+
+.header-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.3s ease;
+  padding: 0.5rem 0;
+}
+
+.header-link:hover,
+.header-link.active {
+  color: #fff;
+}
+
+/* ===== SECTIONS (shared) ===== */
+.section {
+  display: none;
+  min-height: 100vh;
+  padding-top: 60px; /* header height */
+}
+
+.section.active {
+  display: block;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== ART / JEWELRY LAYOUT ===== */
+.art-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+/* Sidebar (left column) */
+.art-sidebar {
+  position: sticky;
+  top: 60px;
+  width: 280px;
+  height: calc(100vh - 60px);
+  padding: 3rem 2rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 2rem;
+}
+
+.art-nav {
+  list-style: none;
+}
+
+.art-nav li + li {
+  margin-top: 1rem;
+}
+
+.art-nav-link {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.25s ease;
+  display: block;
+}
+
+.art-nav-link:hover,
+.art-nav-link.active {
+  color: #fff;
+}
+
+/* Main content (right column) */
+.art-content {
+  flex: 1;
+  padding: 3rem 4rem 6rem;
+  max-width: 900px;
+}
+
+.art-piece + .art-piece {
+  margin-top: 6rem;
+}
+
+.art-image-wrap {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  background: #111;
+}
+
+.art-image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.art-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.4s ease;
+}
+
+.art-image-wrap:hover .art-image {
+  transform: scale(1.02);
+}
+
+.art-description {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 600px;
+}
+
+/* ===== BUY ROW (JEWELRY) ===== */
+.buy-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.buy-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+
+.buy-btn {
+  padding: 0.6rem 2rem;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #000;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.buy-btn:hover {
+  background: #ccc;
+}
+
+/* ===== CONSULTING ===== */
+.section-consulting .consulting-inner {
+  position: relative;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.consulting-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: #111;
+}
+
+.consulting-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.consulting-text {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.consulting-text h2 {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.5rem;
+}
+
+.consulting-text p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.1em;
+}
+
+/* ===== LIGHTBOX ===== */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.lightbox-close:hover {
+  opacity: 1;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  /* Triptych stacks vertically */
+  .home {
+    flex-direction: column;
+  }
+
+  .panel + .panel {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .home:hover .panel {
+    flex: 0.9;
+  }
+  .home:hover .panel:hover {
+    flex: 1.2;
+  }
+
+  .panel-label {
+    top: 50%;
+    left: 1.5rem;
+    transform: translateY(-50%);
+    font-size: clamp(1.8rem, 8vw, 3rem);
+  }
+
+  /* Header */
+  .header-nav {
+    gap: 1.5rem;
+  }
+
+  .header-link {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+  }
+
+  /* Art layout goes single-column */
+  .art-layout {
+    flex-direction: column;
+  }
+
+  .art-sidebar {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: auto;
+    padding: 2rem 1.5rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .art-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .art-nav li + li {
+    margin-top: 0;
+  }
+
+  .art-content {
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .art-piece + .art-piece {
+    margin-top: 4rem;
+  }
+}
