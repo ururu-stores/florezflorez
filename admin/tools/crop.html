@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Crop Tool — Florez Florez</title>
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #000;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar h1 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-right: auto;
+    }
+
+    .toolbar a {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .toolbar a:hover { color: #fff; }
+
+    label.file-label {
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #000;
+      background: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    label.file-label:hover { background: #ccc; }
+    input[type="file"] { display: none; }
+
+    .name-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .name-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .name-input {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      width: 200px;
+    }
+    .name-input:focus {
+      outline: none;
+      border-color: rgba(255,255,255,0.5);
+    }
+    .name-input::placeholder { color: rgba(255,255,255,0.25); }
+
+    .ext {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    button.save-btn {
+      padding: 0.5rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #000;
+      background: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.save-btn:hover { background: #ccc; }
+    button.save-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      min-height: 1.2em;
+    }
+    .status.error { color: #e55; }
+    .status.success { color: #5e5; }
+
+    /* Auth overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .auth-overlay h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .auth-overlay button {
+      padding: 0.75rem 2.5rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #000;
+      background: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    .auth-overlay button:hover { background: #ccc; }
+
+    /* Crop area */
+    .crop-container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .crop-container img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .preview-section {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .preview-section h3 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 1rem;
+    }
+
+    .preview-canvas {
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .empty-state {
+      max-width: 1000px;
+      margin: 8rem auto;
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* Cropper.js overrides for dark theme */
+    .cropper-modal { background: rgba(0,0,0,0.7); }
+    .cropper-view-box { outline: 1px solid rgba(255,255,255,0.6); }
+    .cropper-line { background-color: rgba(255,255,255,0.3); }
+    .cropper-point { background-color: #fff; }
+    .cropper-dashed { border-color: rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+
+  <!-- Auth overlay (production only) -->
+  <div id="auth-overlay" class="auth-overlay" style="display:none;">
+    <h2>Sign in to use this tool</h2>
+    <button id="auth-btn">Sign in with GitHub</button>
+  </div>
+
+  <div class="toolbar">
+    <h1>Crop Tool</h1>
+    <a href="/admin/">Back to CMS</a>
+    <label class="file-label">
+      Choose Image
+      <input type="file" id="file-input" accept="image/*">
+    </label>
+    <div class="name-group">
+      <label for="file-name">Name</label>
+      <input type="text" id="file-name" class="name-input" placeholder="my-image-name">
+      <span class="ext">.png</span>
+    </div>
+    <button class="save-btn" id="save-btn" disabled>Save to Uploads</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div id="empty-state" class="empty-state">
+    Choose an image to begin. It will be cropped to 800 x 600 pixels.
+  </div>
+
+  <div class="crop-container" style="display:none;" id="crop-container">
+    <img id="crop-image" src="" alt="Crop source">
+  </div>
+
+  <div class="preview-section" style="display:none;" id="preview-section">
+    <h3>Preview (800 x 600)</h3>
+    <canvas id="preview-canvas" class="preview-canvas" width="800" height="600"></canvas>
+  </div>
+
+  <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script>
+    (() => {
+      const CROP_WIDTH = 800;
+      const CROP_HEIGHT = 600;
+      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+      // DOM refs
+      const authOverlay = document.getElementById('auth-overlay');
+      const authBtn = document.getElementById('auth-btn');
+      const fileInput = document.getElementById('file-input');
+      const fileName = document.getElementById('file-name');
+      const saveBtn = document.getElementById('save-btn');
+      const statusEl = document.getElementById('status');
+      const emptyState = document.getElementById('empty-state');
+      const cropContainer = document.getElementById('crop-container');
+      const cropImage = document.getElementById('crop-image');
+      const previewSection = document.getElementById('preview-section');
+      const previewCanvas = document.getElementById('preview-canvas');
+
+      let cropper = null;
+      let ghToken = null;
+
+      // ---- Auth ----
+
+      function getStoredToken() {
+        return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token');
+      }
+
+      function storeToken(token) {
+        sessionStorage.setItem('gh_token', token);
+      }
+
+      function initAuth() {
+        if (isLocal) {
+          ghToken = null;
+          return;
+        }
+
+        // Check stored token
+        const stored = getStoredToken();
+        if (stored) {
+          ghToken = stored;
+          return;
+        }
+
+        // Need to authenticate — open popup using existing CMS OAuth flow
+        authOverlay.style.display = '';
+        authBtn.addEventListener('click', () => {
+          const popup = window.open('/api/auth', 'github-auth', 'width=600,height=700');
+
+          window.addEventListener('message', function onMessage(e) {
+            // The CMS callback sends: "authorizing:github" then "authorization:github:success:{token json}"
+            if (typeof e.data !== 'string') return;
+
+            if (e.data.startsWith('authorization:github:success:')) {
+              const payload = JSON.parse(e.data.replace('authorization:github:success:', ''));
+              ghToken = payload.token;
+              storeToken(ghToken);
+              authOverlay.style.display = 'none';
+              window.removeEventListener('message', onMessage);
+              if (popup) popup.close();
+            }
+          });
+
+          // The callback page expects this message to trigger the token postMessage
+          const interval = setInterval(() => {
+            if (popup && !popup.closed) {
+              popup.postMessage('authorizing:github', '*');
+            } else {
+              clearInterval(interval);
+            }
+          }, 250);
+        });
+      }
+
+      initAuth();
+
+      // ---- Cropper ----
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Auto-fill name from filename
+        const baseName = file.name.replace(/\.[^.]+$/, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        fileName.value = baseName;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          emptyState.style.display = 'none';
+          cropContainer.style.display = '';
+          previewSection.style.display = '';
+
+          // Destroy previous cropper
+          if (cropper) cropper.destroy();
+
+          cropImage.src = ev.target.result;
+          cropper = new Cropper(cropImage, {
+            aspectRatio: CROP_WIDTH / CROP_HEIGHT,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            ready: updatePreview,
+            crop: updatePreview,
+          });
+
+          saveBtn.disabled = false;
+          setStatus('');
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function updatePreview() {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({
+          width: CROP_WIDTH,
+          height: CROP_HEIGHT,
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high',
+        });
+        if (!canvas) return;
+
+        const ctx = previewCanvas.getContext('2d');
+        ctx.clearRect(0, 0, CROP_WIDTH, CROP_HEIGHT);
+        ctx.drawImage(canvas, 0, 0);
+      }
+
+      // ---- Save ----
+
+      function setStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      function sanitizeName(name) {
+        return name.trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9\-_]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '') || 'image';
+      }
+
+      saveBtn.addEventListener('click', async () => {
+        if (!cropper) return;
+
+        const name = sanitizeName(fileName.value);
+        if (!name) {
+          setStatus('Please enter a file name.', 'error');
+          return;
+        }
+
+        const fullName = name + '.png';
+
+        saveBtn.disabled = true;
+        setStatus('Processing...');
+
+        // Get cropped canvas
+        const canvas = cropper.getCroppedCanvas({
+          width: CROP_WIDTH,
+          height: CROP_HEIGHT,
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high',
+        });
+
+        canvas.toBlob(async (blob) => {
+          try {
+            if (isLocal) {
+              await saveLocal(blob, fullName);
+            } else {
+              await saveProduction(blob, fullName);
+            }
+            setStatus('Saved as /uploads/' + fullName, 'success');
+          } catch (err) {
+            setStatus('Error: ' + err.message, 'error');
+          }
+          saveBtn.disabled = false;
+        }, 'image/png');
+      });
+
+      // ---- Save: Local (Decap proxy) ----
+
+      async function saveLocal(blob, filename) {
+        const formData = new FormData();
+        formData.append('file', blob, filename);
+
+        const res = await fetch('http://localhost:8081/api/media', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to save locally (is decap-server running?)');
+        }
+      }
+
+      // ---- Save: Production (GitHub API via serverless function) ----
+
+      async function saveProduction(blob, filename) {
+        // Convert blob to base64
+        const buffer = await blob.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + ghToken,
+          },
+          body: JSON.stringify({
+            filename: filename,
+            content: base64,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Upload failed');
+        }
+      }
+
+    })();
+  </script>
+</body>
+</html>
