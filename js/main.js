@@ -387,17 +387,25 @@
       });
     }
 
+    // Track visibility of all pieces and always highlight the most visible
+    const visibilityMap = new Map();
+
     const observer = new IntersectionObserver((entries) => {
-      let best = null;
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          if (!best || entry.intersectionRatio > best.intersectionRatio) {
-            best = entry;
-          }
+        visibilityMap.set(entry.target.id, entry.intersectionRatio);
+      });
+
+      let bestId = null;
+      let bestRatio = 0;
+      visibilityMap.forEach((ratio, id) => {
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestId = id;
         }
       });
-      if (best) setActive(best.target.id);
-    }, { rootMargin: '-20% 0px -70% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+
+      if (bestId) setActive(bestId);
+    }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
 
     pieces.forEach(piece => observer.observe(piece));
 
