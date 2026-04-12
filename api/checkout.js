@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || `https://${req.headers.host}`;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
@@ -18,8 +19,8 @@ module.exports = async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${req.headers.origin}/?checkout=success`,
-      cancel_url: `${req.headers.origin}/?checkout=cancel`,
+      success_url: `${origin}/?checkout=success`,
+      cancel_url: `${origin}/?checkout=cancel`,
     });
 
     res.redirect(303, session.url);
