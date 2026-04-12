@@ -2,6 +2,7 @@
   // ---- DOM refs ----
   const home = document.getElementById('home');
   const header = document.getElementById('header');
+  const logo = document.getElementById('logo');
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('.lightbox-img');
   const lightboxCounter = lightbox.querySelector('.lightbox-counter');
@@ -270,6 +271,10 @@
     setTimeout(() => { home.style.display = 'none'; }, 500);
     header.classList.add('visible');
 
+    // Animate logo to header position
+    logo.classList.remove('logo-home');
+    logo.classList.add('logo-header');
+
     sections.forEach(s => s.classList.remove('active'));
     const target = document.getElementById('section-' + name);
     if (target) target.classList.add('active');
@@ -287,6 +292,11 @@
     home.style.display = 'flex';
     requestAnimationFrame(() => { home.classList.remove('hidden'); });
     header.classList.remove('visible');
+
+    // Animate logo back to homepage position
+    logo.classList.remove('logo-header');
+    logo.classList.add('logo-home');
+
     sections.forEach(s => s.classList.remove('active'));
     headerLinks.forEach(l => l.classList.remove('active'));
     document.body.classList.remove('scroll-down');
@@ -298,10 +308,9 @@
   });
 
   // Logo click -> go home
-  const headerLogo = document.querySelector('.header-logo');
-  if (headerLogo) {
-    headerLogo.addEventListener('click', goHome);
-  }
+  logo.addEventListener('click', () => {
+    if (activeSection) goHome();
+  });
 
   headerLinks.forEach(link => {
     link.addEventListener('click', (e) => {
