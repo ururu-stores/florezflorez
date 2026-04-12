@@ -254,7 +254,7 @@
   </div>
 
   <div id="empty-state" class="empty-state">
-    Choose an image to begin. Images are cropped to 600px tall, up to 800px wide.
+    Choose an image to begin. Images are cropped to 1000px tall, up to 1000px wide.
   </div>
 
   <div class="workspace" style="display:none;" id="workspace">
@@ -272,8 +272,8 @@
   <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script>
     (() => {
-      const MAX_WIDTH = 800;
-      const OUTPUT_HEIGHT = 600;
+      const MAX_WIDTH = 1000;
+      const OUTPUT_HEIGHT = 1000;
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
       // DOM refs
