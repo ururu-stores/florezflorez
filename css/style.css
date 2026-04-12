@@ -582,7 +582,7 @@ a {
   }
 
   .art-content {
-    padding: 2rem 1.5rem 4rem;
+    padding: 2rem 1.5rem 80vh;
     overflow-y: visible;
     height: auto;
     scroll-snap-type: none;

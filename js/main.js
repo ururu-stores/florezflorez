@@ -347,18 +347,29 @@
     const navLinks = sectionEl.querySelectorAll('.art-nav-link');
     if (!pieces.length || !navLinks.length) return;
 
+    function setActive(id) {
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const id = entry.target.id;
-          navLinks.forEach(link => {
-            link.classList.toggle('active', link.getAttribute('href') === '#' + id);
-          });
+          setActive(entry.target.id);
         }
       });
     }, { rootMargin: '-30% 0px -60% 0px' });
 
     pieces.forEach(piece => observer.observe(piece));
+
+    // Click on nav link: force active state immediately
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        const id = link.getAttribute('href').replace('#', '');
+        setActive(id);
+      });
+    });
   }
 
   // ---- Lightbox ----
