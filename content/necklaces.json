@@ -2,7 +2,7 @@
   "pieces": [
     {
       "id": "prod_UJs640Zim616GA",
-      "title": "Pearl Necklace",
+      "title": "Pearl, black flowers",
       "description": "Natural pearls and hand-woven black flowers | 950 silver brooch",
       "price_display": "$170",
       "stripe_price_id": "price_1TLEMbGZz3PbqlU6mgDgOG0W",
@@ -14,6 +14,10 @@
         {
           "src": "/uploads/image-4-11-26-at-11.05 pm.jpg",
           "alt": "pearl necklace on black background"
+        },
+        {
+          "src": "/uploads/flower-necklace.png",
+          "alt": "vertical flower"
         }
       ]
     },
