@@ -397,11 +397,24 @@
 
     pieces.forEach(piece => observer.observe(piece));
 
-    // Click on nav link: force active state immediately
+    // Click on nav link: force active state and scroll precisely
     navLinks.forEach(link => {
-      link.addEventListener('click', () => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
         const id = link.getAttribute('href').replace('#', '');
         setActive(id);
+
+        const target = document.getElementById(id);
+        if (!target) return;
+
+        // Calculate offset: header + sidebar (if sticky above content on mobile)
+        const headerHeight = header.offsetHeight;
+        const sidebar = sectionEl.querySelector('.art-sidebar');
+        const sidebarHeight = sidebar && window.innerWidth <= 768 ? sidebar.offsetHeight : 0;
+        const offset = headerHeight + sidebarHeight + 10;
+
+        const targetTop = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
       });
     });
   }

@@ -302,7 +302,6 @@ a {
 
 .art-piece {
   scroll-snap-align: start;
-  scroll-margin-top: 20px;
 }
 
 .art-piece + .art-piece {
@@ -707,10 +706,6 @@ a {
     overflow-y: visible;
     height: auto;
     scroll-snap-type: none;
-  }
-
-  .art-piece {
-    scroll-margin-top: 110px;
   }
 
   .art-piece + .art-piece {
