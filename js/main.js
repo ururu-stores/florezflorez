@@ -278,6 +278,7 @@
     });
 
     activeSection = name;
+    document.body.classList.remove('scroll-down');
     window.scrollTo(0, 0);
   }
 
@@ -287,6 +288,7 @@
     header.classList.remove('visible');
     sections.forEach(s => s.classList.remove('active'));
     headerLinks.forEach(l => l.classList.remove('active'));
+    document.body.classList.remove('scroll-down');
     activeSection = null;
   }
 
@@ -310,6 +312,33 @@
       }
     });
   });
+
+  // ---- Mobile scroll direction detection ----
+
+  let lastScrollY = 0;
+  let scrollTicking = false;
+
+  function onScroll() {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(() => {
+      const currentY = window.scrollY;
+      const isMobile = window.innerWidth <= 768;
+
+      if (isMobile && activeSection) {
+        if (currentY > lastScrollY && currentY > 60) {
+          document.body.classList.add('scroll-down');
+        } else {
+          document.body.classList.remove('scroll-down');
+        }
+      }
+
+      lastScrollY = currentY;
+      scrollTicking = false;
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
 
   // ---- Sidebar scroll tracking ----
 

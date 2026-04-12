@@ -521,6 +521,7 @@ a {
   }
 
   .panel-label {
+    writing-mode: horizontal-tb;
     top: 50%;
     left: 1.5rem;
     transform: translateY(-50%);
@@ -543,13 +544,25 @@ a {
   }
 
   .art-sidebar {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 60px;
     width: 100%;
     height: auto;
-    padding: 2rem 1.5rem 1rem;
+    padding: 1rem 1.5rem;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #000;
+    z-index: 150;
+    transition: top 0.3s ease;
+  }
+
+  /* When scrolling down, header hides and sidebar takes top */
+  body.scroll-down .header.visible {
+    transform: translateY(-100%);
+  }
+
+  body.scroll-down .art-sidebar {
+    top: 0;
   }
 
   .art-nav {
@@ -564,6 +577,9 @@ a {
 
   .art-content {
     padding: 2rem 1.5rem 4rem;
+    overflow-y: visible;
+    height: auto;
+    scroll-snap-type: none;
   }
 
   .art-piece + .art-piece {
