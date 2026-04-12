@@ -25,6 +25,10 @@ module.exports = async function handler(req, res) {
     res.redirect(303, session.url);
   } catch (err) {
     console.error('Stripe checkout error:', err.message);
-    res.status(500).json({ error: 'Failed to create checkout session' });
+    res.status(500).json({
+      error: 'Failed to create checkout session',
+      detail: err.message,
+      type: err.type || null
+    });
   }
 };
