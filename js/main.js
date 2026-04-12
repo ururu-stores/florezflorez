@@ -297,6 +297,12 @@
     panel.addEventListener('click', () => openSection(panel.dataset.section));
   });
 
+  // Logo click -> go home
+  const headerLogo = document.querySelector('.header-logo');
+  if (headerLogo) {
+    headerLogo.addEventListener('click', goHome);
+  }
+
   headerLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
