@@ -174,12 +174,7 @@ a {
 }
 
 .sidebar-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 2rem;
+  display: none;
 }
 
 .art-nav {
@@ -567,8 +562,19 @@ a {
 
   .art-nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.5rem;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .art-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .art-nav li {
+    flex-shrink: 0;
   }
 
   .art-nav li + li {
