@@ -22,6 +22,29 @@ a {
   text-decoration: none;
 }
 
+/* ===== CUSTOM SCROLLBAR ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15));
+}
+
 /* ===== HOMEPAGE: PANELS ===== */
 .home {
   position: fixed;
@@ -684,6 +707,10 @@ a {
     overflow-y: visible;
     height: auto;
     scroll-snap-type: none;
+  }
+
+  .art-piece {
+    scroll-margin-top: 120px;
   }
 
   .art-piece + .art-piece {
