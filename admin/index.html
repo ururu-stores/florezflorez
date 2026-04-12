@@ -58,16 +58,47 @@
           }]
         },
         {
-          name: 'jewelry',
-          label: 'Jewelry',
+          name: 'necklaces',
+          label: 'Necklaces',
           files: [{
-            name: 'jewelry-pieces',
-            label: 'Jewelry Pieces',
-            file: 'content/jewelry.json',
+            name: 'necklaces-pieces',
+            label: 'Necklaces',
+            file: 'content/necklaces.json',
             format: 'json',
             fields: [{
               name: 'pieces',
-              label: 'Jewelry Pieces',
+              label: 'Necklaces',
+              widget: 'list',
+              fields: [
+                { name: 'id', label: 'ID (lowercase, no spaces)', widget: 'string' },
+                { name: 'title', label: 'Title', widget: 'string' },
+                { name: 'description', label: 'Description', widget: 'text' },
+                { name: 'price_display', label: 'Display Price (e.g. $120)', widget: 'string' },
+                { name: 'stripe_price_id', label: 'Stripe Price ID (from Stripe dashboard)', widget: 'string' },
+                {
+                  name: 'images',
+                  label: 'Images',
+                  widget: 'list',
+                  fields: [
+                    { name: 'src', label: 'Image', widget: 'image' },
+                    { name: 'alt', label: 'Alt Text', widget: 'string' }
+                  ]
+                }
+              ]
+            }]
+          }]
+        },
+        {
+          name: 'rings',
+          label: 'Rings',
+          files: [{
+            name: 'rings-pieces',
+            label: 'Rings',
+            file: 'content/rings.json',
+            format: 'json',
+            fields: [{
+              name: 'pieces',
+              label: 'Rings',
               widget: 'list',
               fields: [
                 { name: 'id', label: 'ID (lowercase, no spaces)', widget: 'string' },
@@ -113,7 +144,8 @@
             format: 'json',
             fields: [
               { name: 'art_background', label: 'Art Panel Background', widget: 'image', required: false },
-              { name: 'jewelry_background', label: 'Jewelry Panel Background', widget: 'image', required: false },
+              { name: 'necklaces_background', label: 'Necklaces Panel Background', widget: 'image', required: false },
+              { name: 'rings_background', label: 'Rings Panel Background', widget: 'image', required: false },
               { name: 'consulting_background', label: 'Consulting Panel Background', widget: 'image', required: false }
             ]
           }]

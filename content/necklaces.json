@@ -1,0 +1,34 @@
+{
+  "pieces": [
+    {
+      "id": "prod_UJs640Zim616GA",
+      "title": "Pearl Necklace",
+      "description": "Natural pearls and hand-woven black flowers | 950 silver brooch",
+      "price_display": "$170",
+      "stripe_price_id": "price_1TLEMbGZz3PbqlU6mgDgOG0W",
+      "images": [
+        {
+          "src": "/uploads/image-4-11-26-at-11.06 pm.jpg",
+          "alt": "pearl necklaace on white background"
+        },
+        {
+          "src": "/uploads/image-4-11-26-at-11.05 pm.jpg",
+          "alt": "pearl necklace on black background"
+        }
+      ]
+    },
+    {
+      "id": "necklace-i",
+      "title": "Necklace I",
+      "description": "Gold-filled chain, pendant.",
+      "price_display": "$180",
+      "stripe_price_id": "1234",
+      "images": [
+        {
+          "src": "/images/placeholder.svg",
+          "alt": "Necklace I"
+        }
+      ]
+    }
+  ]
+}

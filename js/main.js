@@ -127,7 +127,8 @@
       const data = await fetchJSON('content/homepage.json');
       const map = {
         art: data.art_background,
-        jewelry: data.jewelry_background,
+        necklaces: data.necklaces_background,
+        rings: data.rings_background,
         consulting: data.consulting_background
       };
       for (const [key, url] of Object.entries(map)) {
@@ -177,13 +178,13 @@
     }
   }
 
-  // ---- Render: Jewelry ----
+  // ---- Render: Store section (necklaces, rings) ----
 
-  async function renderJewelry() {
+  async function renderStore(jsonPath, navId, contentId, sectionId) {
     try {
-      const data = await fetchJSON('content/jewelry.json');
-      const nav = document.getElementById('jewelry-nav');
-      const content = document.getElementById('jewelry-content');
+      const data = await fetchJSON(jsonPath);
+      const nav = document.getElementById(navId);
+      const content = document.getElementById(contentId);
 
       data.pieces.forEach(piece => {
         const li = document.createElement('li');
@@ -225,9 +226,9 @@
         content.appendChild(article);
       });
 
-      setupScrollTracking(document.getElementById('section-jewelry'));
+      setupScrollTracking(document.getElementById(sectionId));
     } catch (e) {
-      console.error('Failed to load jewelry content:', e);
+      console.error('Failed to load ' + sectionId + ' content:', e);
     }
   }
 
@@ -454,6 +455,7 @@
 
   renderHomepage();
   renderArt();
-  renderJewelry();
+  renderStore('content/necklaces.json', 'necklaces-nav', 'necklaces-content', 'section-necklaces');
+  renderStore('content/rings.json', 'rings-nav', 'rings-content', 'section-rings');
   renderConsulting();
 })();

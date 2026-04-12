@@ -22,11 +22,12 @@ a {
   text-decoration: none;
 }
 
-/* ===== HOMEPAGE: TRIPTYCH ===== */
+/* ===== HOMEPAGE: PANELS ===== */
 .home {
   position: fixed;
   inset: 0;
   display: flex;
+  flex-direction: column;
   z-index: 100;
   transition: opacity 0.5s ease;
 }
@@ -71,10 +72,10 @@ a {
 
 .panel-label {
   position: absolute;
-  top: 10%;
+  top: 50%;
   left: 1.5rem;
-  writing-mode: vertical-lr;
-  font-size: clamp(2rem, 5vw, 4.5rem);
+  transform: translateY(-50%);
+  font-size: clamp(1.8rem, 5vw, 4rem);
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -86,7 +87,7 @@ a {
 
 /* Panel borders */
 .panel + .panel {
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Hover: expand hovered, shrink others */
@@ -499,27 +500,7 @@ a {
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
   /* Triptych stacks vertically */
-  .home {
-    flex-direction: column;
-  }
-
-  .panel + .panel {
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .home:hover .panel {
-    flex: 0.9;
-  }
-  .home:hover .panel:hover {
-    flex: 1.2;
-  }
-
   .panel-label {
-    writing-mode: horizontal-tb;
-    top: 50%;
-    left: 1.5rem;
-    transform: translateY(-50%);
     font-size: clamp(1.8rem, 8vw, 3rem);
   }
 

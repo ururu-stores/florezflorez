@@ -1,0 +1,17 @@
+{
+  "pieces": [
+    {
+      "id": "bracelet-i",
+      "title": "Bracelet I",
+      "description": "Oxidized silver cuff.",
+      "price_display": "$95",
+      "stripe_price_id": "12345",
+      "images": [
+        {
+          "src": "/images/placeholder.svg",
+          "alt": "Bracelet I"
+        }
+      ]
+    }
+  ]
+}

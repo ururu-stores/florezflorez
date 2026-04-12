@@ -7,17 +7,22 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- HOMEPAGE: Triptych -->
+  <!-- HOMEPAGE: Panels -->
   <div id="home" class="home">
     <div class="panel" data-section="art">
       <div class="panel-bg" id="panel-bg-art"></div>
       <div class="panel-overlay"></div>
       <span class="panel-label">ART</span>
     </div>
-    <div class="panel" data-section="jewelry">
-      <div class="panel-bg" id="panel-bg-jewelry"></div>
+    <div class="panel" data-section="necklaces">
+      <div class="panel-bg" id="panel-bg-necklaces"></div>
       <div class="panel-overlay"></div>
-      <span class="panel-label">JEWELRY</span>
+      <span class="panel-label">NECKLACES</span>
+    </div>
+    <div class="panel" data-section="rings">
+      <div class="panel-bg" id="panel-bg-rings"></div>
+      <div class="panel-overlay"></div>
+      <span class="panel-label">RINGS</span>
     </div>
     <div class="panel" data-section="consulting">
       <div class="panel-bg" id="panel-bg-consulting"></div>
@@ -30,7 +35,8 @@
   <header id="header" class="header">
     <nav class="header-nav">
       <a href="#" class="header-link" data-section="art">ART</a>
-      <a href="#" class="header-link" data-section="jewelry">JEWELRY</a>
+      <a href="#" class="header-link" data-section="necklaces">NECKLACES</a>
+      <a href="#" class="header-link" data-section="rings">RINGS</a>
       <a href="#" class="header-link" data-section="consulting">CONSULTING</a>
     </nav>
   </header>
@@ -39,21 +45,29 @@
   <section id="section-art" class="section">
     <div class="art-layout">
       <aside class="art-sidebar">
-        <h2 class="sidebar-title">Works</h2>
         <ul class="art-nav" id="art-nav"></ul>
       </aside>
       <main class="art-content" id="art-content"></main>
     </div>
   </section>
 
-  <!-- SECTION: JEWELRY (populated by JS) -->
-  <section id="section-jewelry" class="section">
+  <!-- SECTION: NECKLACES (populated by JS) -->
+  <section id="section-necklaces" class="section">
     <div class="art-layout">
       <aside class="art-sidebar">
-        <h2 class="sidebar-title">Collection</h2>
-        <ul class="art-nav" id="jewelry-nav"></ul>
+        <ul class="art-nav" id="necklaces-nav"></ul>
       </aside>
-      <main class="art-content" id="jewelry-content"></main>
+      <main class="art-content" id="necklaces-content"></main>
+    </div>
+  </section>
+
+  <!-- SECTION: RINGS (populated by JS) -->
+  <section id="section-rings" class="section">
+    <div class="art-layout">
+      <aside class="art-sidebar">
+        <ul class="art-nav" id="rings-nav"></ul>
+      </aside>
+      <main class="art-content" id="rings-content"></main>
     </div>
   </section>
 
