@@ -126,6 +126,13 @@
   async function renderHomepage() {
     try {
       const data = await fetchJSON('content/homepage.json');
+
+      // Logo
+      if (data.logo) {
+        logo.src = data.logo;
+      }
+
+      // Panel backgrounds
       const map = {
         art: data.art_background,
         necklaces: data.necklaces_background,
@@ -138,7 +145,7 @@
         }
       }
     } catch (e) {
-      // Homepage backgrounds are optional
+      // Homepage data is optional
     }
   }
 
