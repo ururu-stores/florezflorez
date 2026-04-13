@@ -182,12 +182,17 @@
     }
   });
 
-  // Clear cart on successful checkout return
+  // Clear cart and show thank you screen on successful checkout return
   const params = new URLSearchParams(window.location.search);
   if (params.get('checkout') === 'success') {
     cart = [];
     saveCart();
     window.history.replaceState(null, '', window.location.pathname);
+    const thankYouOverlay = document.getElementById('thankyou-overlay');
+    thankYouOverlay.style.display = 'flex';
+    document.getElementById('thankyou-close').addEventListener('click', () => {
+      thankYouOverlay.style.display = 'none';
+    });
   }
 
   // Init cart UI

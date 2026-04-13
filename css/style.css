@@ -732,6 +732,69 @@ a {
   background: #555;
 }
 
+/* ===== THANK YOU OVERLAY ===== */
+.thankyou-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.97);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.thankyou-box {
+  max-width: 560px;
+  text-align: center;
+}
+
+.thankyou-primary {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #333;
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+
+.thankyou-secondary {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.4);
+  line-height: 1.75;
+  letter-spacing: 0.03em;
+  margin-bottom: 2.5rem;
+}
+
+.thankyou-secondary a {
+  color: rgba(0, 0, 0, 0.55);
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.thankyou-secondary a:hover {
+  color: #333;
+}
+
+.thankyou-close {
+  padding: 0.65rem 2.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #333;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.thankyou-close:hover {
+  background: #555;
+}
+
 /* ===== LIGHTBOX ===== */
 .lightbox {
   position: fixed;
