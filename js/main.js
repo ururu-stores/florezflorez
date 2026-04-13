@@ -171,9 +171,6 @@
 
       const data = await res.json();
       if (data.url) {
-        // Clear cart before redirecting
-        cart = [];
-        saveCart();
         window.location.href = data.url;
       } else {
         throw new Error(data.error || 'Checkout failed');
@@ -184,6 +181,14 @@
       cartCheckoutBtn.disabled = false;
     }
   });
+
+  // Clear cart on successful checkout return
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('checkout') === 'success') {
+    cart = [];
+    saveCart();
+    window.history.replaceState(null, '', window.location.pathname);
+  }
 
   // Init cart UI
   updateCartUI();
