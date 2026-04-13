@@ -484,7 +484,7 @@
 
   // ---- Navigation ----
 
-  function openSection(name) {
+  function openSection(name, productId) {
     home.classList.add('hidden');
     homeLogo.style.display = 'none';
     setTimeout(() => { home.style.display = 'none'; }, 500);
@@ -501,7 +501,44 @@
     activeSection = name;
     document.body.classList.remove('scroll-down');
     closeCart();
-    window.scrollTo(0, 0);
+
+    // Update URL hash
+    if (productId) {
+      history.replaceState(null, '', '#' + name + '/' + productId);
+    } else {
+      history.replaceState(null, '', '#' + name);
+    }
+
+    if (productId) {
+      // Scroll to product after a brief delay for rendering
+      setTimeout(() => scrollToProduct(name, productId), 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function scrollToProduct(sectionName, productId) {
+    const target = document.getElementById(productId);
+    if (!target) return;
+
+    const sectionEl = document.getElementById('section-' + sectionName);
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      const sidebar = sectionEl ? sectionEl.querySelector('.art-sidebar') : null;
+      const sidebarHeight = sidebar ? sidebar.offsetHeight : 0;
+      const offset = header.offsetHeight + sidebarHeight + 10;
+      const targetTop = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top: targetTop, behavior: 'smooth' });
+    } else {
+      const contentEl = sectionEl ? sectionEl.querySelector('.art-content') : null;
+      if (contentEl) {
+        const containerTop = contentEl.getBoundingClientRect().top;
+        const targetTop = target.getBoundingClientRect().top;
+        const scrollOffset = contentEl.scrollTop + (targetTop - containerTop);
+        contentEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
+      }
+    }
   }
 
   function goHome() {
@@ -516,6 +553,7 @@
     headerLinks.forEach(l => l.classList.remove('active'));
     document.body.classList.remove('scroll-down');
     activeSection = null;
+    history.replaceState(null, '', window.location.pathname);
   }
 
   panels.forEach(panel => {
@@ -546,12 +584,8 @@
       if (name === activeSection) {
         goHome();
       } else {
-        sections.forEach(s => s.classList.remove('active'));
-        const target = document.getElementById('section-' + name);
-        if (target) target.classList.add('active');
-        headerLinks.forEach(l => l.classList.toggle('active', l.dataset.section === name));
-        activeSection = name;
-        window.scrollTo(0, 0);
+        // Use openSection for consistent hash handling
+        openSection(name);
       }
     });
   });
@@ -592,7 +626,7 @@
 
     const navContainer = sectionEl.querySelector('.art-nav');
 
-    function setActive(id) {
+    function setActive(id, updateHash) {
       navLinks.forEach(link => {
         const isActive = link.getAttribute('href') === '#' + id;
         link.classList.toggle('active', isActive);
@@ -605,6 +639,10 @@
           navContainer.scrollTo({ left: scrollTarget, behavior: 'smooth' });
         }
       });
+      // Update hash to reflect current product
+      if (updateHash !== false && activeSection) {
+        history.replaceState(null, '', '#' + activeSection + '/' + id);
+      }
     }
 
     // Track visibility of all pieces and always highlight the most visible
@@ -743,12 +781,52 @@
     }
   });
 
+  // ---- Permalink routing ----
+
+  function navigateFromHash() {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+
+    const parts = hash.split('/');
+    const sectionName = parts[0];
+    const productId = parts[1] || null;
+
+    // Check if this is a valid section
+    const sectionEl = document.getElementById('section-' + sectionName);
+    if (sectionEl) {
+      openSection(sectionName, productId);
+    }
+  }
+
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) {
+      goHome();
+    } else {
+      const parts = hash.split('/');
+      const sectionName = parts[0];
+      const productId = parts[1] || null;
+      if (document.getElementById('section-' + sectionName)) {
+        openSection(sectionName, productId);
+      }
+    }
+  });
+
   // ---- Init ----
 
   renderHomepage();
-  renderArt();
-  renderStore('content/necklaces.json', 'necklaces-nav', 'necklaces-content', 'section-necklaces');
-  renderStore('content/rings.json', 'rings-nav', 'rings-content', 'section-rings');
-  renderConsulting();
-  renderAbout();
+
+  // Content renders are async — wait for them before checking hash
+  Promise.all([
+    renderArt(),
+    renderStore('content/necklaces.json', 'necklaces-nav', 'necklaces-content', 'section-necklaces'),
+    renderStore('content/rings.json', 'rings-nav', 'rings-content', 'section-rings'),
+    renderConsulting(),
+    renderAbout()
+  ]).then(() => {
+    // Navigate from hash after all content is loaded
+    if (window.location.hash) {
+      navigateFromHash();
+    }
+  });
 })();
