@@ -33,7 +33,9 @@ module.exports = async function handler(req, res) {
   function absoluteImageUrl(path) {
     if (!path) return null;
     if (/^https?:\/\//.test(path)) return path;
-    return siteUrl + (path.startsWith('/') ? path : '/' + path);
+    // Encode each path segment to handle spaces and special characters in filenames
+    const encoded = path.split('/').map(seg => encodeURIComponent(seg)).join('/');
+    return siteUrl + encoded;
   }
 
   try {
