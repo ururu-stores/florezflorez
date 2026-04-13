@@ -111,28 +111,11 @@ a {
   transition: flex 0.7s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.panel-bg {
+.panel-gradient {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-color: #eee;
-  transition: transform 0.5s ease;
-}
-
-.panel-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.35);
-  transition: background 0.4s ease;
-}
-
-.panel:hover .panel-overlay {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.panel:hover .panel-bg {
-  transform: scale(1.03);
+  width: 100%;
+  height: 100%;
 }
 
 .panel-label {

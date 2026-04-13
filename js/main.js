@@ -302,34 +302,87 @@
     return carousel;
   }
 
-  // ---- Render: Homepage backgrounds ----
+  // ---- Render: Homepage ----
 
   async function renderHomepage() {
+    // Load logo from CMS
     try {
       const data = await fetchJSON('content/homepage.json');
-
-      // Logo
       if (data.logo) {
         homeLogo.src = data.logo;
         headerLogo.src = data.logo;
       }
-
-      // Panel backgrounds
-      const map = {
-        art: data.art_background,
-        necklaces: data.necklaces_background,
-        rings: data.rings_background,
-        consulting: data.consulting_background,
-        about: data.about_background
-      };
-      for (const [key, url] of Object.entries(map)) {
-        if (url) {
-          document.getElementById('panel-bg-' + key).style.backgroundImage = `url('${escapeAttr(url)}')`;
-        }
-      }
     } catch (e) {
       // Homepage data is optional
     }
+
+    // Initialize Granim gradients
+    const gradientConfigs = [
+      {
+        id: 'gradient-art',
+        states: {
+          'default-state': {
+            gradients: [
+              ['#e8d5b7', '#c4a882'],
+              ['#d4c4a8', '#b8a080'],
+              ['#f0e6d2', '#d8c8a8']
+            ],
+            transitionSpeed: 4000
+          }
+        }
+      },
+      {
+        id: 'gradient-necklaces',
+        states: {
+          'default-state': {
+            gradients: [
+              ['#c8d8e4', '#a0b8c8'],
+              ['#b0c8d8', '#8ca8bc'],
+              ['#d4e4f0', '#b8d0e0']
+            ],
+            transitionSpeed: 4000
+          }
+        }
+      },
+      {
+        id: 'gradient-rings',
+        states: {
+          'default-state': {
+            gradients: [
+              ['#d4c4d8', '#b8a0bc'],
+              ['#c8b4cc', '#a890ac'],
+              ['#e0d4e4', '#c8b8cc']
+            ],
+            transitionSpeed: 4000
+          }
+        }
+      },
+      {
+        id: 'gradient-consulting',
+        states: {
+          'default-state': {
+            gradients: [
+              ['#c8d8c4', '#a8c0a0'],
+              ['#b8ccb4', '#98b490'],
+              ['#d8e8d4', '#c0d4b8']
+            ],
+            transitionSpeed: 4000
+          }
+        }
+      }
+    ];
+
+    gradientConfigs.forEach(config => {
+      const el = document.getElementById(config.id);
+      if (!el) return;
+      new Granim({
+        element: '#' + config.id,
+        direction: 'diagonal',
+        isPausedWhenNotInView: true,
+        stateTransitionSpeed: 500,
+        states: config.states
+      });
+    });
   }
 
   // ---- Render: Art ----
