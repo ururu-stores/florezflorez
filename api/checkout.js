@@ -41,11 +41,7 @@ module.exports = async function handler(req, res) {
       mode: 'payment',
       line_items,
       shipping_address_collection: {
-        allowed_countries: [
-          'US', 'CA', 'MX',
-          'GB', 'IE', 'FR', 'DE', 'ES', 'IT', 'PT', 'NL', 'BE', 'CH',
-          'AT', 'SE', 'NO', 'DK', 'FI', 'AU', 'NZ', 'JP', 'KR', 'SG', 'HK',
-        ],
+        allowed_countries: ['US'],
       },
       shipping_options: [
         { shipping_rate: 'shr_1TLE6gGZz3PbqlU6QUzZfFdG' },
