@@ -37,12 +37,29 @@ module.exports = async function handler(req, res) {
     }, 0);
     const total = (totalCents / 100).toFixed(2);
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       mode: 'payment',
-      line_items: line_items,
+      line_items,
+      shipping_address_collection: {
+        allowed_countries: [
+          'US', 'CA', 'MX',
+          'GB', 'IE', 'FR', 'DE', 'ES', 'IT', 'PT', 'NL', 'BE', 'CH',
+          'AT', 'SE', 'NO', 'DK', 'FI', 'AU', 'NZ', 'JP', 'KR', 'SG', 'HK',
+        ],
+      },
+      shipping_options: [
+        { shipping_rate: 'shr_1TLE6gGZz3PbqlU6QUzZfFdG' },
+      ],
       success_url: `${origin}/?checkout=success&total=${total}`,
       cancel_url: `${origin}/?checkout=cancel`,
-    });
+    };
+
+    // Auto-apply free shipping coupon on orders over $200
+    if (totalCents > 20000) {
+      sessionParams.discounts = [{ coupon: 'yfDilCGY' }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     if (req.method === 'POST') {
       res.status(200).json({ url: session.url });
