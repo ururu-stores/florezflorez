@@ -390,6 +390,26 @@
         text(desc, piece.description);
         article.appendChild(desc);
 
+        if (piece.for_sale && piece.stripe_price_id) {
+          const buyRow = document.createElement('div');
+          buyRow.className = 'buy-row';
+          const priceEl = document.createElement('span');
+          priceEl.className = 'buy-price';
+          text(priceEl, piece.price_display);
+          buyRow.appendChild(priceEl);
+          const btn = document.createElement('button');
+          btn.className = 'buy-btn';
+          text(btn, 'Add to Cart');
+          btn.addEventListener('click', () => addToCart({
+            price_id: piece.stripe_price_id,
+            title: piece.title,
+            price_display: piece.price_display,
+            image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
+          }));
+          buyRow.appendChild(btn);
+          article.appendChild(buyRow);
+        }
+
         content.appendChild(article);
       });
 
@@ -427,30 +447,32 @@
         text(desc, piece.description);
         article.appendChild(desc);
 
-        const buyRow = document.createElement('div');
-        buyRow.className = 'buy-row';
+        if (piece.for_sale !== false) {
+          const buyRow = document.createElement('div');
+          buyRow.className = 'buy-row';
 
-        const price = document.createElement('span');
-        price.className = 'buy-price';
-        text(price, piece.price_display);
-        buyRow.appendChild(price);
+          const price = document.createElement('span');
+          price.className = 'buy-price';
+          text(price, piece.price_display);
+          buyRow.appendChild(price);
 
-        if (piece.stripe_price_id) {
-          const btn = document.createElement('button');
-          btn.className = 'buy-btn';
-          text(btn, 'Add to Cart');
-          btn.addEventListener('click', () => {
-            addToCart({
-              price_id: piece.stripe_price_id,
-              title: piece.title,
-              price_display: piece.price_display,
-              image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
+          if (piece.stripe_price_id) {
+            const btn = document.createElement('button');
+            btn.className = 'buy-btn';
+            text(btn, 'Add to Cart');
+            btn.addEventListener('click', () => {
+              addToCart({
+                price_id: piece.stripe_price_id,
+                title: piece.title,
+                price_display: piece.price_display,
+                image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
+              });
             });
-          });
-          buyRow.appendChild(btn);
-        }
+            buyRow.appendChild(btn);
+          }
 
-        article.appendChild(buyRow);
+          article.appendChild(buyRow);
+        }
         content.appendChild(article);
       });
 

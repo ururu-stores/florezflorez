@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe Sync — Florez Florez</title>
+  <style>
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('/fonts/IBMPlexMono-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('/fonts/IBMPlexMono-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #fff;
+      color: #333;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar h1 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+      margin-right: auto;
+    }
+
+    .toolbar a {
+      color: rgba(0,0,0,0.35);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .toolbar a:hover { color: #333; }
+
+    .btn {
+      padding: 0.5rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #333;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #555; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-secondary {
+      color: #333;
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .btn-secondary:hover { background: rgba(0,0,0,0.04); color: #333; }
+
+    .status {
+      font-size: 0.8rem;
+      color: rgba(0,0,0,0.4);
+      min-height: 1.2em;
+    }
+    .status.error { color: #c44; }
+    .status.success { color: #3a3; }
+
+    /* Auth overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+    .auth-overlay h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+    }
+    .auth-overlay button {
+      padding: 0.75rem 2.5rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #333;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .auth-overlay button:hover { background: #555; }
+
+    /* Product list */
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 6rem;
+    }
+
+    .section-block {
+      margin-bottom: 3rem;
+    }
+
+    .section-heading {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      margin-bottom: 0;
+    }
+
+    .product-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .product-name {
+      flex: 1;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-price {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: rgba(0,0,0,0.45);
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+    }
+    .badge-synced { background: rgba(40,160,80,0.1); color: #1a7a3a; }
+    .badge-unsynced { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.4); }
+    .badge-migrate { background: rgba(200,120,0,0.1); color: #8a5000; }
+
+    .row-btn {
+      flex-shrink: 0;
+      padding: 0.3rem 0.9rem;
+      font-family: inherit;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .row-btn-primary { color: #fff; background: #333; }
+    .row-btn-primary:hover { background: #555; }
+    .row-btn-secondary { color: rgba(0,0,0,0.45); background: transparent; border: 1px solid rgba(0,0,0,0.15); }
+    .row-btn-secondary:hover { border-color: rgba(0,0,0,0.35); color: #333; }
+    .row-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .row-error {
+      font-size: 0.72rem;
+      color: #c44;
+      flex-shrink: 0;
+      max-width: 200px;
+    }
+
+    .empty-section {
+      padding: 1rem 0;
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: rgba(0,0,0,0.3);
+    }
+
+    .loading {
+      padding: 4rem 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(0,0,0,0.3);
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="auth-overlay" class="auth-overlay" style="display:none;">
+    <h2>Sign in to use this tool</h2>
+    <button id="auth-btn">Sign in with GitHub</button>
+  </div>
+
+  <div class="toolbar">
+    <h1>Stripe Sync</h1>
+    <a href="/admin/">Back to Admin</a>
+    <button class="btn" id="sync-all-btn" disabled>Sync All Unsynced</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div class="page" id="page">
+    <div class="loading">Loading products...</div>
+  </div>
+
+  <script>
+    (() => {
+      const REPO = 'taoofdre/florezflorez';
+      const SECTIONS = [
+        { key: 'art',       label: 'Art',       file: 'content/art.json' },
+        { key: 'necklaces', label: 'Necklaces',  file: 'content/necklaces.json' },
+        { key: 'rings',     label: 'Rings',      file: 'content/rings.json' },
+      ];
+      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+      const authOverlay = document.getElementById('auth-overlay');
+      const authBtn = document.getElementById('auth-btn');
+      const syncAllBtn = document.getElementById('sync-all-btn');
+      const statusEl = document.getElementById('status');
+      const page = document.getElementById('page');
+
+      let ghToken = null;
+      // Cache: { [file]: { content, sha } }
+      const fileCache = {};
+
+      function setStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      // ---- Auth ----
+
+      function getStoredToken() {
+        return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token');
+      }
+      function storeToken(t) { sessionStorage.setItem('gh_token', t); }
+
+      function initAuth() {
+        if (isLocal) { ghToken = null; loadAll(); return; }
+        const stored = getStoredToken();
+        if (stored) { ghToken = stored; loadAll(); return; }
+        authOverlay.style.display = '';
+        authBtn.addEventListener('click', () => {
+          const popup = window.open('/api/auth', 'github-auth', 'width=600,height=700');
+          window.addEventListener('message', function onMsg(e) {
+            if (typeof e.data !== 'string') return;
+            if (e.data.startsWith('authorization:github:success:')) {
+              const payload = JSON.parse(e.data.replace('authorization:github:success:', ''));
+              ghToken = payload.token;
+              storeToken(ghToken);
+              authOverlay.style.display = 'none';
+              window.removeEventListener('message', onMsg);
+              if (popup) popup.close();
+              loadAll();
+            }
+          });
+          const interval = setInterval(() => {
+            if (popup && !popup.closed) popup.postMessage('authorizing:github', '*');
+            else clearInterval(interval);
+          }, 250);
+        });
+      }
+
+      // ---- GitHub file I/O ----
+
+      async function loadFile(file) {
+        if (ghToken) {
+          const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`, {
+            headers: { Authorization: 'token ' + ghToken },
+          });
+          if (!res.ok) throw new Error(`Failed to load ${file}`);
+          const f = await res.json();
+          const content = JSON.parse(atob(f.content.replace(/\n/g, '')));
+          fileCache[file] = { content, sha: f.sha };
+          return fileCache[file];
+        } else {
+          // Local: fetch from server, no SHA available
+          const res = await fetch('/' + file + '?t=' + Date.now());
+          if (!res.ok) throw new Error(`Failed to load ${file}`);
+          const content = await res.json();
+          fileCache[file] = { content, sha: null };
+          return fileCache[file];
+        }
+      }
+
+      async function saveFile(file, content) {
+        if (!ghToken) throw new Error('Sign in required to save');
+        const cached = fileCache[file];
+        if (!cached) throw new Error('File not loaded');
+        const json = JSON.stringify(content, null, 2) + '\n';
+        const encoded = btoa(unescape(encodeURIComponent(json)));
+        const body = { message: 'Sync product to Stripe', content: encoded, branch: 'main' };
+        if (cached.sha) body.sha = cached.sha;
+        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`, {
+          method: 'PUT',
+          headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.message || 'Save failed');
+        }
+        const result = await res.json();
+        fileCache[file].sha = result.content.sha;
+        fileCache[file].content = content;
+      }
+
+      // ---- Stripe sync API ----
+
+      async function callStripeSync(action, product) {
+        const res = await fetch('/api/stripe-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(ghToken ? { Authorization: 'Bearer ' + ghToken } : {}),
+          },
+          body: JSON.stringify({ action, product }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Sync failed');
+        return data;
+      }
+
+      // ---- Sync a single product ----
+
+      async function syncProduct(sectionFile, productId, rowEl) {
+        const syncBtn = rowEl.querySelector('.row-btn');
+        const badge = rowEl.querySelector('.badge');
+        const errorEl = rowEl.querySelector('.row-error');
+
+        syncBtn.disabled = true;
+        syncBtn.textContent = 'Syncing...';
+        if (errorEl) errorEl.textContent = '';
+
+        try {
+          // Always reload file for fresh SHA
+          const { content } = await loadFile(sectionFile);
+          const idx = content.pieces.findIndex(p => p.id === productId);
+          if (idx === -1) throw new Error('Product not found');
+          const piece = content.pieces[idx];
+
+          const imagePath = piece.images && piece.images.length > 0 ? piece.images[0].src : null;
+          const hasProduct = !!piece.stripe_product_id;
+          const hasPriceOnly = !piece.stripe_product_id && !!piece.stripe_price_id;
+          const action = (hasProduct || hasPriceOnly) ? 'update' : 'create';
+
+          const result = await callStripeSync(action, {
+            title: piece.title,
+            description: piece.description,
+            price_display: piece.price_display,
+            image_path: imagePath,
+            stripe_price_id: piece.stripe_price_id || null,
+            stripe_product_id: piece.stripe_product_id || null,
+          });
+
+          // Update piece in content
+          content.pieces[idx] = {
+            ...piece,
+            stripe_price_id: result.stripe_price_id,
+            stripe_product_id: result.stripe_product_id,
+          };
+
+          await saveFile(sectionFile, content);
+
+          // Update UI
+          badge.textContent = 'Synced';
+          badge.className = 'badge badge-synced';
+          syncBtn.textContent = 'Re-sync';
+          syncBtn.className = 'row-btn row-btn-secondary';
+          syncBtn.disabled = false;
+
+        } catch (err) {
+          let errEl = rowEl.querySelector('.row-error');
+          if (!errEl) {
+            errEl = document.createElement('span');
+            errEl.className = 'row-error';
+            rowEl.appendChild(errEl);
+          }
+          errEl.textContent = err.message;
+          syncBtn.textContent = 'Retry';
+          syncBtn.disabled = false;
+        }
+      }
+
+      // ---- Sync all unsynced across all sections ----
+
+      syncAllBtn.addEventListener('click', async () => {
+        syncAllBtn.disabled = true;
+        setStatus('Syncing...');
+        let count = 0;
+        let errors = 0;
+
+        for (const section of SECTIONS) {
+          try {
+            const { content } = await loadFile(section.file);
+            let changed = false;
+
+            for (const piece of content.pieces) {
+              if (!piece.for_sale || piece.stripe_product_id) continue;
+              const imagePath = piece.images && piece.images.length > 0 ? piece.images[0].src : null;
+              const hasPriceOnly = !piece.stripe_product_id && !!piece.stripe_price_id;
+              const action = hasPriceOnly ? 'update' : 'create';
+              try {
+                const result = await callStripeSync(action, {
+                  title: piece.title,
+                  description: piece.description,
+                  price_display: piece.price_display,
+                  image_path: imagePath,
+                  stripe_price_id: piece.stripe_price_id || null,
+                  stripe_product_id: null,
+                });
+                piece.stripe_price_id = result.stripe_price_id;
+                piece.stripe_product_id = result.stripe_product_id;
+                changed = true;
+                count++;
+              } catch (e) {
+                errors++;
+              }
+            }
+
+            if (changed) await saveFile(section.file, content);
+          } catch (e) {
+            errors++;
+          }
+        }
+
+        const msg = count > 0
+          ? `Synced ${count} product${count !== 1 ? 's' : ''}${errors ? `, ${errors} error${errors !== 1 ? 's' : ''}` : ''} — reloading...`
+          : errors > 0 ? `${errors} error${errors !== 1 ? 's' : ''} — check individual products` : 'Nothing to sync';
+
+        setStatus(msg, errors > 0 && count === 0 ? 'error' : 'success');
+        syncAllBtn.disabled = false;
+
+        if (count > 0) setTimeout(() => loadAll(), 800);
+      });
+
+      // ---- Render ----
+
+      function statusBadge(piece) {
+        if (piece.stripe_product_id) return { label: 'Synced', cls: 'badge-synced' };
+        if (piece.stripe_price_id) return { label: 'Needs Sync', cls: 'badge-migrate' };
+        return { label: 'Not Synced', cls: 'badge-unsynced' };
+      }
+
+      function renderSection(section, pieces) {
+        const forSale = pieces.filter(p => p.for_sale);
+
+        const block = document.createElement('div');
+        block.className = 'section-block';
+
+        const heading = document.createElement('div');
+        heading.className = 'section-heading';
+        heading.textContent = section.label;
+        block.appendChild(heading);
+
+        if (forSale.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-section';
+          empty.textContent = 'No items marked for sale.';
+          block.appendChild(empty);
+          return block;
+        }
+
+        forSale.forEach(piece => {
+          const row = document.createElement('div');
+          row.className = 'product-row';
+          row.dataset.id = piece.id;
+
+          const name = document.createElement('span');
+          name.className = 'product-name';
+          name.textContent = piece.title;
+          row.appendChild(name);
+
+          const price = document.createElement('span');
+          price.className = 'product-price';
+          price.textContent = piece.price_display || '—';
+          row.appendChild(price);
+
+          const { label, cls } = statusBadge(piece);
+          const badge = document.createElement('span');
+          badge.className = 'badge ' + cls;
+          badge.textContent = label;
+          row.appendChild(badge);
+
+          const btn = document.createElement('button');
+          const isSynced = !!piece.stripe_product_id;
+          btn.className = 'row-btn ' + (isSynced ? 'row-btn-secondary' : 'row-btn-primary');
+          btn.textContent = isSynced ? 'Re-sync' : 'Sync to Stripe';
+          btn.addEventListener('click', () => syncProduct(section.file, piece.id, row));
+          row.appendChild(btn);
+
+          block.appendChild(row);
+        });
+
+        return block;
+      }
+
+      async function loadAll() {
+        page.innerHTML = '<div class="loading">Loading products...</div>';
+        setStatus('');
+
+        try {
+          const results = await Promise.all(SECTIONS.map(s => loadFile(s.file)));
+          page.innerHTML = '';
+
+          let anyUnsynced = false;
+          SECTIONS.forEach((section, i) => {
+            const { content } = results[i];
+            const pieces = content.pieces || [];
+            if (pieces.some(p => p.for_sale && !p.stripe_product_id)) anyUnsynced = true;
+            page.appendChild(renderSection(section, pieces));
+          });
+
+          syncAllBtn.disabled = !anyUnsynced || !ghToken;
+        } catch (e) {
+          page.innerHTML = '';
+          setStatus('Failed to load products: ' + e.message, 'error');
+        }
+      }
+
+      initAuth();
+    })();
+  </script>
+</body>
+</html>
