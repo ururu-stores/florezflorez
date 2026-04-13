@@ -848,10 +848,11 @@ a {
 
   .header-logo {
     width: 50px;
+    margin-right: auto;
   }
 
   .cart-toggle {
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .hamburger {
