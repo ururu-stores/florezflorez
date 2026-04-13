@@ -1,17 +1,17 @@
 {
   "pieces": [
     {
-      "id": "bracelet-i",
-      "title": "Bracelet I",
-      "description": "Oxidized silver cuff.",
+      "id": "001",
+      "title": "Desert Garnet Ring",
+      "description": "Desert Garnet Ring",
       "for_sale": true,
-      "price_display": "$95",
+      "price_display": "$260",
       "stripe_price_id": "",
       "stripe_product_id": "",
       "images": [
         {
-          "src": "/images/placeholder.svg",
-          "alt": "Bracelet I"
+          "src": "/uploads/garnet-desert-ring01.png",
+          "alt": "Desert Garnet Ring"
         }
       ]
     }
