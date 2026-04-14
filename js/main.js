@@ -44,6 +44,7 @@
 
   // ---- Cart state ----
   let cart = JSON.parse(localStorage.getItem('ff_cart') || '[]');
+  const stockByPriceId = {}; // price_id → stock (null = unlimited)
 
   function saveCart() {
     localStorage.setItem('ff_cart', JSON.stringify(cart));
@@ -51,7 +52,10 @@
   }
 
   function addToCart(item) {
+    const stock = stockByPriceId[item.price_id];
     const existing = cart.find(c => c.price_id === item.price_id);
+    const currentQty = existing ? existing.quantity : 0;
+    if (typeof stock === 'number' && currentQty >= stock) return;
     if (existing) {
       existing.quantity += 1;
     } else {
@@ -69,11 +73,14 @@
   function updateQuantity(priceId, delta) {
     const item = cart.find(c => c.price_id === priceId);
     if (!item) return;
-    item.quantity += delta;
-    if (item.quantity <= 0) {
+    const newQty = item.quantity + delta;
+    if (newQty <= 0) {
       removeFromCart(priceId);
       return;
     }
+    const stock = stockByPriceId[priceId];
+    if (typeof stock === 'number' && newQty > stock) return;
+    item.quantity = newQty;
     saveCart();
   }
 
@@ -134,6 +141,12 @@
       const plusBtn = document.createElement('button');
       plusBtn.className = 'cart-qty-btn';
       plusBtn.textContent = '+';
+      const stock = stockByPriceId[item.price_id];
+      if (typeof stock === 'number' && item.quantity >= stock) {
+        plusBtn.disabled = true;
+        plusBtn.style.opacity = '0.3';
+        plusBtn.style.cursor = 'default';
+      }
       plusBtn.addEventListener('click', () => updateQuantity(item.price_id, 1));
       controls.appendChild(plusBtn);
 
@@ -390,6 +403,8 @@
         text(desc, piece.description);
         article.appendChild(desc);
 
+        if (piece.stripe_price_id) stockByPriceId[piece.stripe_price_id] = piece.stock;
+
         if (piece.for_sale && piece.stripe_price_id) {
           const buyRow = document.createElement('div');
           buyRow.className = 'buy-row';
@@ -454,6 +469,8 @@
         desc.className = 'art-description';
         text(desc, piece.description);
         article.appendChild(desc);
+
+        if (piece.stripe_price_id) stockByPriceId[piece.stripe_price_id] = piece.stock;
 
         if (piece.for_sale !== false) {
           const buyRow = document.createElement('div');

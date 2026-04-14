@@ -1,5 +1,33 @@
 const Stripe = require('stripe');
 
+const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const CONTENT_FILES = ['content/art.json', 'content/necklaces.json', 'content/rings.json'];
+
+async function getStockMap() {
+  const pat = process.env.GITHUB_PAT;
+  if (!pat) return {};
+  const map = {};
+  await Promise.all(CONTENT_FILES.map(async (path) => {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+        headers: {
+          'Authorization': 'token ' + pat,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+      if (!res.ok) return;
+      const file = await res.json();
+      const data = JSON.parse(Buffer.from(file.content.replace(/\n/g, ''), 'base64').toString('utf8'));
+      for (const piece of (data.pieces || [])) {
+        if (piece.stripe_price_id) {
+          map[piece.stripe_price_id] = piece.stock;
+        }
+      }
+    } catch (e) {}
+  }));
+  return map;
+}
+
 module.exports = async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || `https://${req.headers.host}`;
@@ -25,6 +53,23 @@ module.exports = async function handler(req, res) {
       return;
     }
     line_items = [{ price: priceId, quantity: 1 }];
+  }
+
+  // Validate stock before creating Stripe session
+  try {
+    const stockMap = await getStockMap();
+    for (const li of line_items) {
+      const stock = stockMap[li.price];
+      if (typeof stock === 'number' && li.quantity > stock) {
+        const msg = stock === 0
+          ? 'Sorry, this item is sold out'
+          : `Only ${stock} left in stock`;
+        return res.status(400).json({ error: msg });
+      }
+    }
+  } catch (e) {
+    // Stock check failed — allow checkout rather than blocking
+    console.error('Stock check error:', e.message);
   }
 
   try {
