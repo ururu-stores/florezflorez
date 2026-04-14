@@ -5,7 +5,7 @@
       "title": "Pearl, black flowers",
       "description": "Natural pearls and hand-woven black flowers | 950 silver brooch",
       "for_sale": true,
-      "price_display": "$170",
+      "price_display": "170",
       "stripe_price_id": "price_1TLEMbGZz3PbqlU6mgDgOG0W",
       "stripe_product_id": "prod_UJs640Zim616GA",
       "images": [
@@ -28,7 +28,7 @@
       "title": "Necklace I",
       "description": "Gold-filled chain, pendant.",
       "for_sale": true,
-      "price_display": "$180",
+      "price_display": "180",
       "stripe_price_id": "",
       "stripe_product_id": "",
       "images": [
