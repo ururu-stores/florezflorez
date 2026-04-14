@@ -139,7 +139,7 @@
 
       const price = document.createElement('div');
       price.className = 'cart-item-price';
-      price.textContent = item.price_display;
+      price.textContent = formatPrice(item.price_display);
       info.appendChild(price);
 
       const controls = document.createElement('div');
@@ -468,7 +468,7 @@
     buyRow.className = 'buy-row';
     const priceEl = document.createElement('span');
     priceEl.className = 'buy-price';
-    text(priceEl, piece.price_display);
+    text(priceEl, formatPrice(piece.price_display));
     buyRow.appendChild(priceEl);
 
     const isSoldOut = typeof piece.stock === 'number' && piece.stock === 0;
@@ -607,6 +607,7 @@
   // ---- Render: Product page ----
 
   function parsePrice(display) { return parseFloat((display || '').replace(/[^0-9.]/g, '')) || 0; }
+  function formatPrice(display) { const v = (display || '').replace(/[^0-9.]/g, ''); return v ? '$' + v : ''; }
 
   function renderProductView(sectionId, piece, categorySlug) {
     if (typeof fbq === 'function') {

@@ -516,7 +516,8 @@
 
           const price = document.createElement('span');
           price.className = 'product-price';
-          price.textContent = piece.price_display || '—';
+          const pv = (piece.price_display || '').replace(/[^0-9.]/g, '');
+          price.textContent = pv ? '$' + pv : '—';
           row.appendChild(price);
 
           const { label, cls } = statusBadge(piece);
