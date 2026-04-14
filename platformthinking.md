@@ -186,6 +186,51 @@ The USPS rate call and free shipping logic live in the merchant's checkout serve
 
 ---
 
+## Analytics & Ad Performance — Platform Strategy
+
+### Why Not Self-Hosted Web Analytics
+
+Self-hosted analytics platforms (Umami, Plausible, Ackee) all require a real database — analytics is high-frequency write data that can't live in git. Offering this as a platform feature means scaling another resource per tenant:
+
+- A shared Umami/Postgres instance works at small scale but grows with every merchant's traffic. 100 merchants × 1,000 pageviews/day = 100K writes/day. Free database tiers get exhausted quickly, and a paid database adds operational cost that erodes margins at $5/month pricing.
+- Per-merchant databases are not viable at this price point.
+- Self-hosted analytics also adds operational burden (backups, uptime, storage monitoring) for something that isn't the platform's core value.
+
+**Decision: skip self-hosted web analytics.** It doesn't fit the economics.
+
+### Consolidated Ad Performance Dashboard (the better play)
+
+Instead of general web analytics, surface **ad campaign performance data** from the platforms merchants are already using to drive traffic. The target merchants are small makers running Instagram, TikTok, and Google ads — they want to know "is my ad working?" not "what's my bounce rate?"
+
+**Supported platforms:**
+- **Meta** — Marketing API (free, OAuth connect, read campaign spend/reach/clicks/purchases/ROAS)
+- **Google** — Google Ads API (free, developer token required, read campaign performance)
+- **TikTok** — TikTok Marketing API (free, OAuth connect, read campaign metrics)
+- **Reddit** — Reddit Ads API (free, more limited but growing)
+
+**How it works:**
+1. During onboarding, merchants connect their ad accounts via OAuth (similar to Stripe Connect flow)
+2. The CMS admin page calls each platform's API on demand to pull performance metrics
+3. Display a unified dashboard: spend, clicks, add-to-carts, purchases, and ROAS — side by side across all platforms
+4. **No database needed** — all data is read from the ad platform APIs on page load, not stored locally
+
+**Cost to the platform:** Zero per merchant. All ad platform APIs are free to read. Data lives on Meta/Google/TikTok/Reddit's servers.
+
+**Why this is a differentiator:** Shopify doesn't consolidate ad data in their admin — merchants have to check Meta Ads Manager, Google Ads, and TikTok Ads separately. A clean, unified view of "I spent $200 this month across three platforms, here's where my 15 purchases came from" is something no small-merchant tool does well today.
+
+### Ad Creation — On-Platform, Not In Our Admin
+
+All four ad platforms offer APIs for programmatic campaign creation. However, building a unified ad creator is not viable as an early feature:
+
+- Each platform's ad creation is a product unto itself — audience targeting, bid strategies, creative formats, and placement options differ wildly across platforms
+- Merchants already know how to create ads on-platform (boosting an Instagram post, setting up a TikTok ad)
+- The real unmet need is understanding performance across platforms, not creating ads from a different UI
+
+**v1:** Read-only consolidated dashboard. Pull metrics, show them cleanly, no database.
+**Future (v2/v3):** Consider simple "boost this product" flows that create basic campaigns with sensible defaults on Meta/TikTok — but only after validating merchant demand.
+
+---
+
 ## Build Order
 
 1. **Generalize the template** — remove hardcoded repo names, domains, credentials. Everything merchant-specific becomes an env var.
