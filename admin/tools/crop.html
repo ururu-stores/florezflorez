@@ -302,7 +302,7 @@
       <input type="file" id="file-input" accept="image/*">
     </label>
     <label class="square-toggle">
-      <input type="checkbox" id="square-lock">
+      <input type="checkbox" id="square-lock" checked>
       <div class="toggle-track"></div>
       <span>1:1 Square</span>
     </label>
@@ -520,14 +520,7 @@
         const ctx = previewCanvas.getContext('2d');
         ctx.clearRect(0, 0, dims.width, dims.height);
         ctx.drawImage(canvas, 0, 0);
-        const cropData = cropper.getData(true);
-        const srcW = cropData.width;
-        const srcH = cropData.height;
-        const upscaled = (squareLock.checked && (srcW < OUTPUT_HEIGHT || srcH < OUTPUT_HEIGHT))
-          || (!squareLock.checked && srcH < OUTPUT_HEIGHT);
-        previewInfo.textContent = dims.width + ' x ' + dims.height + '  (source: ' + srcW + ' x ' + srcH + ')';
-        previewInfo.style.color = upscaled ? '#c44' : '';
-        if (upscaled) previewInfo.textContent += ' — image too small, will upscale';
+        previewInfo.textContent = dims.width + ' x ' + dims.height;
       }
 
       // ---- Save ----
