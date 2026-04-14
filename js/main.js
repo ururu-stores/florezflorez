@@ -23,11 +23,14 @@
   const cartCheckoutBtn = document.getElementById('cart-checkout-btn');
   const cartCloseBtn = document.getElementById('cart-close');
 
+  // ---- State ----
   let activeSection = null;
+  let activeObserver = null;
+  let instagramDmUrl = 'https://ig.me/m/florezflorez.studio';
+  const dataCache = {};
 
   // ---- Settings (pixel ID, Instagram URL) ----
-  // Start fetching immediately so pixel fires as early as possible
-  const settingsPromise = fetch('content/settings.json?t=' + Date.now())
+  const settingsPromise = fetch('/content/settings.json?t=' + Date.now())
     .then(r => r.ok ? r.json() : {})
     .catch(() => ({}));
 
@@ -40,11 +43,14 @@
     if (igLink && settings.instagram_dm_url) {
       igLink.href = settings.instagram_dm_url;
     }
+    if (settings.instagram_dm_url) {
+      instagramDmUrl = settings.instagram_dm_url;
+    }
   });
 
   // ---- Cart state ----
   let cart = JSON.parse(localStorage.getItem('ff_cart') || '[]');
-  const stockByPriceId = {}; // price_id → stock (null = unlimited)
+  const stockByPriceId = {};
 
   function saveCart() {
     localStorage.setItem('ff_cart', JSON.stringify(cart));
@@ -89,7 +95,6 @@
     cartBadge.textContent = count;
     cartBadge.style.display = count > 0 ? '' : 'none';
 
-    // Render cart items
     cartItemsEl.innerHTML = '';
     if (cart.length === 0) {
       cartEmpty.style.display = '';
@@ -233,12 +238,77 @@
     });
   }
 
-  // Init cart UI
   updateCartUI();
 
-  // ---- Lightbox state ----
+  // ---- Lightbox ----
   let lbImages = [];
   let lbIndex = 0;
+
+  function openLightbox(images, index) {
+    lbImages = images;
+    lbIndex = index;
+    showLightboxImage();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function showLightboxImage() {
+    lightboxImg.src = lbImages[lbIndex].src;
+    lightboxImg.alt = lbImages[lbIndex].alt;
+    text(lightboxCounter, (lbIndex + 1) + ' / ' + lbImages.length);
+    const prevBtn = lightbox.querySelector('.lightbox-prev');
+    const nextBtn = lightbox.querySelector('.lightbox-next');
+    const showNav = lbImages.length > 1;
+    prevBtn.style.display = showNav ? '' : 'none';
+    nextBtn.style.display = showNav ? '' : 'none';
+    lightboxCounter.style.display = showNav ? '' : 'none';
+  }
+
+  function lightboxPrev() {
+    lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
+    showLightboxImage();
+  }
+
+  function lightboxNext() {
+    lbIndex = (lbIndex + 1) % lbImages.length;
+    showLightboxImage();
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  lightbox.querySelector('.lightbox-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLightbox();
+  });
+  lightbox.querySelector('.lightbox-prev').addEventListener('click', (e) => {
+    e.stopPropagation();
+    lightboxPrev();
+  });
+  lightbox.querySelector('.lightbox-next').addEventListener('click', (e) => {
+    e.stopPropagation();
+    lightboxNext();
+  });
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxPrev();
+    if (e.key === 'ArrowRight') lightboxNext();
+  });
+  let lbTouchStartX = 0;
+  lightbox.addEventListener('touchstart', (e) => { lbTouchStartX = e.changedTouches[0].screenX; }, { passive: true });
+  lightbox.addEventListener('touchend', (e) => {
+    const diff = lbTouchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) lightboxNext();
+      else lightboxPrev();
+    }
+  });
 
   // ---- Helpers ----
 
@@ -250,12 +320,37 @@
     return div.innerHTML;
   }
 
-  // ---- Data fetching ----
-
   async function fetchJSON(path) {
     const res = await fetch(path + '?t=' + Date.now());
-    if (!res.ok) throw new Error(`Failed to load ${path}`);
+    if (!res.ok) throw new Error('Failed to load ' + path);
     return res.json();
+  }
+
+  const CATEGORY_NAMES = {
+    art: 'Art',
+    necklaces: 'Necklaces',
+    rings: 'Rings',
+  };
+
+  // ---- Data loading ----
+
+  async function loadAllData() {
+    const [art, necklaces, rings] = await Promise.all([
+      fetchJSON('/content/art.json'),
+      fetchJSON('/content/necklaces.json'),
+      fetchJSON('/content/rings.json'),
+    ]);
+    dataCache.art = art;
+    dataCache.necklaces = necklaces;
+    dataCache.rings = rings;
+
+    [art, necklaces, rings].forEach(data => {
+      (data.pieces || []).forEach(piece => {
+        if (piece.stripe_price_id) {
+          stockByPriceId[piece.stripe_price_id] = piece.stock;
+        }
+      });
+    });
   }
 
   // ---- Carousel builder ----
@@ -278,7 +373,6 @@
       slide.appendChild(imgEl);
       track.appendChild(slide);
 
-      // Click to open lightbox at this slide
       slide.addEventListener('click', () => {
         openLightbox(images, i);
       });
@@ -302,7 +396,7 @@
       images.forEach((_, i) => {
         const dot = document.createElement('button');
         dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-        dot.setAttribute('aria-label', `Image ${i + 1}`);
+        dot.setAttribute('aria-label', 'Image ' + (i + 1));
         dots.appendChild(dot);
       });
 
@@ -328,13 +422,10 @@
         dot.addEventListener('click', (e) => { e.stopPropagation(); goTo(i); });
       });
 
-      // Touch/swipe support
       let touchStartX = 0;
-      let touchEndX = 0;
       carousel.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
       carousel.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        const diff = touchStartX - touchEndX;
+        const diff = touchStartX - e.changedTouches[0].screenX;
         if (Math.abs(diff) > 50) {
           if (diff > 0) goTo(current + 1);
           else goTo(current - 1);
@@ -345,21 +436,60 @@
     return carousel;
   }
 
+  // ---- Build helpers ----
+
+  function buildBuyRow(piece) {
+    const buyRow = document.createElement('div');
+    buyRow.className = 'buy-row';
+    const priceEl = document.createElement('span');
+    priceEl.className = 'buy-price';
+    text(priceEl, piece.price_display);
+    buyRow.appendChild(priceEl);
+
+    const isSoldOut = typeof piece.stock === 'number' && piece.stock === 0;
+    if (isSoldOut) {
+      const soldOut = document.createElement('span');
+      soldOut.className = 'sold-out';
+      text(soldOut, 'Sold Out');
+      buyRow.appendChild(soldOut);
+    } else {
+      const btn = document.createElement('button');
+      btn.className = 'buy-btn';
+      text(btn, 'Add to Cart');
+      btn.addEventListener('click', () => addToCart({
+        price_id: piece.stripe_price_id,
+        title: piece.title,
+        price_display: piece.price_display,
+        image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
+      }));
+      buyRow.appendChild(btn);
+    }
+    return buyRow;
+  }
+
+  function buildRingsBanner() {
+    const banner = document.createElement('div');
+    banner.className = 'rings-dm-banner';
+    const link = document.createElement('a');
+    link.href = instagramDmUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'DM us for more sizes';
+    banner.appendChild(link);
+    return banner;
+  }
+
   // ---- Render: Homepage ----
 
   async function renderHomepage() {
-    // Load logo from CMS
     try {
-      const data = await fetchJSON('content/homepage.json');
+      const data = await fetchJSON('/content/homepage.json');
       if (data.logo) {
         homeLogo.src = data.logo;
         headerLogo.src = data.logo;
       }
-    } catch (e) {
-      // Homepage data is optional
-    }
+    } catch (e) {}
 
-    // Single animated gradient across entire homepage
     new Granim({
       element: '#home-gradient',
       direction: 'diagonal',
@@ -379,157 +509,166 @@
     });
   }
 
-  // ---- Render: Art ----
+  // ---- Render: Category listing ----
 
-  async function renderArt() {
-    try {
-      const data = await fetchJSON('content/art.json');
-      const nav = document.getElementById('art-nav');
-      const content = document.getElementById('art-content');
+  function renderCategoryView(sectionId, pieces, categorySlug) {
+    const section = document.getElementById(sectionId);
+    const artLayout = section.querySelector('.art-layout');
+    const sidebar = artLayout.querySelector('.art-sidebar');
+    const content = artLayout.querySelector('.art-content');
 
-      data.pieces.forEach(piece => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#' + piece.id;
-        a.className = 'art-nav-link';
-        text(a, piece.title);
-        li.appendChild(a);
-        nav.appendChild(li);
+    // Remove product view if present
+    section.classList.remove('product-view');
+    const existingProduct = section.querySelector('.product-page');
+    if (existingProduct) existingProduct.remove();
+    const existingBar = section.querySelector('.product-bottom-bar');
+    if (existingBar) existingBar.remove();
 
-        const article = document.createElement('article');
-        article.id = piece.id;
-        article.className = 'art-piece';
+    artLayout.style.display = '';
+    sidebar.innerHTML = '';
+    content.innerHTML = '';
+    content.scrollTop = 0;
 
-        article.appendChild(buildCarousel(piece.images));
+    // Nav links
+    const nav = document.createElement('ul');
+    nav.className = 'art-nav';
 
-        const desc = document.createElement('p');
-        desc.className = 'art-description';
-        text(desc, piece.description);
-        article.appendChild(desc);
-
-        if (piece.stripe_price_id) stockByPriceId[piece.stripe_price_id] = piece.stock;
-
-        if (piece.for_sale && piece.stripe_price_id) {
-          const buyRow = document.createElement('div');
-          buyRow.className = 'buy-row';
-          const priceEl = document.createElement('span');
-          priceEl.className = 'buy-price';
-          text(priceEl, piece.price_display);
-          buyRow.appendChild(priceEl);
-          const isSoldOut = typeof piece.stock === 'number' && piece.stock === 0;
-          if (isSoldOut) {
-            const soldOut = document.createElement('span');
-            soldOut.className = 'sold-out';
-            text(soldOut, 'Sold Out');
-            buyRow.appendChild(soldOut);
-          } else {
-            const btn = document.createElement('button');
-            btn.className = 'buy-btn';
-            text(btn, 'Add to Cart');
-            btn.addEventListener('click', () => addToCart({
-              price_id: piece.stripe_price_id,
-              title: piece.title,
-              price_display: piece.price_display,
-              image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
-            }));
-            buyRow.appendChild(btn);
-          }
-          article.appendChild(buyRow);
-        }
-
-        content.appendChild(article);
+    pieces.forEach(piece => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '/' + categorySlug + '/' + piece.id;
+      a.className = 'art-nav-link';
+      text(a, piece.title);
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigate('/' + categorySlug + '/' + piece.id);
       });
+      li.appendChild(a);
+      nav.appendChild(li);
+    });
 
-      setupScrollTracking(document.getElementById('section-art'));
-    } catch (e) {
-      console.error('Failed to load art content:', e);
-    }
-  }
+    sidebar.appendChild(nav);
 
-  // ---- Render: Store section (necklaces, rings) ----
+    // Single images
+    pieces.forEach(piece => {
+      const article = document.createElement('article');
+      article.id = piece.id;
+      article.className = 'art-piece';
 
-  async function renderStore(jsonPath, navId, contentId, sectionId) {
-    try {
-      const data = await fetchJSON(jsonPath);
-      const nav = document.getElementById(navId);
-      const content = document.getElementById(contentId);
-
-      data.pieces.forEach(piece => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#' + piece.id;
-        a.className = 'art-nav-link';
-        text(a, piece.title);
-        li.appendChild(a);
-        nav.appendChild(li);
-
-        const article = document.createElement('article');
-        article.id = piece.id;
-        article.className = 'art-piece';
-
-        article.appendChild(buildCarousel(piece.images));
-
-        const desc = document.createElement('p');
-        desc.className = 'art-description';
-        text(desc, piece.description);
-        article.appendChild(desc);
-
-        if (piece.stripe_price_id) stockByPriceId[piece.stripe_price_id] = piece.stock;
-
-        if (piece.for_sale !== false) {
-          const buyRow = document.createElement('div');
-          buyRow.className = 'buy-row';
-
-          const price = document.createElement('span');
-          price.className = 'buy-price';
-          text(price, piece.price_display);
-          buyRow.appendChild(price);
-
-          if (piece.stripe_price_id) {
-            const isSoldOut = typeof piece.stock === 'number' && piece.stock === 0;
-            if (isSoldOut) {
-              const soldOut = document.createElement('span');
-              soldOut.className = 'sold-out';
-              text(soldOut, 'Sold Out');
-              buyRow.appendChild(soldOut);
-            } else {
-              const btn = document.createElement('button');
-              btn.className = 'buy-btn';
-              text(btn, 'Add to Cart');
-              btn.addEventListener('click', () => {
-                addToCart({
-                  price_id: piece.stripe_price_id,
-                  title: piece.title,
-                  price_display: piece.price_display,
-                  image: piece.images && piece.images.length > 0 ? piece.images[0].src : '',
-                });
-              });
-              buyRow.appendChild(btn);
-            }
-          }
-
-          article.appendChild(buyRow);
-        }
-        content.appendChild(article);
-      });
-
-      // Rings section: add custom ring DM banner
-      if (sectionId === 'section-rings') {
-        const sidebar = nav.parentElement;
-        const banner = document.createElement('div');
-        banner.className = 'rings-dm-banner';
+      if (piece.images && piece.images.length > 0) {
         const link = document.createElement('a');
-        link.href = 'https://ig.me/m/florezflorez.studio';
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.textContent = 'DM us for more sizes';
-        banner.appendChild(link);
-        sidebar.insertBefore(banner, nav);
+        link.href = '/' + categorySlug + '/' + piece.id;
+        link.className = 'product-image-link';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigate('/' + categorySlug + '/' + piece.id);
+        });
+
+        const img = document.createElement('img');
+        img.src = piece.images[0].src;
+        img.alt = piece.images[0].alt;
+        img.className = 'art-image';
+        img.loading = 'lazy';
+        link.appendChild(img);
+        article.appendChild(link);
       }
 
-      setupScrollTracking(document.getElementById(sectionId));
-    } catch (e) {
-      console.error('Failed to load ' + sectionId + ' content:', e);
+      content.appendChild(article);
+    });
+
+    // Scroll tracking
+    setupScrollTracking(section, categorySlug);
+  }
+
+  // ---- Render: Product page ----
+
+  function renderProductView(sectionId, piece, categorySlug) {
+    const section = document.getElementById(sectionId);
+    const artLayout = section.querySelector('.art-layout');
+
+    // Disconnect scroll tracking
+    if (activeObserver) {
+      activeObserver.disconnect();
+      activeObserver = null;
+    }
+
+    // Hide category layout
+    artLayout.style.display = 'none';
+
+    // Remove existing product view
+    let productPage = section.querySelector('.product-page');
+    if (productPage) productPage.remove();
+    let bottomBar = section.querySelector('.product-bottom-bar');
+    if (bottomBar) bottomBar.remove();
+
+    section.classList.add('product-view');
+
+    // Build product page
+    productPage = document.createElement('div');
+    productPage.className = 'product-page';
+
+    // Sidebar
+    const sidebar = document.createElement('div');
+    sidebar.className = 'product-sidebar';
+
+    const back = document.createElement('a');
+    back.className = 'product-back';
+    back.href = '/' + categorySlug;
+    back.innerHTML = '&#8592; ' + escapeAttr(CATEGORY_NAMES[categorySlug] || categorySlug);
+    back.addEventListener('click', (e) => { e.preventDefault(); navigate('/' + categorySlug); });
+    sidebar.appendChild(back);
+
+    const titleEl = document.createElement('h2');
+    titleEl.className = 'product-title';
+    text(titleEl, piece.title);
+    sidebar.appendChild(titleEl);
+
+    const descEl = document.createElement('p');
+    descEl.className = 'product-description';
+    text(descEl, piece.description);
+    sidebar.appendChild(descEl);
+
+    if (piece.for_sale && piece.stripe_price_id) {
+      sidebar.appendChild(buildBuyRow(piece));
+    }
+
+    if (categorySlug === 'rings') {
+      sidebar.appendChild(buildRingsBanner());
+    }
+
+    productPage.appendChild(sidebar);
+
+    // Media (carousel)
+    const media = document.createElement('div');
+    media.className = 'product-media';
+
+    if (piece.images && piece.images.length > 0) {
+      media.appendChild(buildCarousel(piece.images));
+    }
+
+    // Mobile description (below carousel, hidden on desktop)
+    const mobileDesc = document.createElement('p');
+    mobileDesc.className = 'product-description-mobile';
+    text(mobileDesc, piece.description);
+    media.appendChild(mobileDesc);
+
+    productPage.appendChild(media);
+    section.appendChild(productPage);
+
+    // Mobile fixed bottom bar
+    bottomBar = document.createElement('div');
+    bottomBar.className = 'product-bottom-bar';
+
+    if (piece.for_sale && piece.stripe_price_id) {
+      bottomBar.appendChild(buildBuyRow(piece));
+    }
+    if (categorySlug === 'rings') {
+      bottomBar.appendChild(buildRingsBanner());
+    }
+
+    // Only add bottom bar if it has content
+    if (bottomBar.children.length > 0) {
+      section.appendChild(bottomBar);
     }
   }
 
@@ -537,7 +676,7 @@
 
   async function renderConsulting() {
     try {
-      const data = await fetchJSON('content/consulting.json');
+      const data = await fetchJSON('/content/consulting.json');
       const textEl = document.getElementById('consulting-text');
       const bgEl = document.getElementById('consulting-bg');
 
@@ -550,22 +689,20 @@
       textEl.appendChild(p);
 
       if (data.background_image) {
-        bgEl.style.backgroundImage = `url('${escapeAttr(data.background_image)}')`;
+        bgEl.style.backgroundImage = "url('" + escapeAttr(data.background_image) + "')";
       }
     } catch (e) {
       console.error('Failed to load consulting content:', e);
     }
   }
 
-  // ---- Render: About ----
-
   async function renderAbout() {
-    // About section is static HTML (policy links) — nothing to render
+    // About section is static HTML (policy links)
   }
 
-  // ---- Navigation ----
+  // ---- Section management ----
 
-  function openSection(name, productId) {
+  function showSection(name) {
     home.classList.add('hidden');
     homeLogo.style.display = 'none';
     setTimeout(() => { home.style.display = 'none'; }, 500);
@@ -582,44 +719,6 @@
     activeSection = name;
     document.body.classList.remove('scroll-down');
     closeCart();
-
-    // Update URL hash
-    if (productId) {
-      history.replaceState(null, '', '#' + name + '/' + productId);
-    } else {
-      history.replaceState(null, '', '#' + name);
-    }
-
-    if (productId) {
-      // Scroll to product after a brief delay for rendering
-      setTimeout(() => scrollToProduct(name, productId), 100);
-    } else {
-      window.scrollTo(0, 0);
-    }
-  }
-
-  function scrollToProduct(sectionName, productId) {
-    const target = document.getElementById(productId);
-    if (!target) return;
-
-    const sectionEl = document.getElementById('section-' + sectionName);
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile) {
-      const sidebar = sectionEl ? sectionEl.querySelector('.art-sidebar') : null;
-      const sidebarHeight = sidebar ? sidebar.offsetHeight : 0;
-      const offset = header.offsetHeight + sidebarHeight + 10;
-      const targetTop = target.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top: targetTop, behavior: 'smooth' });
-    } else {
-      const contentEl = sectionEl ? sectionEl.querySelector('.art-content') : null;
-      if (contentEl) {
-        const containerTop = contentEl.getBoundingClientRect().top;
-        const targetTop = target.getBoundingClientRect().top;
-        const scrollOffset = contentEl.scrollTop + (targetTop - containerTop);
-        contentEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
-      }
-    }
   }
 
   function goHome() {
@@ -634,42 +733,148 @@
     headerLinks.forEach(l => l.classList.remove('active'));
     document.body.classList.remove('scroll-down');
     activeSection = null;
-    history.replaceState(null, '', window.location.pathname);
+
+    if (activeObserver) {
+      activeObserver.disconnect();
+      activeObserver = null;
+    }
   }
-
-  panels.forEach(panel => {
-    panel.addEventListener('click', () => openSection(panel.dataset.section));
-  });
-
-  // Logo click -> go home
-  headerLogo.addEventListener('click', () => {
-    if (activeSection) goHome();
-  });
-
-  // Hamburger toggle
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('open');
-    headerLinksWrap.classList.toggle('open');
-  });
 
   function closeMenu() {
     hamburger.classList.remove('open');
     headerLinksWrap.classList.remove('open');
   }
 
+  // ---- Router ----
+
+  function navigate(path, push) {
+    if (push !== false) history.pushState(null, '', path);
+
+    const clean = path.replace(/^\//, '').replace(/\/$/, '');
+
+    if (!clean) {
+      goHome();
+      return;
+    }
+
+    const parts = clean.split('/');
+    const category = parts[0];
+    const productId = parts[1] || null;
+
+    // Non-product sections
+    if (category === 'consulting' || category === 'about') {
+      showSection(category);
+      return;
+    }
+
+    // Product sections
+    const sectionId = 'section-' + category;
+    if (!document.getElementById(sectionId)) return;
+
+    showSection(category);
+
+    if (productId && dataCache[category]) {
+      const piece = dataCache[category].pieces.find(p => p.id === productId);
+      if (piece) {
+        renderProductView(sectionId, piece, category);
+        return;
+      }
+    }
+
+    if (dataCache[category]) {
+      renderCategoryView(sectionId, dataCache[category].pieces, category);
+    }
+  }
+
+  // ---- Event listeners ----
+
+  panels.forEach(panel => {
+    panel.addEventListener('click', () => {
+      navigate('/' + panel.dataset.section);
+    });
+  });
+
+  headerLogo.addEventListener('click', () => {
+    if (activeSection) navigate('/');
+  });
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    headerLinksWrap.classList.toggle('open');
+  });
+
   headerLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       closeMenu();
       const name = link.dataset.section;
-      if (name === activeSection) {
-        goHome();
+      if (name === activeSection && !document.querySelector('.product-view')) {
+        navigate('/');
       } else {
-        // Use openSection for consistent hash handling
-        openSection(name);
+        navigate('/' + name);
       }
     });
   });
+
+  window.addEventListener('popstate', () => {
+    navigate(window.location.pathname, false);
+  });
+
+  // ---- Scroll tracking ----
+
+  function setupScrollTracking(sectionEl, categorySlug) {
+    if (activeObserver) {
+      activeObserver.disconnect();
+      activeObserver = null;
+    }
+
+    const pieces = sectionEl.querySelectorAll('.art-piece');
+    const navLinks = sectionEl.querySelectorAll('.art-nav-link');
+    if (!pieces.length || !navLinks.length) return;
+
+    const navContainer = sectionEl.querySelector('.art-nav');
+
+    function setActive(id) {
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        const linkId = href.split('/').pop();
+        const isActive = linkId === id;
+        link.classList.toggle('active', isActive);
+        if (isActive && navContainer) {
+          const linkLeft = link.offsetLeft;
+          const linkWidth = link.offsetWidth;
+          const containerWidth = navContainer.offsetWidth;
+          const scrollTarget = linkLeft - (containerWidth / 2) + (linkWidth / 2);
+          navContainer.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+        }
+      });
+    }
+
+    const visibilityMap = new Map();
+
+    activeObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          visibilityMap.set(entry.target.id, entry.intersectionRatio);
+        } else {
+          visibilityMap.delete(entry.target.id);
+        }
+      });
+
+      let bestId = null;
+      let bestRatio = 0;
+      visibilityMap.forEach((ratio, id) => {
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestId = id;
+        }
+      });
+
+      if (bestId) setActive(bestId);
+    }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
+
+    pieces.forEach(piece => activeObserver.observe(piece));
+  }
 
   // ---- Mobile scroll direction detection ----
 
@@ -698,216 +903,19 @@
 
   window.addEventListener('scroll', onScroll, { passive: true });
 
-  // ---- Sidebar scroll tracking ----
-
-  function setupScrollTracking(sectionEl) {
-    const pieces = sectionEl.querySelectorAll('.art-piece');
-    const navLinks = sectionEl.querySelectorAll('.art-nav-link');
-    if (!pieces.length || !navLinks.length) return;
-
-    const navContainer = sectionEl.querySelector('.art-nav');
-
-    function setActive(id, updateHash) {
-      navLinks.forEach(link => {
-        const isActive = link.getAttribute('href') === '#' + id;
-        link.classList.toggle('active', isActive);
-        // Scroll the nav bar to show the active link
-        if (isActive && navContainer) {
-          const linkLeft = link.offsetLeft;
-          const linkWidth = link.offsetWidth;
-          const containerWidth = navContainer.offsetWidth;
-          const scrollTarget = linkLeft - (containerWidth / 2) + (linkWidth / 2);
-          navContainer.scrollTo({ left: scrollTarget, behavior: 'smooth' });
-        }
-      });
-      // Update hash to reflect current product
-      if (updateHash !== false && activeSection) {
-        history.replaceState(null, '', '#' + activeSection + '/' + id);
-      }
-    }
-
-    // Track visibility of all pieces and always highlight the most visible
-    const visibilityMap = new Map();
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          visibilityMap.set(entry.target.id, entry.intersectionRatio);
-        } else {
-          visibilityMap.delete(entry.target.id);
-        }
-      });
-
-      let bestId = null;
-      let bestRatio = 0;
-      visibilityMap.forEach((ratio, id) => {
-        if (ratio > bestRatio) {
-          bestRatio = ratio;
-          bestId = id;
-        }
-      });
-
-      if (bestId) setActive(bestId);
-    }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
-
-    pieces.forEach(piece => observer.observe(piece));
-
-    // Click on nav link: force active state and scroll precisely
-    const contentEl = sectionEl.querySelector('.art-content');
-
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const id = link.getAttribute('href').replace('#', '');
-        setActive(id);
-
-        const target = document.getElementById(id);
-        if (!target) return;
-
-        const isMobile = window.innerWidth <= 768;
-
-        if (isMobile) {
-          // Mobile: page-level scroll, offset by header + sidebar
-          const sidebar = sectionEl.querySelector('.art-sidebar');
-          const sidebarHeight = sidebar ? sidebar.offsetHeight : 0;
-          const offset = header.offsetHeight + sidebarHeight + 10;
-          const targetTop = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: targetTop, behavior: 'smooth' });
-        } else {
-          // Desktop: scroll inside the content container
-          const containerTop = contentEl.getBoundingClientRect().top;
-          const targetTop = target.getBoundingClientRect().top;
-          const scrollOffset = contentEl.scrollTop + (targetTop - containerTop);
-          contentEl.scrollTo({ top: scrollOffset, behavior: 'smooth' });
-        }
-      });
-    });
-  }
-
-  // ---- Lightbox ----
-
-  function openLightbox(images, index) {
-    lbImages = images;
-    lbIndex = index;
-    showLightboxImage();
-    lightbox.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function showLightboxImage() {
-    lightboxImg.src = lbImages[lbIndex].src;
-    lightboxImg.alt = lbImages[lbIndex].alt;
-    text(lightboxCounter, (lbIndex + 1) + ' / ' + lbImages.length);
-
-    // Show/hide nav buttons
-    const prevBtn = lightbox.querySelector('.lightbox-prev');
-    const nextBtn = lightbox.querySelector('.lightbox-next');
-    const showNav = lbImages.length > 1;
-    prevBtn.style.display = showNav ? '' : 'none';
-    nextBtn.style.display = showNav ? '' : 'none';
-    lightboxCounter.style.display = showNav ? '' : 'none';
-  }
-
-  function lightboxPrev() {
-    lbIndex = (lbIndex - 1 + lbImages.length) % lbImages.length;
-    showLightboxImage();
-  }
-
-  function lightboxNext() {
-    lbIndex = (lbIndex + 1) % lbImages.length;
-    showLightboxImage();
-  }
-
-  function closeLightbox() {
-    lightbox.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  lightbox.querySelector('.lightbox-close').addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeLightbox();
-  });
-
-  lightbox.querySelector('.lightbox-prev').addEventListener('click', (e) => {
-    e.stopPropagation();
-    lightboxPrev();
-  });
-
-  lightbox.querySelector('.lightbox-next').addEventListener('click', (e) => {
-    e.stopPropagation();
-    lightboxNext();
-  });
-
-  // Click background to close (but not on the image or buttons)
-  lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
-  });
-
-  // Keyboard nav
-  document.addEventListener('keydown', (e) => {
-    if (!lightbox.classList.contains('open')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') lightboxPrev();
-    if (e.key === 'ArrowRight') lightboxNext();
-  });
-
-  // Lightbox swipe
-  let lbTouchStartX = 0;
-  lightbox.addEventListener('touchstart', (e) => { lbTouchStartX = e.changedTouches[0].screenX; }, { passive: true });
-  lightbox.addEventListener('touchend', (e) => {
-    const diff = lbTouchStartX - e.changedTouches[0].screenX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) lightboxNext();
-      else lightboxPrev();
-    }
-  });
-
-  // ---- Permalink routing ----
-
-  function navigateFromHash() {
-    const hash = window.location.hash.replace('#', '');
-    if (!hash) return;
-
-    const parts = hash.split('/');
-    const sectionName = parts[0];
-    const productId = parts[1] || null;
-
-    // Check if this is a valid section
-    const sectionEl = document.getElementById('section-' + sectionName);
-    if (sectionEl) {
-      openSection(sectionName, productId);
-    }
-  }
-
-  window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.replace('#', '');
-    if (!hash) {
-      goHome();
-    } else {
-      const parts = hash.split('/');
-      const sectionName = parts[0];
-      const productId = parts[1] || null;
-      if (document.getElementById('section-' + sectionName)) {
-        openSection(sectionName, productId);
-      }
-    }
-  });
-
   // ---- Init ----
 
   renderHomepage();
 
-  // Content renders are async — wait for them before checking hash
   Promise.all([
-    renderArt(),
-    renderStore('content/necklaces.json', 'necklaces-nav', 'necklaces-content', 'section-necklaces'),
-    renderStore('content/rings.json', 'rings-nav', 'rings-content', 'section-rings'),
+    loadAllData(),
     renderConsulting(),
     renderAbout()
   ]).then(() => {
-    // Navigate from hash after all content is loaded
-    if (window.location.hash) {
-      navigateFromHash();
+    // Route based on current path
+    const path = window.location.pathname;
+    if (path && path !== '/') {
+      navigate(path, false);
     }
   });
 })();

@@ -503,7 +503,97 @@ a {
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ===== PRODUCT PAGE ===== */
+.product-page {
+  display: flex;
+  height: calc(100vh - 120px);
+}
+
+.product-sidebar {
+  width: 280px;
+  padding: 2rem;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-back {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  display: block;
+  transition: color 0.2s;
+}
+.product-back:hover { color: #333; }
+
+.product-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.product-description {
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 1.5rem;
+}
+
+.product-sidebar .buy-row {
+  justify-content: flex-start;
+}
+
+.product-sidebar .rings-dm-banner {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.product-media {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.product-media .carousel {
+  height: 70vh;
+  max-height: 600px;
+  width: 100%;
+}
+
+.product-description-mobile {
+  display: none;
+}
+
+.product-bottom-bar {
+  display: none;
+}
+
+.product-image-link {
+  display: block;
+  cursor: pointer;
+}
+
+.product-image-link img {
+  transition: opacity 0.2s;
+}
+
+.product-image-link:hover img {
+  opacity: 0.85;
 }
 
 /* ===== CONSULTING ===== */
@@ -940,10 +1030,6 @@ a {
 }
 
 /* ===== RINGS DM BANNER ===== */
-#section-rings .art-sidebar {
-  padding-top: 1.5rem;
-}
-
 .rings-dm-banner {
   font-size: 0.78rem;
   font-weight: 400;
@@ -1095,18 +1181,95 @@ a {
     margin-top: 0;
   }
 
-  /* Rings DM banner: above nav on mobile */
-  #section-rings .art-sidebar {
-    display: flex;
+  /* ---- Mobile product page ---- */
+  .product-page {
     flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 60px);
   }
 
-  .rings-dm-banner {
-    order: -1;
-    margin-bottom: 0.5rem;
+  .product-sidebar {
+    position: sticky;
+    top: 60px;
+    width: 100%;
+    height: auto;
+    padding: 0.75rem 1.5rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+    z-index: 150;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    overflow: visible;
+  }
+
+  .product-sidebar .product-back {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .product-sidebar .product-title {
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-sidebar .product-description,
+  .product-sidebar .buy-row,
+  .product-sidebar .rings-dm-banner {
+    display: none;
+  }
+
+  .product-media {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.5rem;
+  }
+
+  .product-media .carousel {
+    height: 350px;
+    max-height: none;
+  }
+
+  .product-description-mobile {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 400;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.5);
+    margin-top: 1.5rem;
+    padding-bottom: 6rem;
+  }
+
+  .product-bottom-bar {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1.5rem;
+    z-index: 200;
+  }
+
+  .product-bottom-bar .buy-row {
+    margin-top: 0;
+  }
+
+  .product-bottom-bar .rings-dm-banner {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
     text-align: center;
     font-size: 0.72rem;
     white-space: normal;
+  }
+
+  body.scroll-down .product-sidebar {
+    top: 0;
   }
 
   .carousel {
