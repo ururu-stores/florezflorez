@@ -59,6 +59,18 @@
           "alt": "Landscapes"
         }
       ]
+    },
+    {
+      "for_sale": false,
+      "price_display": "",
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "images": [
+        {
+          "src": "/uploads/los-colores-de-lo-cotidiano-02.png",
+          "alt": "The sun or the moon"
+        }
+      ]
     }
   ]
 }
