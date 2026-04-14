@@ -95,6 +95,10 @@
       cartEmpty.style.display = '';
       cartFooter.style.display = 'none';
       cartItemsEl.appendChild(cartEmpty);
+      const note = document.createElement('div');
+      note.className = 'cart-shipping-note';
+      note.innerHTML = '<p>Shipping to USA only</p><p>Arrives in 3\u20134 days</p><p>Free shipping on orders over $200</p>';
+      cartItemsEl.appendChild(note);
       return;
     }
 
@@ -521,7 +525,6 @@
         link.textContent = 'DM us';
         banner.appendChild(document.createTextNode("Don\u2019t see your size? "));
         banner.appendChild(link);
-        banner.appendChild(document.createTextNode(' for a custom ring.'));
         sidebar.insertBefore(banner, nav);
       }
 

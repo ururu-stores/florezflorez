@@ -628,7 +628,7 @@ a {
   font-size: 0.85rem;
   font-weight: 400;
   text-align: center;
-  padding: 3rem 0;
+  padding: 2rem 0 1rem;
 }
 
 .cart-item {
@@ -743,18 +743,21 @@ a {
 }
 
 .cart-shipping-note {
-  padding: 0.75rem 1.5rem 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
+  padding: 0.75rem 0 0;
 }
 
 .cart-shipping-note p {
   font-size: 0.7rem;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.3);
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
   text-align: center;
+}
+
+/* In empty cart: center the shipping note */
+.cart-items .cart-shipping-note {
+  padding: 0 1.5rem;
 }
 
 /* ===== THANK YOU OVERLAY ===== */
@@ -936,11 +939,12 @@ a {
   font-size: 0.78rem;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.45);
-  line-height: 1.6;
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.5rem;
+  line-height: 1.4;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .rings-dm-banner a {
@@ -1076,18 +1080,18 @@ a {
     margin-top: 0;
   }
 
-  /* Rings DM banner: horizontal below nav on mobile */
+  /* Rings DM banner: above nav on mobile */
   #section-rings .art-sidebar {
     display: flex;
     flex-direction: column;
   }
 
   .rings-dm-banner {
-    order: 1;
-    margin-bottom: 0;
-    margin-top: 0.75rem;
+    order: -1;
+    margin-bottom: 0.5rem;
     text-align: center;
     font-size: 0.72rem;
+    white-space: normal;
   }
 
   .footer-links {
