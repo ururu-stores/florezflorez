@@ -683,8 +683,35 @@
           const removeBtn = document.createElement('button');
           removeBtn.className = 'btn-danger';
           removeBtn.textContent = 'Remove';
-          removeBtn.addEventListener('click', () => {
-            if (!confirm('Remove category "' + cat.label + '"?')) return;
+          removeBtn.addEventListener('click', async () => {
+            // Check if category has products
+            let productCount = 0;
+            const contentFile = 'content/' + cat.slug + '.json';
+            try {
+              let data;
+              if (ghToken) {
+                const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${contentFile}`, {
+                  headers: { Authorization: 'token ' + ghToken },
+                });
+                if (res.ok) {
+                  const f = await res.json();
+                  data = JSON.parse(atob(f.content.replace(/\n/g, '')));
+                  productCount = (data.pieces || []).length;
+                }
+              } else {
+                const res = await fetch('/' + contentFile + '?t=' + Date.now());
+                if (res.ok) {
+                  data = await res.json();
+                  productCount = (data.pieces || []).length;
+                }
+              }
+            } catch (e) {}
+
+            let msg = 'Remove category "' + cat.label + '"?';
+            if (productCount > 0) {
+              msg = 'This category has ' + productCount + ' product' + (productCount !== 1 ? 's' : '') + '. They will no longer be visible on the site but can be reassigned to a different category.\n\nRemove "' + cat.label + '"?';
+            }
+            if (!confirm(msg)) return;
             categories.splice(i, 1);
             renderCategories();
             markDirty();

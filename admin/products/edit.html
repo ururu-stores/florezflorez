@@ -668,8 +668,6 @@
           originalPiece = piece;
           pageTitle.textContent = 'Edit Product';
 
-          // Hide category selector for existing products
-          catFieldGroup.style.display = 'none';
           catField.value = paramCat;
 
           // Populate fields
@@ -948,7 +946,6 @@
 
           // Step 3: Build piece and save JSON
           setStatus('Saving to GitHub...');
-          const { content } = await loadFile(file); // Fresh load for SHA
 
           const piece = {
             id: isNew ? (stripeProductId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) : paramId,
@@ -964,20 +961,36 @@
           const stockVal = stockField.value.trim();
           if (stockVal !== '') piece.stock = parseInt(stockVal, 10);
 
-          if (isNew) {
-            content.pieces.push(piece);
-          } else {
-            const idx = content.pieces.findIndex(p => p.id === paramId);
-            if (idx === -1) throw new Error('Product not found in file');
-            content.pieces[idx] = piece;
-          }
+          const categoryChanged = !isNew && paramCat && cat !== paramCat;
 
-          await saveFile(file, content, (isNew ? 'Add' : 'Update') + ' product: ' + title);
+          if (categoryChanged) {
+            // Remove from old category file
+            const oldFile = SECTIONS[paramCat];
+            const { content: oldContent } = await loadFile(oldFile);
+            const oldIdx = oldContent.pieces.findIndex(p => p.id === paramId);
+            if (oldIdx !== -1) oldContent.pieces.splice(oldIdx, 1);
+            await saveFile(oldFile, oldContent, 'Move product out: ' + title);
+
+            // Add to new category file
+            const { content: newContent } = await loadFile(file);
+            newContent.pieces.push(piece);
+            await saveFile(file, newContent, 'Move product in: ' + title);
+          } else {
+            const { content } = await loadFile(file); // Fresh load for SHA
+            if (isNew) {
+              content.pieces.push(piece);
+            } else {
+              const idx = content.pieces.findIndex(p => p.id === paramId);
+              if (idx === -1) throw new Error('Product not found in file');
+              content.pieces[idx] = piece;
+            }
+            await saveFile(file, content, (isNew ? 'Add' : 'Update') + ' product: ' + title);
+          }
 
           setStatus('Saved — site will update on next deploy', 'success');
 
-          // If new, redirect to edit page with the new ID
-          if (isNew) {
+          // If new or category changed, redirect to edit page with correct params
+          if (isNew || categoryChanged) {
             setTimeout(() => {
               location.href = '/admin/products/edit.html?cat=' + cat + '&id=' + encodeURIComponent(piece.id);
             }, 800);
