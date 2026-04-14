@@ -742,6 +742,21 @@ a {
   background: #555;
 }
 
+.cart-shipping-note {
+  padding: 0.75rem 1.5rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.cart-shipping-note p {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.3);
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
 /* ===== THANK YOU OVERLAY ===== */
 .thankyou-overlay {
   position: fixed;
@@ -888,6 +903,57 @@ a {
   cursor: default;
 }
 
+/* ===== FOOTER ===== */
+.site-footer {
+  padding: 3rem 2rem;
+  text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #333;
+}
+
+/* ===== RINGS DM BANNER ===== */
+.rings-dm-banner {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.6;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+.rings-dm-banner a {
+  color: #333;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.rings-dm-banner a:hover {
+  border-bottom-color: #333;
+}
+
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
   /* Triptych stacks vertically */
@@ -1008,6 +1074,24 @@ a {
 
   .art-nav li + li {
     margin-top: 0;
+  }
+
+  /* Rings DM banner: horizontal below nav on mobile */
+  #section-rings .art-sidebar {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rings-dm-banner {
+    order: 1;
+    margin-bottom: 0;
+    margin-top: 0.75rem;
+    text-align: center;
+    font-size: 0.72rem;
+  }
+
+  .footer-links {
+    gap: 1.25rem;
   }
 
   .carousel {

@@ -281,6 +281,11 @@
         <p class="field-desc">The preferred URL for this site. Used as og:url. Usually your primary domain.</p>
         <input type="text" id="og-url" class="text-input" placeholder="https://florezflorez.vercel.app">
       </div>
+      <div class="field-group">
+        <label for="favicon-url">Favicon URL</label>
+        <p class="field-desc">The small icon shown in browser tabs. Optimal size: <strong>32 × 32 px</strong> (PNG). Upload the image first via the CMS, then paste its full URL here. For best results, also provide a 180×180 px version for Apple devices.</p>
+        <input type="text" id="favicon-url" class="text-input" placeholder="https://florezflorez.vercel.app/uploads/favicon.png">
+      </div>
     </div>
 
     <!-- Meta / Facebook Pixel -->
@@ -352,6 +357,7 @@
       const siteDescInput = document.getElementById('site-description');
       const ogImageInput = document.getElementById('og-image');
       const ogUrlInput = document.getElementById('og-url');
+      const faviconInput = document.getElementById('favicon-url');
       const descCounter = document.getElementById('desc-counter');
       const metaPixelInput = document.getElementById('meta-pixel-id');
       const instagramInput = document.getElementById('instagram-url');
@@ -420,14 +426,16 @@
         return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
 
-      function buildMetaBlock(title, desc, image, url) {
+      function buildMetaBlock(title, desc, image, url, favicon) {
         const t = (title || '').trim() || 'Florez Florez';
         const d = (desc || '').trim();
         const i = (image || '').trim();
         const u = (url || '').trim();
+        const f = (favicon || '').trim();
         const parts = ['<!-- META:START -->'];
         parts.push('  <title>' + escHtml(t) + '</title>');
         if (d) parts.push('  <meta name="description" content="' + escHtml(d) + '">');
+        if (f) parts.push('  <link rel="icon" type="image/png" href="' + escHtml(f) + '">');
         parts.push('  <meta property="og:type" content="website">');
         parts.push('  <meta property="og:title" content="' + escHtml(t) + '">');
         if (d) parts.push('  <meta property="og:description" content="' + escHtml(d) + '">');
@@ -461,6 +469,7 @@
             siteDescInput.value = data.site_description || '';
             ogImageInput.value = data.og_image || '';
             ogUrlInput.value = data.og_url || '';
+            faviconInput.value = data.favicon_url || '';
             metaPixelInput.value = data.meta_pixel_id || '';
             instagramInput.value = data.instagram_dm_url || '';
             // Trigger counter
@@ -497,6 +506,7 @@
           site_description: siteDescInput.value.trim(),
           og_image: ogImageInput.value.trim(),
           og_url: ogUrlInput.value.trim(),
+          favicon_url: faviconInput.value.trim(),
           meta_pixel_id: metaPixelInput.value.trim(),
           instagram_dm_url: instagramInput.value.trim(),
         };
@@ -545,7 +555,7 @@
           const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
           const indexSha = indexFile.sha;
 
-          const newMetaBlock = buildMetaBlock(settings.site_title, settings.site_description, settings.og_image, settings.og_url);
+          const newMetaBlock = buildMetaBlock(settings.site_title, settings.site_description, settings.og_image, settings.og_url, settings.favicon_url);
 
           let updatedIndex;
           if (/<!-- META:START -->[\s\S]*?<!-- META:END -->/.test(indexContent)) {

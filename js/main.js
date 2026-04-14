@@ -509,6 +509,22 @@
         content.appendChild(article);
       });
 
+      // Rings section: add custom ring DM banner
+      if (sectionId === 'section-rings') {
+        const sidebar = nav.parentElement;
+        const banner = document.createElement('div');
+        banner.className = 'rings-dm-banner';
+        const link = document.createElement('a');
+        link.href = 'https://ig.me/m/florezflorez.studio';
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'DM us';
+        banner.appendChild(document.createTextNode("Don\u2019t see your size? "));
+        banner.appendChild(link);
+        banner.appendChild(document.createTextNode(' for a custom ring.'));
+        sidebar.insertBefore(banner, nav);
+      }
+
       setupScrollTracking(document.getElementById(sectionId));
     } catch (e) {
       console.error('Failed to load ' + sectionId + ' content:', e);

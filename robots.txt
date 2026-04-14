@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://florezflorez.vercel.app/sitemap.xml
