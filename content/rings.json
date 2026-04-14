@@ -2,7 +2,7 @@
   "pieces": [
     {
       "for_sale": true,
-      "stripe_product_id": "",
+      "stripe_product_id": "prod_UKruuoonR8D32S",
       "id": "ring001",
       "title": "Triangle (size 8.5)",
       "description": "Statement, triangular ring, 27 grams, size 8.5 | 950 silver",
@@ -12,7 +12,8 @@
         {
           "src": "/uploads/amy-s-rings-01.png"
         }
-      ]
+      ],
+      "stripe_price_id": "price_1TMCAhGZz3PbqlU6v2LBOrA2"
     },
     {
       "for_sale": true,
