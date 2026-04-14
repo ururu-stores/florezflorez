@@ -127,13 +127,14 @@
     },
     {
       "for_sale": true,
-      "stripe_product_id": "",
+      "stripe_product_id": "prod_UKruTfFRR8r0R9",
       "id": "ring008",
       "title": "Labradorita",
       "description": "Bauhaus-inspired with labradorite stone, size 9, 12 grams | 950 silver ",
       "price_display": "240",
       "stock": 1,
-      "images": []
+      "images": [],
+      "stripe_price_id": "price_1TMCAyGZz3PbqlU6Uej9RG5z"
     }
   ]
 }
