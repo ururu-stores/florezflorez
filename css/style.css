@@ -954,6 +954,7 @@ a {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   white-space: nowrap;
+  text-align: center;
 }
 
 .rings-dm-banner a {
