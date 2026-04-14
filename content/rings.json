@@ -52,7 +52,7 @@
     },
     {
       "for_sale": true,
-      "stripe_product_id": "",
+      "stripe_product_id": "prod_UKru95hQ4ee2Qd",
       "id": "ring004",
       "title": "Ovo with stone",
       "description": "Rounded ring with garnet stone, 12 grams, size 8 | 950 silver",
@@ -67,7 +67,8 @@
           "src": "/uploads/ovo-ring-01.png",
           "alt": "ovo ring next to a fork and orange"
         }
-      ]
+      ],
+      "stripe_price_id": "price_1TMCAnGZz3PbqlU68yLz7Doc"
     },
     {
       "id": "ring005",
