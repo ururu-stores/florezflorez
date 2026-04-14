@@ -298,6 +298,20 @@
       </div>
     </div>
 
+    <!-- Meta Product Feed -->
+    <div class="settings-section">
+      <h2>Meta Product Feed</h2>
+      <p class="section-desc">Use this URL in <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener">Meta Commerce Manager</a> as a scheduled data feed to sync your product catalog for Instagram Shopping and Facebook Shops.</p>
+      <div class="field-group">
+        <label>Feed URL</label>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="text" id="meta-feed-url" class="text-input" readonly style="flex:1;">
+          <button type="button" id="copy-feed-url" class="btn" style="white-space:nowrap;padding:0.5rem 1rem;font-size:0.75rem;">COPY</button>
+        </div>
+        <p class="field-desc" style="margin-top:0.5rem;">This feed auto-updates when you add or edit products in the CMS. Set Meta Commerce Manager to poll it daily.</p>
+      </div>
+    </div>
+
     <!-- Contact & Social -->
     <div class="settings-section">
       <h2>Contact &amp; Social</h2>
@@ -472,6 +486,11 @@
             faviconInput.value = data.favicon_url || '';
             metaPixelInput.value = data.meta_pixel_id || '';
             instagramInput.value = data.instagram_dm_url || '';
+            // Populate feed URL from og_url
+            const feedUrlInput = document.getElementById('meta-feed-url');
+            if (feedUrlInput && data.og_url) {
+              feedUrlInput.value = data.og_url.replace(/\/$/, '') + '/api/meta-feed';
+            }
             // Trigger counter
             if (siteDescInput.value) siteDescInput.dispatchEvent(new Event('input'));
           }
@@ -592,6 +611,16 @@
         }
 
         saveBtn.disabled = false;
+      });
+
+      document.getElementById('copy-feed-url').addEventListener('click', () => {
+        const input = document.getElementById('meta-feed-url');
+        if (!input.value) return;
+        navigator.clipboard.writeText(input.value).then(() => {
+          const btn = document.getElementById('copy-feed-url');
+          btn.textContent = 'COPIED';
+          setTimeout(() => { btn.textContent = 'COPY'; }, 2000);
+        });
       });
 
       initAuth();
