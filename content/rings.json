@@ -118,6 +118,16 @@
           "alt": "desert ring straight"
         }
       ]
+    },
+    {
+      "for_sale": true,
+      "stripe_product_id": "",
+      "id": "ring008",
+      "title": "Labradorita",
+      "description": "Bauhaus-inspired with labradorite stone, size 9, 12 grams | 950 silver ",
+      "price_display": "240",
+      "stock": 1,
+      "images": []
     }
   ]
 }
