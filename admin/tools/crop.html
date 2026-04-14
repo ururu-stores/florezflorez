@@ -110,6 +110,47 @@
       color: rgba(0,0,0,0.35);
     }
 
+    .square-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .square-toggle input { display: none; }
+    .square-toggle .toggle-track {
+      width: 32px;
+      height: 18px;
+      border-radius: 9px;
+      background: rgba(0,0,0,0.15);
+      position: relative;
+      transition: background 0.2s;
+    }
+    .square-toggle input:checked + .toggle-track {
+      background: #333;
+    }
+    .square-toggle .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.2s;
+    }
+    .square-toggle input:checked + .toggle-track::after {
+      transform: translateX(14px);
+    }
+    .square-toggle span {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+    }
+
     button.save-btn {
       padding: 0.5rem 1.5rem;
       font-family: inherit;
@@ -260,6 +301,11 @@
       Choose Image
       <input type="file" id="file-input" accept="image/*">
     </label>
+    <label class="square-toggle">
+      <input type="checkbox" id="square-lock">
+      <div class="toggle-track"></div>
+      <span>1:1 Square</span>
+    </label>
     <div class="name-group">
       <label for="file-name">Name</label>
       <input type="text" id="file-name" class="name-input" placeholder="my-image-name">
@@ -270,7 +316,7 @@
   </div>
 
   <div id="empty-state" class="empty-state">
-    Choose an image to begin. Images are cropped to 1000px tall, up to 1000px wide.
+    Choose an image to begin. Images are cropped to 1000px tall, up to 1000px wide. Enable 1:1 Square for 1000 x 1000 output.
   </div>
 
   <div class="workspace" style="display:none;" id="workspace">
@@ -305,6 +351,8 @@
       const cropImage = document.getElementById('crop-image');
       const previewCanvas = document.getElementById('preview-canvas');
       const previewInfo = document.getElementById('preview-info');
+
+      const squareLock = document.getElementById('square-lock');
 
       let cropper = null;
       let ghToken = null;
@@ -366,6 +414,34 @@
 
       // ---- Cropper ----
 
+      function getCropperOptions() {
+        const opts = {
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 1,
+          restore: false,
+          guides: true,
+          center: true,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+          ready: updatePreview,
+          crop: updatePreview,
+        };
+        if (squareLock.checked) opts.aspectRatio = 1;
+        return opts;
+      }
+
+      function rebuildCropper() {
+        if (!cropper) return;
+        const src = cropImage.src;
+        cropper.destroy();
+        cropper = new Cropper(cropImage, getCropperOptions());
+      }
+
+      squareLock.addEventListener('change', rebuildCropper);
+
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -386,20 +462,7 @@
           if (cropper) cropper.destroy();
 
           cropImage.src = ev.target.result;
-          cropper = new Cropper(cropImage, {
-            viewMode: 1,
-            dragMode: 'move',
-            autoCropArea: 1,
-            restore: false,
-            guides: true,
-            center: true,
-            highlight: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-            toggleDragModeOnDblclick: false,
-            ready: updatePreview,
-            crop: updatePreview,
-          });
+          cropper = new Cropper(cropImage, getCropperOptions());
 
           saveBtn.disabled = false;
           setStatus('');
@@ -408,6 +471,7 @@
       });
 
       function getOutputDimensions() {
+        if (squareLock.checked) return { width: 1000, height: 1000 };
         if (!cropper) return { width: MAX_WIDTH, height: OUTPUT_HEIGHT };
         const data = cropper.getCropBoxData();
         const imageData = cropper.getImageData();
