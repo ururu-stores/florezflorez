@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homepage — Florez Florez</title>
+  <style>
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('/fonts/IBMPlexMono-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('/fonts/IBMPlexMono-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #fff;
+      color: #333;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar h1 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+      margin-right: auto;
+    }
+
+    .toolbar a {
+      color: rgba(0,0,0,0.35);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .toolbar a:hover { color: #333; }
+
+    .btn {
+      padding: 0.5rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #333;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #555; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .btn-outline {
+      color: #333;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .btn-outline:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.35); }
+
+    .btn-danger {
+      color: #c44;
+      background: transparent;
+      border: 1px solid #c44;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.68rem;
+    }
+    .btn-danger:hover { background: #c44; color: #fff; }
+
+    .status {
+      font-size: 0.8rem;
+      color: rgba(0,0,0,0.4);
+      min-height: 1.2em;
+    }
+    .status.error { color: #c44; }
+    .status.success { color: #3a3; }
+
+    /* Auth overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+    .auth-overlay h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+    }
+    .auth-overlay button {
+      padding: 0.75rem 2.5rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #333;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .auth-overlay button:hover { background: #555; }
+
+    /* Page layout */
+    .page {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+
+    .section-block {
+      border-top: 1px solid rgba(0,0,0,0.1);
+      padding: 2.5rem 0;
+    }
+
+    .section-block h2 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.35);
+      margin-bottom: 1.75rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+    }
+    .field-group:last-child { margin-bottom: 0; }
+
+    .field-group label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(0,0,0,0.5);
+    }
+
+    .field-desc {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: rgba(0,0,0,0.4);
+      line-height: 1.5;
+    }
+
+    .text-input {
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.15);
+      color: #333;
+      padding: 0.5rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      width: 100%;
+      margin-top: 0.25rem;
+    }
+    .text-input:focus { outline: none; border-color: rgba(0,0,0,0.4); }
+    .text-input::placeholder { color: rgba(0,0,0,0.25); }
+
+    select.text-input { cursor: pointer; }
+
+    /* Logo preview */
+    .logo-preview {
+      width: 80px;
+      height: auto;
+      margin-top: 0.5rem;
+      background: #f2f2f2;
+    }
+
+    /* Category list */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .cat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid rgba(0,0,0,0.1);
+      cursor: grab;
+    }
+    .cat-item.dragging { opacity: 0.4; }
+    .cat-item.drag-over { outline: 2px solid #333; outline-offset: 2px; }
+
+    .cat-item .cat-handle {
+      color: rgba(0,0,0,0.2);
+      font-size: 1rem;
+      flex-shrink: 0;
+      cursor: grab;
+    }
+
+    .cat-item .cat-slug {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(0,0,0,0.35);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .cat-item .cat-label-input {
+      flex: 1;
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.1);
+      color: #333;
+      padding: 0.3rem 0.5rem;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .cat-item .cat-label-input:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+
+    /* Gradient editor */
+    .gradient-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .gradient-pair {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .gradient-pair input[type="color"] {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(0,0,0,0.15);
+      padding: 2px;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .gradient-preview {
+      flex: 1;
+      height: 36px;
+      border-radius: 2px;
+    }
+
+    .loading {
+      padding: 4rem 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(0,0,0,0.3);
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="auth-overlay" class="auth-overlay" style="display:none;">
+    <h2>Sign in to use this tool</h2>
+    <button id="auth-btn">Sign in with GitHub</button>
+  </div>
+
+  <div class="toolbar">
+    <h1>Homepage</h1>
+    <a href="/admin/">Back to Admin</a>
+    <button class="btn" id="save-btn" disabled>Save</button>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div class="page" id="page" style="display:none;">
+
+    <!-- Logo -->
+    <div class="section-block">
+      <h2>Logo</h2>
+      <div class="field-group">
+        <label for="logo-url">Logo Image URL</label>
+        <p class="field-desc">Path to the logo image shown on the homepage and header. Upload via the CMS first, then paste the path here.</p>
+        <input type="text" id="logo-url" class="text-input" placeholder="/uploads/my-logo.png">
+        <img id="logo-preview" class="logo-preview" src="" alt="Logo preview" style="display:none;">
+      </div>
+    </div>
+
+    <!-- Font -->
+    <div class="section-block">
+      <h2>Site Font</h2>
+      <div class="field-group">
+        <label for="font-select">Font Family</label>
+        <p class="field-desc">The font used across the entire site. Changing this requires uploading the font files to /fonts/ and updating the CSS.</p>
+        <select id="font-select" class="text-input">
+          <option value="IBM Plex Mono">IBM Plex Mono</option>
+        </select>
+        <p class="field-desc" style="margin-top:0.5rem;">Currently only IBM Plex Mono is available. To add fonts, upload .ttf files to /fonts/ and they will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Gradient -->
+    <div class="section-block">
+      <h2>Background Gradient</h2>
+      <p class="field-desc" style="margin-bottom:1rem;">Color pairs that cycle on the homepage background. Each pair creates a diagonal gradient.</p>
+      <div class="gradient-list" id="gradient-list"></div>
+      <button class="btn btn-outline" id="add-gradient" type="button">Add Color Pair</button>
+    </div>
+
+    <!-- Categories -->
+    <div class="section-block">
+      <h2>Categories</h2>
+      <p class="field-desc" style="margin-bottom:1rem;">Homepage panels and navigation links. Drag to reorder. The slug determines the URL path (e.g., /necklaces).</p>
+      <div class="cat-list" id="cat-list"></div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <input type="text" id="new-cat-slug" class="text-input" placeholder="slug (e.g. earrings)" style="width:200px;margin-top:0;">
+        <input type="text" id="new-cat-label" class="text-input" placeholder="Label (e.g. EARRINGS)" style="width:200px;margin-top:0;text-transform:uppercase;">
+        <button class="btn btn-outline" id="add-cat" type="button">Add</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="loading" id="loading">Loading...</div>
+
+  <script>
+    (() => {
+      const REPO = 'taoofdre/florezflorez';
+      const HOMEPAGE_PATH = 'content/homepage.json';
+      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+      const authOverlay = document.getElementById('auth-overlay');
+      const authBtn = document.getElementById('auth-btn');
+      const saveBtn = document.getElementById('save-btn');
+      const statusEl = document.getElementById('status');
+      const pageEl = document.getElementById('page');
+      const loadingEl = document.getElementById('loading');
+      const logoUrl = document.getElementById('logo-url');
+      const logoPreview = document.getElementById('logo-preview');
+      const fontSelect = document.getElementById('font-select');
+      const gradientListEl = document.getElementById('gradient-list');
+      const addGradientBtn = document.getElementById('add-gradient');
+      const catListEl = document.getElementById('cat-list');
+      const addCatBtn = document.getElementById('add-cat');
+      const newCatSlug = document.getElementById('new-cat-slug');
+      const newCatLabel = document.getElementById('new-cat-label');
+
+      let ghToken = null;
+      let fileSha = null;
+      let gradients = [];
+      let categories = [];
+
+      function setStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = 'status' + (type ? ' ' + type : '');
+      }
+
+      function markDirty() {
+        saveBtn.disabled = false;
+        if (statusEl.classList.contains('success')) setStatus('');
+      }
+
+      // ---- Auth ----
+
+      function getStoredToken() {
+        return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token');
+      }
+      function storeToken(t) { sessionStorage.setItem('gh_token', t); }
+
+      function initAuth() {
+        if (isLocal) { loadData(); return; }
+        const stored = getStoredToken();
+        if (stored) { ghToken = stored; loadData(); return; }
+        loadingEl.style.display = 'none';
+        authOverlay.style.display = '';
+        authBtn.addEventListener('click', () => {
+          const popup = window.open('/api/auth', 'github-auth', 'width=600,height=700');
+          window.addEventListener('message', function onMsg(e) {
+            if (typeof e.data !== 'string') return;
+            if (e.data.startsWith('authorization:github:success:')) {
+              const payload = JSON.parse(e.data.replace('authorization:github:success:', ''));
+              ghToken = payload.token;
+              storeToken(ghToken);
+              authOverlay.style.display = 'none';
+              window.removeEventListener('message', onMsg);
+              if (popup) popup.close();
+              loadData();
+            }
+          });
+          const interval = setInterval(() => {
+            if (popup && !popup.closed) popup.postMessage('authorizing:github', '*');
+            else clearInterval(interval);
+          }, 250);
+        });
+      }
+
+      // ---- Load ----
+
+      async function loadData() {
+        try {
+          let data;
+          if (ghToken) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
+              headers: { Authorization: 'token ' + ghToken },
+            });
+            if (!res.ok) throw new Error('Failed to load');
+            const f = await res.json();
+            data = JSON.parse(atob(f.content.replace(/\n/g, '')));
+            fileSha = f.sha;
+          } else {
+            const res = await fetch('/content/homepage.json?t=' + Date.now());
+            data = await res.json();
+          }
+
+          logoUrl.value = data.logo || '';
+          if (data.logo) { logoPreview.src = data.logo; logoPreview.style.display = ''; }
+          if (data.font) fontSelect.value = data.font;
+          gradients = data.gradients || [['#834d9b', '#d04ed6']];
+          categories = data.categories || [];
+
+          renderGradients();
+          renderCategories();
+
+          loadingEl.style.display = 'none';
+          pageEl.style.display = '';
+        } catch (e) {
+          loadingEl.textContent = 'Error: ' + e.message;
+        }
+      }
+
+      // ---- Logo preview ----
+
+      logoUrl.addEventListener('input', () => {
+        markDirty();
+        const v = logoUrl.value.trim();
+        if (v) { logoPreview.src = v; logoPreview.style.display = ''; }
+        else { logoPreview.style.display = 'none'; }
+      });
+
+      fontSelect.addEventListener('change', markDirty);
+
+      // ---- Gradients ----
+
+      function renderGradients() {
+        gradientListEl.innerHTML = '';
+        gradients.forEach((pair, i) => {
+          const row = document.createElement('div');
+          row.className = 'gradient-pair';
+
+          const c1 = document.createElement('input');
+          c1.type = 'color';
+          c1.value = pair[0];
+          c1.addEventListener('input', () => { gradients[i][0] = c1.value; updateGradientPreview(row, i); markDirty(); });
+          row.appendChild(c1);
+
+          const c2 = document.createElement('input');
+          c2.type = 'color';
+          c2.value = pair[1];
+          c2.addEventListener('input', () => { gradients[i][1] = c2.value; updateGradientPreview(row, i); markDirty(); });
+          row.appendChild(c2);
+
+          const preview = document.createElement('div');
+          preview.className = 'gradient-preview';
+          preview.style.background = 'linear-gradient(135deg, ' + pair[0] + ', ' + pair[1] + ')';
+          row.appendChild(preview);
+
+          if (gradients.length > 1) {
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn-danger';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => { gradients.splice(i, 1); renderGradients(); markDirty(); });
+            row.appendChild(removeBtn);
+          }
+
+          gradientListEl.appendChild(row);
+        });
+      }
+
+      function updateGradientPreview(row, i) {
+        const preview = row.querySelector('.gradient-preview');
+        preview.style.background = 'linear-gradient(135deg, ' + gradients[i][0] + ', ' + gradients[i][1] + ')';
+      }
+
+      addGradientBtn.addEventListener('click', () => {
+        gradients.push(['#333333', '#666666']);
+        renderGradients();
+        markDirty();
+      });
+
+      // ---- Categories ----
+
+      let dragIdx = null;
+
+      function renderCategories() {
+        catListEl.innerHTML = '';
+        categories.forEach((cat, i) => {
+          const row = document.createElement('div');
+          row.className = 'cat-item';
+          row.draggable = true;
+          row.dataset.idx = i;
+
+          row.addEventListener('dragstart', () => { dragIdx = i; row.classList.add('dragging'); });
+          row.addEventListener('dragend', () => { row.classList.remove('dragging'); dragIdx = null; document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('drag-over')); });
+          row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+          row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+          row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            if (dragIdx === null || dragIdx === i) return;
+            const moved = categories.splice(dragIdx, 1)[0];
+            categories.splice(i, 0, moved);
+            renderCategories();
+            markDirty();
+          });
+
+          const handle = document.createElement('span');
+          handle.className = 'cat-handle';
+          handle.textContent = '\u2261';
+          row.appendChild(handle);
+
+          const slug = document.createElement('span');
+          slug.className = 'cat-slug';
+          slug.textContent = cat.slug;
+          row.appendChild(slug);
+
+          const labelInput = document.createElement('input');
+          labelInput.className = 'cat-label-input';
+          labelInput.type = 'text';
+          labelInput.value = cat.label;
+          labelInput.addEventListener('input', () => { categories[i].label = labelInput.value; markDirty(); });
+          row.appendChild(labelInput);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn-danger';
+          removeBtn.textContent = 'Remove';
+          removeBtn.addEventListener('click', () => {
+            if (!confirm('Remove category "' + cat.label + '"?')) return;
+            categories.splice(i, 1);
+            renderCategories();
+            markDirty();
+          });
+          row.appendChild(removeBtn);
+
+          catListEl.appendChild(row);
+        });
+      }
+
+      addCatBtn.addEventListener('click', () => {
+        const slug = newCatSlug.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+        const label = newCatLabel.value.trim().toUpperCase();
+        if (!slug) { setStatus('Enter a slug', 'error'); return; }
+        if (!label) { setStatus('Enter a label', 'error'); return; }
+        if (categories.some(c => c.slug === slug)) { setStatus('Slug already exists', 'error'); return; }
+        categories.push({ slug, label });
+        newCatSlug.value = '';
+        newCatLabel.value = '';
+        renderCategories();
+        markDirty();
+      });
+
+      // ---- Save ----
+
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        setStatus('Saving...');
+
+        try {
+          // Build homepage.json
+          // Reload for fresh SHA
+          if (ghToken) {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
+              headers: { Authorization: 'token ' + ghToken },
+            });
+            if (res.ok) {
+              const f = await res.json();
+              fileSha = f.sha;
+            }
+          }
+
+          const oldData = fileSha ? JSON.parse(atob((await (await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
+            headers: { Authorization: 'token ' + ghToken },
+          })).json()).content.replace(/\n/g, ''))) : {};
+
+          const data = {
+            ...oldData,
+            logo: logoUrl.value.trim(),
+            font: fontSelect.value,
+            gradients: gradients,
+            categories: categories,
+          };
+
+          const json = JSON.stringify(data, null, 2) + '\n';
+          const encoded = btoa(unescape(encodeURIComponent(json)));
+          const body = { message: 'Update homepage settings', content: encoded, branch: 'main' };
+          if (fileSha) body.sha = fileSha;
+
+          const saveRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
+            method: 'PUT',
+            headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+
+          if (!saveRes.ok) {
+            const d = await saveRes.json().catch(() => ({}));
+            throw new Error(d.message || 'Save failed');
+          }
+
+          const result = await saveRes.json();
+          fileSha = result.content.sha;
+
+          // Update index.html panels and header links
+          setStatus('Updating index.html...');
+
+          const indexRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
+            headers: { Authorization: 'token ' + ghToken },
+          });
+          if (!indexRes.ok) throw new Error('Could not load index.html');
+          const indexFile = await indexRes.json();
+          const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
+          const indexSha = indexFile.sha;
+
+          // Build new panels HTML
+          const panelsHtml = categories.map(c =>
+            '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>'
+          ).join('\n');
+
+          // Build new header links HTML
+          const linksHtml = categories.map(c =>
+            '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>'
+          ).join('\n');
+          // Always include About link
+          const fullLinksHtml = linksHtml + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
+
+          // Replace panels
+          let updated = indexContent.replace(
+            /(<canvas id="home-gradient"><\/canvas>\n)([\s\S]*?)(\n  <\/div>\n\n  <!-- TOP HEADER NAV)/,
+            '$1' + panelsHtml + '\n$3'
+          );
+
+          // Replace header links
+          updated = updated.replace(
+            /(<div class="header-links" id="header-links">\n)([\s\S]*?)(\n\s*<\/div>\n\s*<button class="cart-toggle")/,
+            '$1' + fullLinksHtml + '\n$3'
+          );
+
+          const encodedIndex = btoa(unescape(encodeURIComponent(updated)));
+          const indexPutRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
+            method: 'PUT',
+            headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: 'Update homepage categories',
+              content: encodedIndex,
+              sha: indexSha,
+              branch: 'main',
+            }),
+          });
+
+          if (!indexPutRes.ok) {
+            const d = await indexPutRes.json().catch(() => ({}));
+            throw new Error(d.message || 'index.html update failed');
+          }
+
+          setStatus('Saved — site will update on next deploy', 'success');
+        } catch (e) {
+          setStatus('Error: ' + e.message, 'error');
+          saveBtn.disabled = false;
+        }
+      });
+
+      initAuth();
+    })();
+  </script>
+</body>
+</html>

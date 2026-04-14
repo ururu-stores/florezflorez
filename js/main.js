@@ -507,12 +507,14 @@
   // ---- Render: Homepage ----
 
   async function renderHomepage() {
+    let gradientColors = [['#834d9b', '#d04ed6'], ['#1CD8D2', '#93EDC7'], ['#ee9ca7', '#ffdde1'], ['#2193b0', '#6dd5ed']];
     try {
       const data = await fetchJSON('/content/homepage.json');
       if (data.logo) {
         homeLogo.src = data.logo;
         headerLogo.src = data.logo;
       }
+      if (data.gradients && data.gradients.length > 0) gradientColors = data.gradients;
     } catch (e) {}
 
     new Granim({
@@ -522,12 +524,7 @@
       stateTransitionSpeed: 300,
       states: {
         'default-state': {
-          gradients: [
-            ['#834d9b', '#d04ed6'],
-            ['#1CD8D2', '#93EDC7'],
-            ['#ee9ca7', '#ffdde1'],
-            ['#2193b0', '#6dd5ed']
-          ],
+          gradients: gradientColors,
           transitionSpeed: 6000
         }
       }
