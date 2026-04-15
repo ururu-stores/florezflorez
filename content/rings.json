@@ -33,10 +33,13 @@
       "for_sale": true
     },
     {
-      "stripe_price_id": "price_1TMCAlGZz3PbqlU6wSlOVa9Z",
-      "price_display": "285",
-      "stock": 1,
+      "id": "ring003",
       "title": "Peak",
+      "description": "Organic ring, 17 grams, size 9 | 950 silver",
+      "for_sale": true,
+      "price_display": "285",
+      "stripe_price_id": "price_1TMCAlGZz3PbqlU6wSlOVa9Z",
+      "stripe_product_id": "prod_UKruGx0ES7j9pT",
       "images": [
         {
           "src": "/uploads/anillo02-dsf8710.png",
@@ -47,10 +50,7 @@
           "alt": "peak ring close neutral background"
         }
       ],
-      "id": "ring003",
-      "description": "Organic false-stone ring, 17 grams, size 9 | 950 silver",
-      "stripe_product_id": "prod_UKruGx0ES7j9pT",
-      "for_sale": true
+      "stock": 1
     },
     {
       "id": "ring004",
