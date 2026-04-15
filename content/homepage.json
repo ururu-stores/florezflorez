@@ -3,20 +3,28 @@
   "font": "IBM Plex Mono",
   "gradients": [
     [
-      "#d1b8db",
-      "#cecace"
+      "#cedace",
+      "#4f4b29"
     ],
     [
-      "#d1e5e5",
-      "#709988"
+      "#ededed",
+      "#7e7567"
     ],
     [
-      "#9a7479",
-      "#dfd2d4"
+      "#d7eaee",
+      "#a6a8ab"
     ],
     [
-      "#b4b5b6",
-      "#c5e5ec"
+      "#babac5",
+      "#86869c"
+    ],
+    [
+      "#fffae0",
+      "#fae274"
+    ],
+    [
+      "#dad9f2",
+      "#8685ba"
     ]
   ],
   "categories": [
