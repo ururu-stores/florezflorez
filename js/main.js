@@ -859,7 +859,7 @@
       closeMenu();
       const name = link.dataset.section;
       if (name === activeSection && !document.querySelector('.product-view')) {
-        navigate('/');
+        return;
       } else {
         navigate('/' + name);
       }
