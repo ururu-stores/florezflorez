@@ -2,7 +2,7 @@
   "pieces": [
     {
       "id": "ring001",
-      "title": "Triangle (size 8.5)",
+      "title": "Triangle",
       "description": "Statement, triangular ring, 27 grams, size 8.5 | 950 silver",
       "for_sale": true,
       "price_display": "510",
@@ -18,7 +18,15 @@
           "alt": ""
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "sizes": [
+        {
+          "label": "8.5"
+        },
+        {
+          "label": "9.5"
+        }
+      ]
     },
     {
       "id": "ring002",
