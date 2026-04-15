@@ -519,7 +519,7 @@
     contactBtn.href = instagramDmUrl;
     contactBtn.target = '_blank';
     contactBtn.rel = 'noopener';
-    text(contactBtn, 'Contact us for options');
+    text(contactBtn, 'Make me one');
     wrap.appendChild(contactBtn);
 
     return wrap;
