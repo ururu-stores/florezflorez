@@ -772,7 +772,8 @@
     setTimeout(() => { home.style.display = 'none'; }, 500);
     header.classList.add('visible');
 
-    sections.forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.classList.remove('product-view'); });
+    document.body.classList.remove('product-open');
     const target = document.getElementById('section-' + name);
     if (target) target.classList.add('active');
 
@@ -793,8 +794,8 @@
     requestAnimationFrame(() => { home.classList.remove('hidden'); });
     header.classList.remove('visible');
 
-    sections.forEach(s => s.classList.remove('active'));
-    headerLinks.forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.classList.remove('product-view'); });
+    document.querySelectorAll('.header-link').forEach(l => l.classList.remove('active'));
     document.body.classList.remove('scroll-down');
     document.body.classList.remove('product-open');
     activeSection = null;
