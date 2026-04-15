@@ -151,7 +151,16 @@
       "price_display": "240",
       "stripe_price_id": "price_1TMCAyGZz3PbqlU6Uej9RG5z",
       "stripe_product_id": "prod_UKruTfFRR8r0R9",
-      "images": [],
+      "images": [
+        {
+          "src": "/uploads/labradorita-1776225266655-0.png",
+          "alt": ""
+        },
+        {
+          "src": "/uploads/labradorita-1776225268512-1.png",
+          "alt": ""
+        }
+      ],
       "stock": 1
     }
   ]
