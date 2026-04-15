@@ -591,11 +591,33 @@
 
       // ---- Gradients ----
 
+      let gradDragIdx = null;
+
       function renderGradients() {
         gradientListEl.innerHTML = '';
         gradients.forEach((pair, i) => {
           const row = document.createElement('div');
           row.className = 'gradient-pair';
+          row.draggable = true;
+
+          row.addEventListener('dragstart', () => { gradDragIdx = i; row.style.opacity = '0.4'; });
+          row.addEventListener('dragend', () => { row.style.opacity = ''; gradDragIdx = null; document.querySelectorAll('.gradient-pair').forEach(r => r.style.outline = ''); });
+          row.addEventListener('dragover', (e) => { e.preventDefault(); row.style.outline = '2px solid #333'; row.style.outlineOffset = '2px'; });
+          row.addEventListener('dragleave', () => { row.style.outline = ''; });
+          row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            row.style.outline = '';
+            if (gradDragIdx === null || gradDragIdx === i) return;
+            const moved = gradients.splice(gradDragIdx, 1)[0];
+            gradients.splice(i, 0, moved);
+            renderGradients();
+            markDirty();
+          });
+
+          const handle = document.createElement('span');
+          handle.style.cssText = 'color:rgba(0,0,0,0.2);font-size:1rem;cursor:grab;flex-shrink:0;';
+          handle.textContent = '\u2261';
+          row.appendChild(handle);
 
           const c1 = document.createElement('input');
           c1.type = 'color';
@@ -866,6 +888,32 @@
           if (!indexPutRes.ok) {
             const d = await indexPutRes.json().catch(() => ({}));
             throw new Error(d.message || 'index.html update failed');
+          }
+
+          // Update 404.html gradient to match
+          setStatus('Updating 404 page...');
+          const fourRes = await fetch(`https://api.github.com/repos/${REPO}/contents/404.html`, {
+            headers: { Authorization: 'token ' + ghToken },
+          });
+          if (fourRes.ok) {
+            const fourFile = await fourRes.json();
+            const fourContent = decodeURIComponent(escape(atob(fourFile.content.replace(/\n/g, ''))));
+            const allColors = gradients.flat().join(', ');
+            const updated404 = fourContent.replace(
+              /background:\s*linear-gradient\(135deg,[^)]*\)/,
+              'background: linear-gradient(135deg, ' + allColors + ')'
+            );
+            const encoded404 = btoa(unescape(encodeURIComponent(updated404)));
+            await fetch(`https://api.github.com/repos/${REPO}/contents/404.html`, {
+              method: 'PUT',
+              headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: 'Update 404 gradient colors',
+                content: encoded404,
+                sha: fourFile.sha,
+                branch: 'main',
+              }),
+            });
           }
 
           setStatus('Saved — site will update on next deploy', 'success');
