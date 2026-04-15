@@ -53,11 +53,18 @@
       "for_sale": true
     },
     {
-      "stripe_price_id": "price_1TMCAnGZz3PbqlU68yLz7Doc",
-      "price_display": "280",
-      "stock": 0,
+      "id": "ring004",
       "title": "Ovo with stone",
+      "description": "Rounded ring with garnet stone, 12 grams, size 8 | 950 silver",
+      "for_sale": true,
+      "price_display": "280",
+      "stripe_price_id": "price_1TMCAnGZz3PbqlU68yLz7Doc",
+      "stripe_product_id": "prod_UKru95hQ4ee2Qd",
       "images": [
+        {
+          "src": "/uploads/ovo-with-stone-1776220933465-0.png",
+          "alt": ""
+        },
         {
           "src": "/uploads/ovo-ring-02.png",
           "alt": "ovo rings on a fork"
@@ -65,12 +72,13 @@
         {
           "src": "/uploads/ovo-ring-01.png",
           "alt": "ovo ring next to a fork and orange"
+        },
+        {
+          "src": "/uploads/ovo-with-stone-1776220935589-3.png",
+          "alt": ""
         }
       ],
-      "id": "ring004",
-      "description": "Rounded ring with garnet stone, 12 grams, size 8 | 950 silver",
-      "stripe_product_id": "prod_UKru95hQ4ee2Qd",
-      "for_sale": true
+      "stock": 0
     },
     {
       "id": "ring005",
