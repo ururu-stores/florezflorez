@@ -75,7 +75,7 @@ a {
   flex-direction: column;
   z-index: 100;
   transition: opacity 0.5s ease;
-  background: linear-gradient(135deg, #834d9b, #d04ed6);
+  background: #333;
 }
 
 .home.hidden {

@@ -842,6 +842,15 @@
             '$1' + fullLinksHtml + '\n$3'
           );
 
+          // Update home div inline gradient to match first color pair
+          if (gradients.length > 0) {
+            const g = gradients[0];
+            updated = updated.replace(
+              /(<div id="home" class="home" style="background:)[^"]*(")/,
+              '$1linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ');$2'
+            );
+          }
+
           const encodedIndex = btoa(unescape(encodeURIComponent(updated)));
           const indexPutRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
             method: 'PUT',
