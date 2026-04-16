@@ -1,7 +1,14 @@
 {
   "name": "florezflorez",
   "private": true,
+  "scripts": {
+    "test": "npx playwright test"
+  },
   "dependencies": {
     "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "serve": "^14.2.6"
   }
 }

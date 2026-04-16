@@ -285,15 +285,196 @@ Shopify merchants need third-party affiliate apps ($30-49/month). Offering built
 
 ---
 
+## Instagram Import — Product Listing from Posts
+
+### How It Works
+
+Merchants connect their Instagram Business account via Meta OAuth. They paste an Instagram post URL into the admin panel, and the platform pulls the images and caption to pre-populate a product listing.
+
+**Flow:**
+1. Merchant connects Instagram during onboarding (same Meta OAuth used for the ad performance dashboard)
+2. In the product editor, merchant pastes an Instagram post URL
+3. Admin calls the Instagram Graph API to fetch the post's media and caption
+4. Images are downloaded, cropped/resized, and uploaded to R2
+5. Caption text pre-fills the product description field
+6. Merchant reviews, sets price/sizes/stock, and publishes
+
+### Instagram Graph API Details
+
+**Required endpoints:**
+- `GET /me/media` — list merchant's posts (for a browse/picker UI later)
+- `GET /{media-id}?fields=caption,media_url,media_type,children` — fetch a single post's data
+- For carousel posts: `GET /{media-id}/children?fields=media_url,media_type` — fetch all images in a multi-image post
+
+**Required permissions:**
+- `instagram_basic` — read profile and media
+- `instagram_content_publish` is NOT needed (read-only)
+
+**Access requirements:**
+- Facebook App (shared across the platform, same app used for ad dashboard)
+- Merchant must have an Instagram Business or Creator account (not Personal)
+- App must pass Facebook App Review for `instagram_basic` permission
+
+### What Gets Imported
+
+| Instagram field | Maps to | Notes |
+|---|---|---|
+| `media_url` (images) | `images[].src` | Downloaded, resized to 1000x1000, converted to WebP, uploaded to R2 |
+| `caption` | `description` | Pre-filled, merchant can edit before saving |
+| Carousel children | Multiple `images[]` entries | Each carousel image becomes a product image |
+| Video posts | Skipped or thumbnail only | Product listings are image-based |
+
+### What the Merchant Still Sets Manually
+- Title (Instagram captions aren't titles)
+- Price
+- Sizes and stock
+- Category
+- For-sale toggle
+
+### Platform Implications
+
+- **Single Meta OAuth flow** serves both the ad performance dashboard and Instagram import — one connection, two features
+- **No per-merchant cost** — Instagram Graph API is free to read
+- **Token storage:** Long-lived tokens (60 days) stored as env vars or in provisioning metadata, auto-refreshed
+- **Rate limits:** 200 calls/user/hour — more than enough for importing a few posts per session
+
+### Why This Is a Differentiator
+
+Small makers and artisans already showcase products on Instagram before listing them anywhere. "Import from Instagram" removes the friction of re-uploading photos and rewriting descriptions. Shopify has this via third-party apps ($10-30/month). Offering it built-in at $5/month total is a strong selling point.
+
+---
+
+## GitHub Architecture — GitHub App Model
+
+### The Problem
+
+The current CMS authenticates via GitHub OAuth — the store owner logs in with GitHub, gets a token, and uses it to read/write their repo. This works for a developer but not for target merchants (artisans, small makers). Requiring a GitHub account to sell jewelry kills onboarding conversion.
+
+### The Solution: GitHub App + Platform Auth
+
+Register a **GitHub App** on a platform-owned GitHub org. Merchants never interact with GitHub — they log into the platform with email, and the GitHub App handles all repo operations behind the scenes.
+
+### One-Time Platform Setup
+
+1. Create a GitHub org (e.g., `florezflorez-stores`)
+2. Register a GitHub App on that org
+3. Install the app on the org with write access to all repos
+4. Store the app's private key as a platform secret
+
+### Merchant Onboarding Flow
+
+1. Merchant signs up with email — no GitHub account needed
+2. Provisioning API creates a repo from the template in the platform org (e.g., `florezflorez-stores/merchant-name`)
+3. The GitHub App auto-has access (installed on the org)
+4. Merchant logs into their admin via **platform auth** (magic link or email/password)
+5. When admin reads/writes content, the platform backend generates a short-lived GitHub App installation token and proxies the request
+
+**What the merchant experiences:** Sign up, pick a store name, connect Stripe, start adding products. They never see the word "GitHub."
+
+### Architecture Change from Current Model
+
+| Current (Florez Florez) | Platform (GitHub App) |
+|---|---|
+| Admin sends GitHub OAuth token directly to GitHub API | Admin sends platform session token to platform API, which uses GitHub App token |
+| Merchant needs a GitHub account | Merchant needs only an email |
+| Merchant's GitHub token stored in browser | GitHub App token generated server-side, never exposed to client |
+| `/api/upload.js` receives merchant's GitHub token | Upload goes to R2 (no GitHub involvement for images) |
+| Product save writes JSON via merchant's GitHub token | Product save goes through platform API → GitHub App token → GitHub |
+| Merchant directly owns their GitHub repo | Platform org owns repos; merchant owns their data conceptually |
+
+### Merchant Auth
+
+Since the platform already uses Stripe for billing, auth can be lightweight:
+
+- **Magic link login** (email a login link, no password) — cheapest to build, lowest friction for non-technical merchants
+- **Session management:** JWTs or simple cookies
+- **Stripe Customer Portal** for account/billing management
+- GitHub OAuth is eliminated entirely as a merchant-facing flow
+
+### Data Ownership & Export
+
+With repos under the platform org, merchants don't directly own their repo. To address this:
+
+- Provide a **data export** feature in the admin (download content JSON + images as a zip)
+- This is a standard platform practice (Shopify, Squarespace all do this)
+- For the target market ($5/month artisans), direct GitHub access is not a selling point
+
+### GitHub App Token Details
+
+- GitHub Apps generate **installation access tokens** (valid for 1 hour)
+- The platform backend requests a token when needed: `POST /app/installations/{id}/access_tokens`
+- Tokens can be scoped to specific repos for extra security
+- No long-lived tokens stored — generated on demand from the app's private key
+- Rate limit: 5,000 requests/hour per installation (more than enough)
+
+---
+
+## Merchant Onboarding Flow
+
+### Step 1: Account + Payment
+- Email address (becomes their login via magic link)
+- Store name (e.g., "Luna Silver Studio")
+- Choose plan: $5/month or $50/year
+- Stripe Checkout for platform subscription (on the platform's own Stripe account)
+- **Nothing is provisioned until payment succeeds**
+
+### Step 2: Branding
+- Upload logo
+- Pick color palette (gradient pairs — offer presets or a picker)
+- Font choice (offer 3-4 curated options, default IBM Plex Mono)
+
+### Step 3: Categories
+- Choose or name their product categories (e.g., "Rings, Necklaces, Bracelets")
+- Minimum 1, add more later
+- Optional: upload a background image per category (or skip, use gradient-only)
+
+### Step 4: Connect Stripe
+- Stripe Connect OAuth flow (separate from the platform subscription in Step 1)
+- This connects their payout account — where their sales revenue goes
+- Stripe handles bank account setup, identity verification, tax info
+
+### Step 5: Store is Live
+- Show them their URL: `luna-silver-studio.florezflorez.com`
+- Empty store with their branding — ready for products
+- CTA: "Add your first product"
+
+### What Happens Behind the Scenes
+
+| After step | Platform provisions |
+|---|---|
+| 1. Payment succeeds | Create merchant record in platform DB, create Stripe Billing subscription |
+| 2. Branding submitted | Upload logo to R2 |
+| 3. Categories chosen | Hold in memory (not written yet — no repo exists) |
+| 4. Stripe connected | Store `stripe_account_id` in platform DB |
+| 5. Store goes live | Create repo from template via GitHub App, write `homepage.json` + `settings.json` + empty category JSONs, create R2 bucket, create Vercel project, set all env vars, deploy |
+
+All provisioning happens in one batch at the end. Steps 1-4 collect inputs; Step 5 builds everything.
+
+### What Merchants Configure Later (in their admin)
+
+- Add/edit/delete products (with optional Instagram import)
+- Shipping settings (defaults: US only, free over $200)
+- Meta Pixel ID for tracking
+- Connect Instagram for product import + ad dashboard
+- Connect ad platforms (Google, TikTok, Reddit) for consolidated dashboard
+- Set up affiliate program
+- Request custom domain
+- Update branding (logo, colors, font)
+
+---
+
 ## Build Order
 
 1. **Generalize the template** — remove hardcoded repo names, domains, credentials. Everything merchant-specific becomes an env var.
-2. **Stripe Connect onboarding** — OAuth flow, store `stripe_account_id`, update checkout to use `stripe-account` header.
-3. **Provisioning API** — GitHub fork + Vercel project creation + env var injection.
-4. **Platform landing page + signup flow.**
-5. **Subdomain routing.**
-6. **Custom domain support** with OAuth proxy for Decap CMS.
-7. **Template update mechanism.**
+2. **Migrate images to Cloudflare R2** — eliminate deploy-per-image, serve via `img.florezflorez.com`.
+3. **Register GitHub App + create platform org** — foundation for all merchant repo management.
+4. **Stripe Connect onboarding** — OAuth flow, store `stripe_account_id`, update checkout to use `stripe-account` header.
+5. **Platform auth (magic link)** — replace GitHub OAuth with email-based merchant login.
+6. **Provisioning API** — repo creation via GitHub App + Vercel project creation + R2 bucket + env var injection.
+7. **Platform landing page + signup flow.**
+8. **Subdomain routing.**
+9. **Custom domain support.**
+10. **Template update mechanism.**
 
 ---
 
@@ -311,11 +492,13 @@ Florez Florez itself becomes merchant #1 on the platform once it launches.
 
 | Layer | Technology |
 |---|---|
-| Shop template | Vanilla JS + Decap CMS (current) |
-| Hosting per merchant | Vercel (one project per fork) |
-| Content per merchant | GitHub (one repo per fork) |
+| Shop template | Vanilla JS + custom git-based CMS |
+| Hosting per merchant | Vercel (one project per repo) |
+| Content per merchant | GitHub (one repo per merchant, under platform org) |
+| Image storage | Cloudflare R2 (one bucket per merchant, custom domain) |
+| Repo management | GitHub App (platform-owned, server-side tokens) |
+| Merchant auth | Magic link (email-based, no GitHub account needed) |
 | Payments | Stripe Connect (Standard accounts) |
-| Platform database | Supabase (Postgres — just for provisioning metadata) |
+| Platform database | Postgres (provisioning metadata only) |
 | Platform app | Next.js or similar |
-| Auth proxy for CMS | Single Vercel function at auth.platform.com |
 | Merchant billing | Stripe Billing (platform's own Stripe account) |

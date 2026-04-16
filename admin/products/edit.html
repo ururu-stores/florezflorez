@@ -956,7 +956,7 @@
           renderImages();
           markDirty();
           closeCropModal();
-        }, 'image/png');
+        }, 'image/webp', 0.85);
       });
 
       // ---- Save ----
@@ -982,7 +982,7 @@
             if (!img.isNew) continue;
             setStatus('Uploading image ' + (i + 1) + '...');
             const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            const filename = slug + '-' + Date.now() + '-' + i + '.png';
+            const filename = slug + '-' + Date.now() + '-' + i + '.webp';
             const result = await uploadImage(img.blob, filename);
             img.src = result.path;
             img.isNew = false;

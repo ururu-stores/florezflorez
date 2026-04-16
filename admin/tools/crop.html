@@ -309,7 +309,7 @@
     <div class="name-group">
       <label for="file-name">Name</label>
       <input type="text" id="file-name" class="name-input" placeholder="my-image-name">
-      <span class="ext">.png</span>
+      <span class="ext">.webp</span>
     </div>
     <button class="save-btn" id="save-btn" disabled>Save to Uploads</button>
     <span class="status" id="status"></span>
@@ -558,7 +558,7 @@
           return;
         }
 
-        const fullName = name + '.png';
+        const fullName = name + '.webp';
 
         saveBtn.disabled = true;
         setStatus('Processing...');
@@ -585,7 +585,7 @@
             setStatus('Error: ' + err.message, 'error');
           }
           saveBtn.disabled = false;
-        }, 'image/png');
+        }, 'image/webp', 0.85);
       });
 
       // ---- Save: Local (download to uploads/ folder) ----
