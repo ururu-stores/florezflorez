@@ -648,7 +648,7 @@
           // 3. Atomic commit — both files in one deploy
           await batch.commit('Update site settings');
 
-          setStatus('Saved — site will update on next deploy', 'success');
+          setStatus('Saved — site will update in about 1 minute', 'success');
         } catch (e) {
           setStatus('Error: ' + e.message, 'error');
         }

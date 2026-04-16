@@ -1,5 +1,5 @@
 {
-  "logo": "/uploads/florez-florez-black-logo.png",
+  "logo": "https://img.florezflorez.com/florez-florez-black-logo.png",
   "font": "IBM Plex Mono",
   "gradients": [
     [
@@ -36,14 +36,6 @@
       "slug": "earrings",
       "label": "EARRINGS"
     },
-    {
-      "slug": "consulting",
-      "label": "CONSULTING"
-    },
-    {
-      "slug": "art",
-      "label": "ART"
-    }
   ],
   "art_background": "https://img.florezflorez.com/whatsapp-image-2026-04-12-at-20.23.36.jpeg",
   "necklaces_background": "https://img.florezflorez.com/image-4-11-26-at-11.05 pm.jpg",

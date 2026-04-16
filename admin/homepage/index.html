@@ -880,7 +880,7 @@
           // 5. Atomic commit — all files in one deploy
           await batch.commit('Update homepage settings');
 
-          setStatus('Saved — site will update on next deploy', 'success');
+          setStatus('Saved — site will update in about 1 minute', 'success');
         } catch (e) {
           setStatus('Error: ' + e.message, 'error');
           saveBtn.disabled = false;
