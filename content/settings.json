@@ -1,7 +1,28 @@
 {
   "site_title": "Florez Florez Studio",
   "site_description": "Handmade jewelry and art. Made in Brooklyn and Medellin.",
-  "og_image": "https://florezflorez.vercel.apphttps://img.florezflorez.com/adriene-wedding-rings-02.png",
+  "og_image": "https://img.florezflorez.com/og-share-image.png",
   "og_url": "https://florezflorez.vercel.app",
-  "meta_pixel_id": "3993733700852442"
+  "favicon_url": "https://img.florezflorez.com/favicon-32.png",
+  "apple_icon_url": "https://img.florezflorez.com/apple-touch-icon.png",
+  "meta_pixel_id": "3993733700852442",
+  "secondary_cta": {
+    "button_text": "MAKE ME ONE",
+    "message_template": "Hi! I'm interested in {product}. Can I order a custom version from you?",
+    "desktop": {
+      "channel": "instagram",
+      "handle": "florezflorez.studio"
+    },
+    "mobile": {
+      "channel": "instagram",
+      "handle": "florezflorez.studio"
+    }
+  },
+  "shipping": {
+    "method": "free",
+    "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
+    "free_threshold": null,
+    "pickup_address": "",
+    "pickup_hours": ""
+  }
 }
