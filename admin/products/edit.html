@@ -432,7 +432,7 @@
   <div class="toolbar">
     <h1 id="page-title">Edit Product</h1>
     <a href="/admin/products/">Back to Products</a>
-    <button class="btn" id="save-btn" disabled>Save</button>
+    <button class="btn" id="save-btn" disabled>Save & Exit</button>
     <button class="btn btn-danger" id="delete-btn" style="display:none;">Delete</button>
     <span class="status" id="status"></span>
   </div>
@@ -518,6 +518,7 @@
   <div class="loading" id="loading">Loading...</div>
 
   <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script src="/js/git-batch.js"></script>
   <script>
     (() => {
       const REPO = 'taoofdre/florezflorez';
@@ -568,11 +569,17 @@
       let sizes = []; // { label, stock }
       let cropper = null;
       let originalPiece = null;
+      let isDirty = false;
 
       function markDirty() {
+        isDirty = true;
         saveBtn.disabled = false;
         if (statusEl.classList.contains('success')) setStatus('');
       }
+
+      window.addEventListener('beforeunload', (e) => {
+        if (isDirty) { e.preventDefault(); }
+      });
 
       function setStatus(msg, type) {
         statusEl.textContent = msg;
@@ -634,27 +641,13 @@
         }
       }
 
-      async function saveFile(file, content, message) {
+      async function batchSave(files, message) {
         if (!ghToken) throw new Error('Sign in required');
-        // Always reload for fresh SHA
-        await loadFile(file);
-        const cached = fileCache[file];
-        const json = JSON.stringify(content, null, 2) + '\n';
-        const encoded = btoa(unescape(encodeURIComponent(json)));
-        const body = { message: message || 'Update product', content: encoded, branch: 'main' };
-        if (cached.sha) body.sha = cached.sha;
-        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`, {
-          method: 'PUT',
-          headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d.message || 'Save failed');
+        const batch = new GitBatch(REPO, ghToken);
+        for (const { path, content } of files) {
+          batch.addJSON(path, content);
         }
-        const result = await res.json();
-        fileCache[file].sha = result.content.sha;
-        fileCache[file].content = content;
+        await batch.commit(message);
       }
 
       // ---- Stripe sync ----
@@ -1037,6 +1030,7 @@
           });
 
           const categoryChanged = !isNew && paramCat && cat !== paramCat;
+          const filesToSave = [];
 
           if (categoryChanged) {
             // Remove from old category file
@@ -1044,14 +1038,14 @@
             const { content: oldContent } = await loadFile(oldFile);
             const oldIdx = oldContent.pieces.findIndex(p => p.id === paramId);
             if (oldIdx !== -1) oldContent.pieces.splice(oldIdx, 1);
-            await saveFile(oldFile, oldContent, 'Move product out: ' + title);
+            filesToSave.push({ path: oldFile, content: oldContent });
 
             // Add to new category file
             const { content: newContent } = await loadFile(file);
             newContent.pieces.push(piece);
-            await saveFile(file, newContent, 'Move product in: ' + title);
+            filesToSave.push({ path: file, content: newContent });
           } else {
-            const { content } = await loadFile(file); // Fresh load for SHA
+            const { content } = await loadFile(file);
             if (isNew) {
               content.pieces.push(piece);
             } else {
@@ -1059,28 +1053,14 @@
               if (idx === -1) throw new Error('Product not found in file');
               content.pieces[idx] = piece;
             }
-            await saveFile(file, content, (isNew ? 'Add' : 'Update') + ' product: ' + title);
+            filesToSave.push({ path: file, content });
           }
 
-          setStatus('Saved — site will update on next deploy', 'success');
+          await batchSave(filesToSave, (isNew ? 'Add' : 'Update') + ' product: ' + title);
 
-          // If new or category changed, redirect to edit page with correct params
-          if (isNew || categoryChanged) {
-            setTimeout(() => {
-              location.href = '/admin/products/edit.html?cat=' + cat + '&id=' + encodeURIComponent(piece.id);
-            }, 800);
-          } else {
-            originalPiece = piece;
-            // Save button stays disabled until user makes a change
-            // Update stripe IDs display
-            if (stripeProductId || stripePriceId) {
-              stripeSection.style.display = '';
-              const parts = [];
-              if (stripeProductId) parts.push('Product: ' + stripeProductId);
-              if (stripePriceId) parts.push('Price: ' + stripePriceId);
-              stripeIds.textContent = parts.join('\n');
-            }
-          }
+          isDirty = false;
+          setStatus('Saved — redirecting...', 'success');
+          setTimeout(() => { location.href = '/admin/products/'; }, 800);
 
         } catch (e) {
           setStatus('Error: ' + e.message, 'error');
@@ -1102,8 +1082,9 @@
           const idx = content.pieces.findIndex(p => p.id === paramId);
           if (idx === -1) throw new Error('Product not found');
           content.pieces.splice(idx, 1);
-          await saveFile(file, content, 'Delete product: ' + (originalPiece ? originalPiece.title : paramId));
+          await batchSave([{ path: file, content }], 'Delete product: ' + (originalPiece ? originalPiece.title : paramId));
 
+          isDirty = false;
           setStatus('Deleted — redirecting...', 'success');
           setTimeout(() => { location.href = '/admin/products/'; }, 800);
         } catch (e) {

@@ -449,6 +449,7 @@
 
   </div>
 
+  <script src="/js/git-batch.js"></script>
   <script>
     (() => {
       const REPO = 'taoofdre/florezflorez';
@@ -470,7 +471,6 @@
       const instagramInput = document.getElementById('instagram-url');
 
       let ghToken = null;
-      let currentSha = null;
 
       function setStatus(msg, type) {
         statusEl.textContent = msg;
@@ -588,17 +588,6 @@
             if (siteDescInput.value) siteDescInput.dispatchEvent(new Event('input'));
           }
 
-          // Separately fetch SHA via GitHub API (needed to update the file)
-          if (ghToken) {
-            const ghRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${SETTINGS_PATH}`, {
-              headers: { 'Authorization': 'token ' + ghToken }
-            });
-            if (ghRes.ok) {
-              const file = await ghRes.json();
-              currentSha = file.sha;
-            }
-          }
-
           setStatus('');
         } catch (e) {
           setStatus('Could not load current settings', 'error');
@@ -628,37 +617,12 @@
         setStatus('Saving...');
 
         try {
-          // 1. Save settings.json
-          const json = JSON.stringify(settings, null, 2) + '\n';
-          const encodedSettings = btoa(unescape(encodeURIComponent(json)));
+          const batch = new GitBatch(REPO, ghToken);
 
-          const settingsBody = {
-            message: 'Update site settings',
-            content: encodedSettings,
-            branch: 'main',
-          };
-          if (currentSha) settingsBody.sha = currentSha;
-
-          const settingsRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${SETTINGS_PATH}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'token ' + ghToken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(settingsBody),
-          });
-
-          if (!settingsRes.ok) {
-            const data = await settingsRes.json().catch(() => ({}));
-            throw new Error(data.message || 'Settings save failed');
-          }
-
-          const settingsResult = await settingsRes.json();
-          currentSha = settingsResult.content.sha;
+          // 1. Queue settings.json
+          batch.addJSON(SETTINGS_PATH, settings);
 
           // 2. Fetch index.html and update the META block
-          setStatus('Updating metadata in index.html...');
-
           const indexRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${INDEX_PATH}`, {
             headers: { 'Authorization': 'token ' + ghToken }
           });
@@ -666,7 +630,6 @@
 
           const indexFile = await indexRes.json();
           const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
-          const indexSha = indexFile.sha;
 
           const newMetaBlock = buildMetaBlock(settings.site_title, settings.site_description, settings.og_image, settings.og_url, settings.favicon_url);
 
@@ -674,30 +637,13 @@
           if (/<!-- META:START -->[\s\S]*?<!-- META:END -->/.test(indexContent)) {
             updatedIndex = indexContent.replace(/<!-- META:START -->[\s\S]*?<!-- META:END -->/, newMetaBlock);
           } else {
-            // Fallback: replace bare <title> tag
             updatedIndex = indexContent.replace(/<title>[^<]*<\/title>/, newMetaBlock);
           }
 
-          const encodedIndex = btoa(unescape(encodeURIComponent(updatedIndex)));
+          batch.addText(INDEX_PATH, updatedIndex);
 
-          const indexPutRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${INDEX_PATH}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'token ' + ghToken,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: 'Update site metadata',
-              content: encodedIndex,
-              sha: indexSha,
-              branch: 'main',
-            }),
-          });
-
-          if (!indexPutRes.ok) {
-            const data = await indexPutRes.json().catch(() => ({}));
-            throw new Error(data.message || 'index.html update failed');
-          }
+          // 3. Atomic commit — both files in one deploy
+          await batch.commit('Update site settings');
 
           setStatus('Saved — site will update on next deploy', 'success');
         } catch (e) {

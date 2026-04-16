@@ -246,6 +246,7 @@
     <div class="loading">Loading products...</div>
   </div>
 
+  <script src="/js/git-batch.js"></script>
   <script>
     (() => {
       const REPO = 'taoofdre/florezflorez';
@@ -326,26 +327,13 @@
         }
       }
 
-      async function saveFile(file, content) {
+      async function saveFiles(filesToSave, message) {
         if (!ghToken) throw new Error('Sign in required to save');
-        const cached = fileCache[file];
-        if (!cached) throw new Error('File not loaded');
-        const json = JSON.stringify(content, null, 2) + '\n';
-        const encoded = btoa(unescape(encodeURIComponent(json)));
-        const body = { message: 'Sync product to Stripe', content: encoded, branch: 'main' };
-        if (cached.sha) body.sha = cached.sha;
-        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`, {
-          method: 'PUT',
-          headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d.message || 'Save failed');
+        const batch = new GitBatch(REPO, ghToken);
+        for (const { path, content } of filesToSave) {
+          batch.addJSON(path, content);
         }
-        const result = await res.json();
-        fileCache[file].sha = result.content.sha;
-        fileCache[file].content = content;
+        await batch.commit(message);
       }
 
       // ---- Stripe sync API ----
@@ -403,7 +391,7 @@
             stripe_product_id: result.stripe_product_id,
           };
 
-          await saveFile(sectionFile, content);
+          await saveFiles([{ path: sectionFile, content }], 'Sync product to Stripe');
 
           // Update UI
           badge.textContent = 'Synced';
@@ -432,6 +420,7 @@
         setStatus('Syncing...');
         let count = 0;
         let errors = 0;
+        const changedFiles = [];
 
         for (const section of SECTIONS) {
           try {
@@ -461,7 +450,16 @@
               }
             }
 
-            if (changed) await saveFile(section.file, content);
+            if (changed) changedFiles.push({ path: section.file, content });
+          } catch (e) {
+            errors++;
+          }
+        }
+
+        // Batch commit all changed category files at once
+        if (changedFiles.length > 0) {
+          try {
+            await saveFiles(changedFiles, 'Stripe sync: ' + count + ' product' + (count !== 1 ? 's' : ''));
           } catch (e) {
             errors++;
           }

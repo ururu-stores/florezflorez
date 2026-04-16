@@ -380,6 +380,7 @@
 
   <div class="loading" id="loading">Loading...</div>
 
+  <script src="/js/git-batch.js"></script>
   <script>
     (() => {
       const REPO = 'taoofdre/florezflorez';
@@ -408,7 +409,6 @@
       const newCatLabel = document.getElementById('new-cat-label');
 
       let ghToken = null;
-      let fileSha = null;
       let gradients = [];
       let categories = [];
 
@@ -468,7 +468,6 @@
             if (!res.ok) throw new Error('Failed to load');
             const f = await res.json();
             data = JSON.parse(atob(f.content.replace(/\n/g, '')));
-            fileSha = f.sha;
           } else {
             const res = await fetch('/content/homepage.json?t=' + Date.now());
             data = await res.json();
@@ -790,21 +789,19 @@
         setStatus('Saving...');
 
         try {
-          // Build homepage.json
-          // Reload for fresh SHA
+          const batch = new GitBatch(REPO, ghToken);
+
+          // 1. Build homepage.json — merge with existing data
+          let oldData = {};
           if (ghToken) {
             const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
               headers: { Authorization: 'token ' + ghToken },
             });
             if (res.ok) {
               const f = await res.json();
-              fileSha = f.sha;
+              oldData = JSON.parse(atob(f.content.replace(/\n/g, '')));
             }
           }
-
-          const oldData = fileSha ? JSON.parse(atob((await (await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
-            headers: { Authorization: 'token ' + ghToken },
-          })).json()).content.replace(/\n/g, ''))) : {};
 
           const data = {
             ...oldData,
@@ -813,27 +810,9 @@
             gradients: gradients,
             categories: categories,
           };
+          batch.addJSON(HOMEPAGE_PATH, data);
 
-          const json = JSON.stringify(data, null, 2) + '\n';
-          const encoded = btoa(unescape(encodeURIComponent(json)));
-          const body = { message: 'Update homepage settings', content: encoded, branch: 'main' };
-          if (fileSha) body.sha = fileSha;
-
-          const saveRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${HOMEPAGE_PATH}`, {
-            method: 'PUT',
-            headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-
-          if (!saveRes.ok) {
-            const d = await saveRes.json().catch(() => ({}));
-            throw new Error(d.message || 'Save failed');
-          }
-
-          const result = await saveRes.json();
-          fileSha = result.content.sha;
-
-          // Create content JSON files for new product categories
+          // 2. Create content JSON files for new product categories
           const specialSections = ['consulting', 'about'];
           for (const cat of categories) {
             if (specialSections.includes(cat.slug)) continue;
@@ -842,53 +821,35 @@
               headers: { Authorization: 'token ' + ghToken },
             });
             if (checkRes.status === 404) {
-              setStatus('Creating ' + cat.slug + '.json...');
-              const emptyJson = JSON.stringify({ pieces: [] }, null, 2) + '\n';
-              const emptyEncoded = btoa(unescape(encodeURIComponent(emptyJson)));
-              await fetch(`https://api.github.com/repos/${REPO}/contents/${contentPath}`, {
-                method: 'PUT',
-                headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: 'Create category: ' + cat.label, content: emptyEncoded, branch: 'main' }),
-              });
+              batch.addJSON(contentPath, { pieces: [] });
             }
           }
 
-          // Update index.html panels and header links
-          setStatus('Updating index.html...');
-
+          // 3. Update index.html — panels, header links, gradient
           const indexRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
             headers: { Authorization: 'token ' + ghToken },
           });
           if (!indexRes.ok) throw new Error('Could not load index.html');
           const indexFile = await indexRes.json();
           const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
-          const indexSha = indexFile.sha;
 
-          // Build new panels HTML
           const panelsHtml = categories.map(c =>
             '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>'
           ).join('\n');
 
-          // Build new header links HTML
           const linksHtml = categories.map(c =>
             '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>'
           ).join('\n');
-          // Always include About link
           const fullLinksHtml = linksHtml + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
 
-          // Replace panels
           let updated = indexContent.replace(
             /(<canvas id="home-gradient"><\/canvas>\n)([\s\S]*?)(\n  <\/div>\n\n  <!-- TOP HEADER NAV)/,
             '$1' + panelsHtml + '\n$3'
           );
-
-          // Replace header links
           updated = updated.replace(
             /(<div class="header-links" id="header-links">\n)([\s\S]*?)(\n\s*<\/div>\n\s*<button class="cart-toggle")/,
             '$1' + fullLinksHtml + '\n$3'
           );
-
-          // Update home div inline gradient to match first color pair
           if (gradients.length > 0) {
             const g = gradients[0];
             updated = updated.replace(
@@ -896,26 +857,9 @@
               '$1linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ');$2'
             );
           }
+          batch.addText('index.html', updated);
 
-          const encodedIndex = btoa(unescape(encodeURIComponent(updated)));
-          const indexPutRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
-            method: 'PUT',
-            headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: 'Update homepage categories',
-              content: encodedIndex,
-              sha: indexSha,
-              branch: 'main',
-            }),
-          });
-
-          if (!indexPutRes.ok) {
-            const d = await indexPutRes.json().catch(() => ({}));
-            throw new Error(d.message || 'index.html update failed');
-          }
-
-          // Update 404.html gradient to match
-          setStatus('Updating 404 page...');
+          // 4. Update 404.html gradient
           const fourRes = await fetch(`https://api.github.com/repos/${REPO}/contents/404.html`, {
             headers: { Authorization: 'token ' + ghToken },
           });
@@ -927,18 +871,11 @@
               /background:\s*linear-gradient\(135deg,[^)]*\)/,
               'background: linear-gradient(135deg, ' + allColors + ')'
             );
-            const encoded404 = btoa(unescape(encodeURIComponent(updated404)));
-            await fetch(`https://api.github.com/repos/${REPO}/contents/404.html`, {
-              method: 'PUT',
-              headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                message: 'Update 404 gradient colors',
-                content: encoded404,
-                sha: fourFile.sha,
-                branch: 'main',
-              }),
-            });
+            batch.addText('404.html', updated404);
           }
+
+          // 5. Atomic commit — all files in one deploy
+          await batch.commit('Update homepage settings');
 
           setStatus('Saved — site will update on next deploy', 'success');
         } catch (e) {
