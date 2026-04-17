@@ -567,6 +567,51 @@
       </div>
     </div>
 
+    <!-- Contact -->
+    <div class="settings-section">
+      <h2>Contact</h2>
+      <p class="field-desc" style="margin-bottom:1.25rem;">Displayed on the About page. Only filled-in fields will appear.</p>
+      <div class="field-group">
+        <label for="contact-email">Email</label>
+        <input type="email" id="contact-email" class="text-input" placeholder="hello@florezflorez.com">
+      </div>
+      <div class="field-group">
+        <label for="contact-phone">Phone / SMS</label>
+        <p class="field-desc">Phone number with country code. Opens SMS on click.</p>
+        <input type="text" id="contact-phone" class="text-input" placeholder="+13475551234">
+      </div>
+      <div class="field-group">
+        <label for="contact-instagram">Instagram</label>
+        <p class="field-desc">Username without @. Opens a DM conversation.</p>
+        <input type="text" id="contact-instagram" class="text-input" placeholder="florezflorez.studio">
+      </div>
+      <div class="field-group">
+        <label for="contact-whatsapp">WhatsApp</label>
+        <p class="field-desc">Phone number with country code. Opens a WhatsApp chat.</p>
+        <input type="text" id="contact-whatsapp" class="text-input" placeholder="+573001234567">
+      </div>
+      <div class="field-group">
+        <label for="contact-tiktok">TikTok</label>
+        <p class="field-desc">Username without @. Links to your profile.</p>
+        <input type="text" id="contact-tiktok" class="text-input" placeholder="florezflorez.studio">
+      </div>
+    </div>
+
+    <!-- Thank You -->
+    <div class="settings-section">
+      <h2>Thank You Page</h2>
+      <p class="field-desc" style="margin-bottom:1.25rem;">Shown after a successful checkout.</p>
+      <div class="field-group">
+        <label for="thankyou-primary">Primary Message</label>
+        <textarea id="thankyou-primary" class="text-input" rows="3" placeholder="e.g. Thank you for your order! It should ship in 1–2 business days." style="resize:vertical;"></textarea>
+      </div>
+      <div class="field-group">
+        <label for="thankyou-secondary">Secondary Message</label>
+        <p class="field-desc">Additional details (e.g. email confirmation, contact info). Plain text.</p>
+        <textarea id="thankyou-secondary" class="text-input" rows="3" placeholder="e.g. You'll receive an email confirmation from Stripe. If you have any questions, reach out to us." style="resize:vertical;"></textarea>
+      </div>
+    </div>
+
     <!-- Stripe -->
     <div class="settings-section">
       <h2>Stripe</h2>
@@ -736,6 +781,13 @@
       const shippingDeliveryDaysInput = document.getElementById('shipping-delivery-days');
       const shippingDeliveryDaysField = document.getElementById('shipping-delivery-days-field');
       const shippingReturnsPolicyInput = document.getElementById('shipping-returns-policy');
+      const contactEmailInput = document.getElementById('contact-email');
+      const contactPhoneInput = document.getElementById('contact-phone');
+      const contactInstagramInput = document.getElementById('contact-instagram');
+      const contactWhatsappInput = document.getElementById('contact-whatsapp');
+      const contactTiktokInput = document.getElementById('contact-tiktok');
+      const thankyouPrimaryInput = document.getElementById('thankyou-primary');
+      const thankyouSecondaryInput = document.getElementById('thankyou-secondary');
       let stripeShippingRates = [];
 
       function updateShippingFields() {
@@ -1027,6 +1079,17 @@
             shippingDeliveryDaysInput.value = ship.delivery_days || '';
             shippingReturnsPolicyInput.value = ship.returns_policy || '';
             updateShippingFields();
+            // Contact
+            const contact = data.contact || {};
+            contactEmailInput.value = contact.email || '';
+            contactPhoneInput.value = contact.phone || '';
+            contactInstagramInput.value = contact.instagram || '';
+            contactWhatsappInput.value = contact.whatsapp || '';
+            contactTiktokInput.value = contact.tiktok || '';
+            // Thank you
+            const ty = data.thank_you || {};
+            thankyouPrimaryInput.value = ty.primary || '';
+            thankyouSecondaryInput.value = ty.secondary || '';
             await loadStripeShippingRates();
             if (ship.stripe_rate_id) shippingRateIdInput.value = ship.stripe_rate_id;
             // Populate feed URL from og_url
@@ -1081,6 +1144,17 @@
             pickup_hours: shippingPickupHoursInput.value.trim(),
             delivery_days: shippingDeliveryDaysInput.value.trim(),
             returns_policy: shippingReturnsPolicyInput.value.trim(),
+          },
+          contact: {
+            email: contactEmailInput.value.trim(),
+            phone: contactPhoneInput.value.trim(),
+            instagram: contactInstagramInput.value.trim(),
+            whatsapp: contactWhatsappInput.value.trim(),
+            tiktok: contactTiktokInput.value.trim(),
+          },
+          thank_you: {
+            primary: thankyouPrimaryInput.value.trim(),
+            secondary: thankyouSecondaryInput.value.trim(),
           },
         };
 

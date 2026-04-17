@@ -46,6 +46,27 @@
     if (settings.shipping) {
       shippingConfig = settings.shipping;
     }
+    if (settings.thank_you) {
+      var tyPrimary = document.getElementById('thankyou-primary-text');
+      var tySecondary = document.getElementById('thankyou-secondary-text');
+      if (tyPrimary && settings.thank_you.primary) tyPrimary.textContent = settings.thank_you.primary;
+      if (tySecondary && settings.thank_you.secondary) tySecondary.textContent = settings.thank_you.secondary;
+    }
+    if (settings.contact) {
+      var contactEl = document.getElementById('about-contact');
+      if (contactEl) {
+        var links = [];
+        var c = settings.contact;
+        if (c.email) links.push({ label: 'Email', href: 'mailto:' + c.email });
+        if (c.phone) links.push({ label: 'Text / SMS', href: 'sms:' + c.phone.replace(/[^+\d]/g, '') });
+        if (c.instagram) links.push({ label: 'Instagram', href: 'https://ig.me/m/' + c.instagram });
+        if (c.whatsapp) links.push({ label: 'WhatsApp', href: 'https://wa.me/' + c.whatsapp.replace(/[^+\d]/g, '') });
+        if (c.tiktok) links.push({ label: 'TikTok', href: 'https://tiktok.com/@' + c.tiktok });
+        contactEl.innerHTML = links.map(function(l) {
+          return '<a href="' + l.href + '" target="_blank" rel="noopener">' + l.label + '</a>';
+        }).join('');
+      }
+    }
     updateCartUI();
   });
 
