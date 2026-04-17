@@ -46,6 +46,7 @@
     if (settings.shipping) {
       shippingConfig = settings.shipping;
     }
+    updateCartUI();
   });
 
   function buildCtaUrl(channelConfig, productTitle) {

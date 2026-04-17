@@ -267,7 +267,7 @@ test.describe('Cart', () => {
     await goToSection(page, 'rings');
     await page.evaluate(() => { window.scrollTo(0, 0); document.getElementById('cart-panel').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); });
     await expect(page.locator('.cart-shipping-note').first()).toBeVisible();
-    await expect(page.locator('.cart-shipping-note').first()).toContainText('Shipping to USA only');
+    await expect(page.locator('.cart-shipping-note').first()).toContainText('USA only');
   });
 });
 
