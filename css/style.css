@@ -1060,6 +1060,28 @@ a {
   color: #333;
 }
 
+.thankyou-contact:not(:empty) {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.thankyou-contact a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.thankyou-contact a:hover {
+  color: #333;
+}
+
 .thankyou-close {
   padding: 0.65rem 2.5rem;
   font-family: 'IBM Plex Mono', monospace;

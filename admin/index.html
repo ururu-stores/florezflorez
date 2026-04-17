@@ -4,301 +4,1486 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Florez Florez</title>
+  <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
   <style>
-    @font-face {
-      font-family: 'IBM Plex Mono';
-      src: url('/fonts/IBMPlexMono-SemiBold.ttf') format('truetype');
-      font-weight: 600;
-      font-style: normal;
-    }
-    @font-face {
-      font-family: 'IBM Plex Mono';
-      src: url('/fonts/IBMPlexMono-Regular.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
-    }
-
+    @font-face { font-family: 'IBM Plex Mono'; src: url('/fonts/IBMPlexMono-SemiBold.ttf') format('truetype'); font-weight: 600; font-style: normal; }
+    @font-face { font-family: 'IBM Plex Mono'; src: url('/fonts/IBMPlexMono-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; }
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'IBM Plex Mono', monospace; background: #fff; color: #333; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-    body {
-      font-family: 'IBM Plex Mono', monospace;
-      background: #fff;
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .auth-screen {
-      text-align: center;
-    }
-
-    .auth-screen h1 {
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(0, 0, 0, 0.35);
-      margin-bottom: 2rem;
-    }
-
-    .auth-btn {
-      padding: 0.75rem 2.5rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: #fff;
-      background: #333;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+    /* Auth */
+    .auth-screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; background: #fff; z-index: 100; }
+    .auth-screen h1 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.35); }
+    .auth-btn { padding: 0.75rem 2.5rem; font-family: inherit; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; background: #333; border: none; cursor: pointer; }
     .auth-btn:hover { background: #555; }
 
-    .dashboard {
-      display: none;
-      width: 100%;
-      max-width: 500px;
-      padding: 2rem;
-    }
+    /* Layout */
+    #admin-layout { display: none; height: 100vh; }
+    #admin-layout.show { display: flex; }
+    #sidebar { width: 200px; flex-shrink: 0; border-right: 1px solid rgba(0,0,0,0.1); padding: 1.5rem 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+    #content-area { flex: 1; overflow-y: auto; }
 
-    .dashboard-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 3rem;
-    }
+    .sidebar-header { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.25); padding: 0 1.25rem; margin-bottom: 1.5rem; }
+    .sidebar-group { margin-bottom: 1rem; }
+    .sidebar-group-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(0,0,0,0.2); padding: 0.5rem 1.25rem 0.25rem; }
+    .sidebar-link { display: block; padding: 0.4rem 1.25rem; font-size: 0.78rem; font-weight: 400; color: rgba(0,0,0,0.5); text-decoration: none; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .sidebar-link:hover { background: rgba(0,0,0,0.03); color: #333; }
+    .sidebar-link.active { color: #333; font-weight: 600; background: rgba(0,0,0,0.04); }
+    .sidebar-back { margin-top: auto; padding: 1rem 1.25rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.25); text-decoration: none; }
+    .sidebar-back:hover { color: #333; }
 
-    .dashboard-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(0, 0, 0, 0.35);
-    }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
 
-    .dashboard-user {
-      font-size: 0.75rem;
-      font-weight: 400;
-      color: rgba(0, 0, 0, 0.3);
-    }
+    /* Toolbar */
+    .toolbar { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid rgba(0,0,0,0.1); padding: 1rem 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; position: relative; }
+    .toolbar h1 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.35); margin-right: auto; }
+    .toolbar a, .toolbar button.link-btn { color: rgba(0,0,0,0.35); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; }
+    .toolbar a:hover, .toolbar button.link-btn:hover { color: #333; }
 
-    .tool-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    /* Buttons */
+    .btn { padding: 0.5rem 1.5rem; font-family: inherit; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; background: #333; border: none; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #555; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-outline { color: #333; background: #fff; border: 1px solid rgba(0,0,0,0.2); }
+    .btn-outline:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.35); }
+    .btn-danger { color: #c44; background: transparent; border: 1px solid #c44; padding: 0.3rem 0.75rem; font-size: 0.68rem; font-family: inherit; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+    .btn-danger:hover { background: #c44; color: #fff; }
 
-    .tool-link {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      padding: 1.25rem 1.5rem;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      text-decoration: none;
-      color: #333;
-      transition: border-color 0.2s, background 0.2s;
-    }
+    /* Status */
+    .status { position: absolute; right: 2rem; bottom: -1.4rem; font-size: 0.72rem; color: rgba(0,0,0,0.4); white-space: nowrap; }
+    .status.error { color: #c44; }
+    .status.success { color: #3a3; }
 
-    .tool-link:hover {
-      border-color: rgba(0, 0, 0, 0.3);
-      background: rgba(0, 0, 0, 0.02);
-    }
+    /* Form */
+    .settings-page { max-width: 640px; padding: 3rem 2rem 6rem; }
+    .settings-section, .editor-section { border-top: 1px solid rgba(0,0,0,0.1); padding: 2.5rem 0; }
+    .settings-section h2, .editor-section h2 { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.35); margin-bottom: 1.75rem; }
+    .section-desc { font-size: 0.8rem; font-weight: 400; color: rgba(0,0,0,0.4); line-height: 1.65; margin-bottom: 1.25rem; }
+    .field-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.25rem; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-group label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.5); }
+    .field-desc { font-size: 0.75rem; font-weight: 400; color: rgba(0,0,0,0.4); line-height: 1.5; }
+    .text-input { background: transparent; border: 1px solid rgba(0,0,0,0.15); color: #333; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.85rem; width: 100%; margin-top: 0.25rem; }
+    .text-input:focus { outline: none; border-color: rgba(0,0,0,0.4); }
+    .text-input::placeholder { color: rgba(0,0,0,0.25); }
+    textarea.text-input { resize: vertical; min-height: 80px; }
+    select.text-input { cursor: pointer; }
 
-    .tool-icon {
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
-      color: rgba(0, 0, 0, 0.4);
-    }
+    /* Toggle */
+    .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; }
+    .toggle-row .toggle-track { width: 32px; height: 18px; border-radius: 9px; background: rgba(0,0,0,0.15); position: relative; transition: background 0.2s; cursor: pointer; flex-shrink: 0; }
+    .toggle-row input { display: none; }
+    .toggle-row input:checked + .toggle-track { background: #333; }
+    .toggle-row .toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .toggle-row input:checked + .toggle-track::after { transform: translateX(14px); }
+    .toggle-row .toggle-label { font-size: 0.82rem; color: #333; }
 
-    .tool-info {
-      flex: 1;
-    }
+    /* Product list */
+    .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 1.5rem 2rem 0; max-width: 900px; }
+    .filter-btn { padding: 0.3rem 0.8rem; font-family: inherit; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid rgba(0,0,0,0.15); background: transparent; color: rgba(0,0,0,0.4); cursor: pointer; }
+    .filter-btn:hover { border-color: rgba(0,0,0,0.35); color: #333; }
+    .filter-btn.active { background: #333; color: #fff; border-color: #333; }
+    .product-list-page { max-width: 900px; padding: 1.5rem 2rem 6rem; }
+    .product-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(0,0,0,0.06); text-decoration: none; color: inherit; cursor: pointer; }
+    .product-row:hover { background: rgba(0,0,0,0.02); }
+    .product-thumb { width: 48px; height: 48px; object-fit: cover; flex-shrink: 0; background: #f2f2f2; }
+    .product-thumb-empty { width: 48px; height: 48px; flex-shrink: 0; background: #f2f2f2; }
+    .product-name { flex: 1; font-size: 0.85rem; font-weight: 600; color: #333; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-cat { flex-shrink: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,0,0,0.3); width: 90px; }
+    .pl-product-price { font-size: 0.8rem; font-weight: 400; color: rgba(0,0,0,0.45); width: 70px; flex-shrink: 0; text-align: right; }
+    .badge { flex-shrink: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 2px; }
+    .badge-active { background: rgba(40,160,80,0.1); color: #1a7a3a; }
+    .badge-hidden { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.35); }
 
-    .tool-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 0.25rem;
-    }
+    /* Sizes */
+    .size-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 0.5rem; }
+    .size-item .size-label { font-size: 0.85rem; font-weight: 600; min-width: 60px; }
+    .size-item .size-stock { width: 80px; background: transparent; border: 1px solid rgba(0,0,0,0.1); color: #333; padding: 0.3rem 0.5rem; font-family: inherit; font-size: 0.82rem; }
+    .size-item .size-stock:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+    .size-item .size-stock::placeholder { color: rgba(0,0,0,0.25); }
+    .size-stock-label { font-size: 0.68rem; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.1em; }
+    .size-remove { margin-left: auto; font-family: inherit; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #c44; background: none; border: 1px solid #c44; padding: 0.2rem 0.6rem; cursor: pointer; }
+    .size-remove:hover { background: #c44; color: #fff; }
 
-    .tool-desc {
-      font-size: 0.75rem;
-      font-weight: 400;
-      color: rgba(0, 0, 0, 0.4);
-    }
+    /* Images */
+    .image-list { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+    .image-card { position: relative; width: 120px; cursor: grab; }
+    .image-card.dragging { opacity: 0.4; }
+    .image-card.drag-over { outline: 2px solid #333; outline-offset: 2px; }
+    .image-card img { width: 120px; height: 120px; object-fit: cover; display: block; background: #f2f2f2; }
+    .image-card .image-alt { width: 100%; font-family: inherit; font-size: 0.68rem; border: 1px solid rgba(0,0,0,0.1); border-top: none; padding: 0.3rem 0.4rem; color: #333; background: transparent; }
+    .image-card .image-alt:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+    .image-card .image-alt::placeholder { color: rgba(0,0,0,0.25); }
+    .image-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; font-size: 12px; line-height: 20px; text-align: center; }
+    .image-remove:hover { background: #c44; }
+    .image-new-badge { position: absolute; top: 4px; left: 4px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; background: #333; color: #fff; padding: 0.1rem 0.4rem; }
+    .add-image-label { display: inline-block; padding: 0.5rem 1.5rem; font-family: inherit; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #333; background: transparent; border: 1px solid rgba(0,0,0,0.2); cursor: pointer; }
+    .add-image-label:hover { border-color: rgba(0,0,0,0.4); }
+    .add-image-label input { display: none; }
 
-    .tool-arrow {
-      flex-shrink: 0;
-      color: rgba(0, 0, 0, 0.2);
-      font-size: 1.2rem;
-    }
+    /* Crop modal */
+    .crop-modal { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(255,255,255,0.97); flex-direction: column; align-items: center; padding: 2rem; overflow: hidden; }
+    .crop-modal.open { display: flex; }
+    .crop-modal-inner { max-width: 600px; width: 100%; flex: 1; min-height: 0; }
+    .crop-modal-inner img { display: block; max-width: 100%; }
+    .crop-modal-bar { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; flex-shrink: 0; max-width: 600px; width: 100%; }
+    .crop-modal-bar .text-input { width: 200px; margin-top: 0; }
+    .crop-modal-bar .crop-info { font-size: 0.75rem; color: rgba(0,0,0,0.4); margin-right: auto; }
 
-    .back-link {
-      display: inline-block;
-      margin-top: 3rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(0, 0, 0, 0.3);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .back-link:hover { color: #333; }
+    /* Homepage */
+    .logo-preview { width: 80px; height: auto; margin-top: 0.5rem; background: #f2f2f2; }
+    .gradient-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+    .gradient-pair { display: flex; align-items: center; gap: 0.75rem; }
+    .gradient-pair input[type="color"] { width: 36px; height: 36px; border: 1px solid rgba(0,0,0,0.15); padding: 2px; cursor: pointer; background: transparent; }
+    .gradient-preview { flex: 1; height: 36px; border-radius: 2px; }
+    .cat-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .cat-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; border: 1px solid rgba(0,0,0,0.1); cursor: grab; }
+    .cat-item.dragging { opacity: 0.4; }
+    .cat-item.drag-over { outline: 2px solid #333; outline-offset: 2px; }
+    .cat-item .cat-handle { color: rgba(0,0,0,0.2); font-size: 1rem; flex-shrink: 0; cursor: grab; }
+    .cat-item .cat-slug { font-size: 0.72rem; font-weight: 600; color: rgba(0,0,0,0.35); letter-spacing: 0.1em; text-transform: uppercase; width: 100px; flex-shrink: 0; }
+    .cat-item .cat-label-input { flex: 1; background: transparent; border: 1px solid rgba(0,0,0,0.1); color: #333; padding: 0.3rem 0.5rem; font-family: inherit; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .cat-item .cat-label-input:focus { outline: none; border-color: rgba(0,0,0,0.3); }
+
+    /* Settings images */
+    .image-field-preview { display: inline-flex; align-items: flex-start; gap: 0.5rem; margin-top: 0.5rem; }
+    .image-field-preview img { border: 1px solid rgba(0,0,0,0.08); }
+    .image-delete-btn { font-family: inherit; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #c44; background: none; border: 1px solid #c44; padding: 0.2rem 0.5rem; cursor: pointer; }
+    .image-delete-btn:hover { background: #c44; color: #fff; }
+
+    /* Stripe info */
+    .stripe-ids { font-size: 0.72rem; color: rgba(0,0,0,0.3); line-height: 1.6; word-break: break-all; }
+    .env-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .env-item { padding: 0.85rem 1rem; border: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 0.3rem; }
+    .env-key { font-family: inherit; font-size: 0.82rem; font-weight: 600; color: #333; }
+    .env-desc { font-size: 0.75rem; font-weight: 400; color: rgba(0,0,0,0.45); line-height: 1.5; }
+    .section-link { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(0,0,0,0.4); text-decoration: none; border-bottom: 1px solid rgba(0,0,0,0.15); padding-bottom: 1px; }
+    .section-link + .section-link { margin-left: 2rem; }
+    .section-link:hover { color: #333; border-color: rgba(0,0,0,0.4); }
+
+    /* Coupons */
+    .coupon-item { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 0.5rem; }
+    .coupon-item .coupon-code { font-family: inherit; font-size: 0.82rem; font-weight: 600; color: #333; min-width: 120px; }
+    .coupon-item .coupon-detail { font-size: 0.75rem; color: rgba(0,0,0,0.45); flex: 1; }
+    .coupon-item .coupon-deactivate { font-family: inherit; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #c44; background: none; border: 1px solid #c44; padding: 0.3rem 0.75rem; cursor: pointer; flex-shrink: 0; }
+    .coupon-item .coupon-deactivate:hover { background: #c44; color: #fff; }
+
+    .loading { padding: 4rem 0; text-align: center; font-size: 0.8rem; color: rgba(0,0,0,0.3); letter-spacing: 0.1em; }
+    .empty-msg { padding: 2rem 0; font-size: 0.8rem; color: rgba(0,0,0,0.3); }
+
+    /* Cropper overrides */
+    .cropper-modal { background: rgba(0,0,0,0.5); }
+    .cropper-view-box { outline: 2px solid #fff; outline-offset: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,0.5); }
+    .cropper-line { background-color: rgba(255,255,255,0.4); }
+    .cropper-point { background-color: #fff; border: 1px solid rgba(0,0,0,0.3); }
+    .cropper-dashed { border-color: rgba(255,255,255,0.5); }
   </style>
 </head>
 <body>
 
-  <!-- Auth screen -->
+  <!-- Auth -->
   <div class="auth-screen" id="auth-screen">
     <h1>Admin</h1>
     <button class="auth-btn" id="auth-btn">Sign in with GitHub</button>
   </div>
 
-  <!-- Dashboard (shown after auth) -->
-  <div class="dashboard" id="dashboard">
-    <div class="dashboard-header">
-      <span class="dashboard-title">Admin</span>
-      <span class="dashboard-user" id="dashboard-user"></span>
-    </div>
+  <!-- Main layout -->
+  <div id="admin-layout">
+    <nav id="sidebar">
+      <div class="sidebar-header">Admin</div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Store</div>
+        <a class="sidebar-link active" data-section="products">Products</a>
+        <a class="sidebar-link" data-section="branding">Branding</a>
+        <a class="sidebar-link" data-section="categories">Categories</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Checkout</div>
+        <a class="sidebar-link" data-section="shipping">Shipping</a>
+        <a class="sidebar-link" data-section="secondary-cta">Secondary CTA</a>
+        <a class="sidebar-link" data-section="coupons">Coupons</a>
+        <a class="sidebar-link" data-section="thankyou">Thank You</a>
+      </div>
+      <div class="sidebar-group">
+        <a class="sidebar-link" data-section="marketing">Marketing</a>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Settings</div>
+        <a class="sidebar-link" data-section="metadata">Metadata</a>
+        <a class="sidebar-link" data-section="contact">Contact</a>
+        <a class="sidebar-link" data-section="stripe">Stripe</a>
+      </div>
+      <a href="/" class="sidebar-back">&larr; Back to Site</a>
+    </nav>
 
-    <ul class="tool-list">
-      <li>
-        <a href="/admin/homepage/" class="tool-link">
-          <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
-          <div class="tool-info">
-            <div class="tool-name">Homepage</div>
-            <div class="tool-desc">Edit categories, gradient, logo, and font</div>
-          </div>
-          <span class="tool-arrow">&rsaquo;</span>
-        </a>
-      </li>
-      <li>
-        <a href="/admin/products/" class="tool-link">
-          <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <path d="M16 10a4 4 0 01-8 0"></path>
-          </svg>
-          <div class="tool-info">
-            <div class="tool-name">Products</div>
-            <div class="tool-desc">Add, edit, and manage products across all categories</div>
-          </div>
-          <span class="tool-arrow">&rsaquo;</span>
-        </a>
-      </li>
-      <li>
-        <a href="/admin/tools/settings.html" class="tool-link">
-          <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <div class="tool-info">
-            <div class="tool-name">Store Settings</div>
-            <div class="tool-desc">Manage pixel, social links, coupons, and integrations</div>
-          </div>
-          <span class="tool-arrow">&rsaquo;</span>
-        </a>
-      </li>
-    </ul>
+    <main id="content-area">
 
-    <a href="/" class="back-link">&larr; Back to site</a>
+      <!-- ==================== PRODUCTS ==================== -->
+      <section id="sec-products" class="admin-section active">
+        <!-- List view -->
+        <div id="pl-view">
+          <div class="toolbar">
+            <h1>Products</h1>
+            <button class="btn btn-outline" id="pl-add-btn">Add Product</button>
+            <span class="status" id="pl-status"></span>
+          </div>
+          <div class="filters" id="pl-filters"><button class="filter-btn active" data-cat="all">All</button></div>
+          <div class="product-list-page" id="pl-page"><div class="loading">Loading products...</div></div>
+        </div>
+        <!-- Edit view -->
+        <div id="pe-view" style="display:none;">
+          <div class="toolbar">
+            <h1 id="pe-title">Edit Product</h1>
+            <button class="link-btn" id="pe-back">Back to Products</button>
+            <button class="btn" id="pe-save-btn" disabled>Save &amp; Exit</button>
+            <button class="btn btn-danger" id="pe-delete-btn" style="display:none;">Delete</button>
+            <span class="status" id="pe-status"></span>
+          </div>
+          <div class="settings-page" id="pe-editor">
+            <div class="editor-section">
+              <h2>Details</h2>
+              <div class="field-group"><label for="pe-cat">Category</label><select id="pe-cat" class="text-input"></select></div>
+              <div class="field-group"><label for="pe-title-field">Title</label><input type="text" id="pe-title-field" class="text-input" placeholder="Product title"></div>
+              <div class="field-group"><label for="pe-desc">Description</label><textarea id="pe-desc" class="text-input" placeholder="Product description"></textarea></div>
+              <div class="field-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="0" step="0.01"></div>
+              <div class="field-group"><label>For Sale</label><label class="toggle-row"><input type="checkbox" id="pe-forsale"><div class="toggle-track"></div><span class="toggle-label" id="pe-forsale-label">Hidden</span></label></div>
+              <div class="field-group" id="pe-stock-group"><label for="pe-stock">Stock</label><p class="field-desc">Leave blank for unlimited. Set to 0 for Sold Out.</p><input type="number" id="pe-stock" class="text-input" placeholder="Unlimited" min="0" step="1"></div>
+            </div>
+            <div class="editor-section">
+              <h2>Sizes</h2>
+              <p class="field-desc" style="margin-bottom:1rem;">Optional. Per-size inventory is optional (leave blank for unlimited).</p>
+              <div id="pe-sizes-list"></div>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.75rem;"><input type="text" id="pe-new-size" class="text-input" placeholder="e.g. S, M, L or 6, 7, 8" style="width:200px;margin-top:0;"><button class="btn btn-outline" id="pe-add-size" type="button" style="white-space:nowrap;">Add Size</button></div>
+            </div>
+            <div class="editor-section">
+              <h2>Images</h2>
+              <div class="image-list" id="pe-image-list"></div>
+              <label class="add-image-label">Add Image<input type="file" id="pe-image-input" accept="image/*"></label>
+            </div>
+            <div class="editor-section" id="pe-stripe-section" style="display:none;">
+              <h2>Stripe</h2>
+              <div class="stripe-ids" id="pe-stripe-ids"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== BRANDING ==================== -->
+      <section id="sec-branding" class="admin-section">
+        <div class="toolbar">
+          <h1>Branding</h1>
+          <button class="btn" id="hp-save-btn" disabled>Save</button>
+          <span class="status" id="hp-status"></span>
+        </div>
+        <div class="settings-page" id="hp-page" style="display:none;">
+          <div class="settings-section" style="border-top:none;">
+            <h2>Logo</h2>
+            <div class="field-group">
+              <label>Upload Logo</label>
+              <p class="field-desc">PNG with transparent background. Displayed at 80px on the site.</p>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;">
+                <label class="btn btn-outline" style="cursor:pointer;">Choose File<input type="file" id="hp-logo-file" accept="image/png,image/svg+xml" style="display:none;"></label>
+                <span class="field-desc" id="hp-logo-status"></span>
+              </div>
+              <img id="hp-logo-preview" class="logo-preview" src="" alt="Logo preview" style="display:none;">
+              <input type="hidden" id="hp-logo-url">
+            </div>
+          </div>
+          <div class="settings-section">
+            <h2>Site Font</h2>
+            <div class="field-group"><label for="hp-font-select">Font Family</label><select id="hp-font-select" class="text-input"><option value="IBM Plex Mono">IBM Plex Mono</option></select></div>
+            <div class="field-group" style="margin-top:1.25rem;">
+              <label>Upload New Font</label>
+              <p class="field-desc">Upload a .ttf or .woff2 file.</p>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;">
+                <label class="btn btn-outline" style="cursor:pointer;">Choose Font File<input type="file" id="hp-font-file" accept=".ttf,.woff2" style="display:none;"></label>
+                <span class="field-desc" id="hp-font-status"></span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h2>Background Gradient</h2>
+            <p class="field-desc" style="margin-bottom:1rem;">Color pairs that cycle on the homepage background.</p>
+            <div class="gradient-list" id="hp-gradient-list"></div>
+            <button class="btn btn-outline" id="hp-add-gradient" type="button">Add Color Pair</button>
+          </div>
+        </div>
+        <div class="loading" id="hp-loading">Loading...</div>
+      </section>
+
+      <!-- ==================== CATEGORIES ==================== -->
+      <section id="sec-categories" class="admin-section">
+        <div class="toolbar">
+          <h1>Categories</h1>
+          <button class="btn" id="hp-cat-save-btn" disabled>Save</button>
+          <span class="status" id="hp-cat-status"></span>
+        </div>
+        <div class="settings-page" id="hp-cat-page" style="display:none;">
+          <div class="settings-section" style="border-top:none;">
+            <p class="field-desc" style="margin-bottom:1rem;">Homepage panels and navigation links. Drag to reorder.</p>
+            <div class="cat-list" id="hp-cat-list"></div>
+            <div style="border:1px solid rgba(0,0,0,0.1);padding:1.25rem;margin-top:1rem;">
+              <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,0,0,0.35);margin-bottom:1rem;">Add Category</p>
+              <div class="field-group"><label for="hp-new-cat-slug">Slug</label><p class="field-desc">URL path (lowercase, no spaces).</p><input type="text" id="hp-new-cat-slug" class="text-input" placeholder="e.g. earrings"></div>
+              <div class="field-group"><label for="hp-new-cat-label">Label</label><input type="text" id="hp-new-cat-label" class="text-input" placeholder="e.g. EARRINGS" style="text-transform:uppercase;"></div>
+              <button class="btn btn-outline" id="hp-add-cat" type="button" style="margin-top:0.5rem;">Add Category</button>
+              <span class="field-desc" id="hp-add-cat-status" style="margin-left:0.75rem;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="loading" id="hp-cat-loading">Loading...</div>
+      </section>
+
+      <!-- ==================== SHIPPING ==================== -->
+      <section id="sec-shipping" class="admin-section">
+        <div class="toolbar"><h1>Shipping</h1><button class="btn" id="st-ship-save">Save</button><span class="status" id="st-ship-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="field-desc" style="margin-bottom:1.25rem;">US-only shipping. Shipping rates are managed in <a href="https://dashboard.stripe.com/shipping-rates" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Stripe</a>.</p>
+            <div class="field-group"><label for="st-shipping-method">Shipping Method</label><select id="st-shipping-method" class="text-input"><option value="free">Free Shipping</option><option value="flat">Flat Rate (Stripe Shipping Rate)</option><option value="pickup">Local Pickup</option></select></div>
+            <div id="st-shipping-flat-fields" style="display:none;">
+              <div class="field-group"><label for="st-shipping-rate-id">Stripe Shipping Rate</label><select id="st-shipping-rate-id" class="text-input"><option value="">Loading rates...</option></select></div>
+              <div class="field-group"><label for="st-shipping-free-threshold">Free Shipping Over (USD)</label><p class="field-desc">Leave blank to always charge.</p><input type="number" id="st-shipping-free-threshold" class="text-input" placeholder="e.g. 200" min="0" step="0.01"></div>
+            </div>
+            <div id="st-shipping-pickup-fields" style="display:none;">
+              <div class="field-group"><label for="st-shipping-pickup-address">Pickup Address</label><input type="text" id="st-shipping-pickup-address" class="text-input" placeholder="123 Main St, Brooklyn, NY 11201"></div>
+              <div class="field-group"><label for="st-shipping-pickup-hours">Pickup Hours</label><input type="text" id="st-shipping-pickup-hours" class="text-input" placeholder="e.g. Mon–Fri 10am–6pm"></div>
+            </div>
+            <div class="field-group" id="st-delivery-days-field"><label for="st-delivery-days">Delivery Time</label><p class="field-desc">How many days after ordering for the package to arrive.</p><input type="text" id="st-delivery-days" class="text-input" placeholder="e.g. 3–4"></div>
+            <div class="field-group"><label for="st-returns-policy">Returns Policy</label><p class="field-desc">Displayed on the Shipping &amp; Returns page.</p><textarea id="st-returns-policy" class="text-input" rows="5" style="resize:vertical;"></textarea></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== SECONDARY CTA ==================== -->
+      <section id="sec-secondary-cta" class="admin-section">
+        <div class="toolbar"><h1>Secondary CTA</h1><button class="btn" id="st-cta-save">Save</button><span class="status" id="st-cta-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="field-desc" style="margin-bottom:1.25rem;">The contact button shown below "Add to Cart" on product pages.</p>
+            <div class="field-group"><label for="st-cta-button-text">Button Text</label><input type="text" id="st-cta-button-text" class="text-input" placeholder="e.g. Make me one"></div>
+            <div class="field-group"><label for="st-cta-message-template">Message Template</label><p class="field-desc">Use <strong>{product}</strong> to insert the product name. Instagram does not support pre-filled messages.</p><textarea id="st-cta-message-template" class="text-input" rows="2" style="resize:vertical;"></textarea></div>
+            <div class="field-group"><label for="st-cta-desktop-channel">Desktop — Channel</label><select id="st-cta-desktop-channel" class="text-input"><option value="instagram">Instagram DM</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option><option value="email">Email</option></select></div>
+            <div class="field-group"><label for="st-cta-desktop-handle">Desktop — Handle / Number / Email</label><p class="field-desc" id="st-cta-desktop-desc">Instagram username without @</p><input type="text" id="st-cta-desktop-handle" class="text-input"></div>
+            <div class="field-group"><label for="st-cta-mobile-channel">Mobile — Channel</label><select id="st-cta-mobile-channel" class="text-input"><option value="instagram">Instagram DM</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option><option value="email">Email</option></select></div>
+            <div class="field-group"><label for="st-cta-mobile-handle">Mobile — Handle / Number / Email</label><p class="field-desc" id="st-cta-mobile-desc">Instagram username without @</p><input type="text" id="st-cta-mobile-handle" class="text-input"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== COUPONS ==================== -->
+      <section id="sec-coupons" class="admin-section">
+        <div class="toolbar"><h1>Coupons</h1><span class="status" id="st-coupon-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <div id="st-coupons-list"></div>
+            <div style="border:1px solid rgba(0,0,0,0.1);padding:1.25rem;margin-top:1rem;">
+              <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,0,0,0.35);margin-bottom:1rem;">Create Coupon</p>
+              <div class="field-group"><label for="st-coupon-code">Code</label><input type="text" id="st-coupon-code" class="text-input" placeholder="e.g. WELCOME10" style="text-transform:uppercase;"></div>
+              <div class="field-group"><label for="st-coupon-name">Name</label><input type="text" id="st-coupon-name" class="text-input" placeholder="e.g. Welcome discount"></div>
+              <div class="field-group"><label for="st-coupon-type">Discount Type</label><select id="st-coupon-type" class="text-input"><option value="percent">Percentage Off</option><option value="fixed">Fixed Amount Off</option></select></div>
+              <div class="field-group"><label for="st-coupon-amount">Amount</label><p class="field-desc">Enter number only (e.g. 10 for 10% or $10).</p><input type="number" id="st-coupon-amount" class="text-input" placeholder="10" min="0"></div>
+              <div class="field-group"><label for="st-coupon-max">Max Redemptions</label><p class="field-desc">Leave blank for unlimited.</p><input type="number" id="st-coupon-max" class="text-input" placeholder="Unlimited" min="1"></div>
+              <div class="field-group"><label for="st-coupon-expires">Expires (days)</label><p class="field-desc">Leave blank for no expiration.</p><input type="number" id="st-coupon-expires" class="text-input" placeholder="Never" min="1"></div>
+              <button type="button" id="st-coupon-create-btn" class="btn" style="margin-top:0.5rem;">Create Coupon</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== THANK YOU ==================== -->
+      <section id="sec-thankyou" class="admin-section">
+        <div class="toolbar"><h1>Thank You</h1><button class="btn" id="st-ty-save">Save</button><span class="status" id="st-ty-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="field-desc" style="margin-bottom:1.25rem;">Shown after a successful checkout. We will display your contact info as well. Edit your contact info in the Contact section.</p>
+            <div class="field-group"><label for="st-ty-primary">Primary Message</label><textarea id="st-ty-primary" class="text-input" rows="3" style="resize:vertical;"></textarea></div>
+            <div class="field-group"><label for="st-ty-secondary">Secondary Message</label><textarea id="st-ty-secondary" class="text-input" rows="3" style="resize:vertical;"></textarea></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MARKETING ==================== -->
+      <section id="sec-marketing" class="admin-section">
+        <div class="toolbar"><h1>Marketing</h1><button class="btn" id="st-mkt-save">Save</button><span class="status" id="st-mkt-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <div class="field-group"><label for="st-pixel-id">Meta / Facebook Pixel ID</label><p class="field-desc">Found in Meta Events Manager.</p><input type="text" id="st-pixel-id" class="text-input" placeholder="e.g. 1234567890123456"></div>
+            <div class="field-group" style="margin-top:1.5rem;">
+              <label>Meta Product Feed URL</label>
+              <p class="field-desc">Use in <a href="https://business.facebook.com/commerce" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Meta Commerce Manager</a> to sync your catalog.</p>
+              <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.25rem;"><input type="text" id="st-feed-url" class="text-input" readonly style="flex:1;"><button type="button" id="st-copy-feed" class="btn" style="white-space:nowrap;padding:0.5rem 1rem;font-size:0.75rem;">COPY</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== METADATA ==================== -->
+      <section id="sec-metadata" class="admin-section">
+        <div class="toolbar"><h1>Metadata</h1><button class="btn" id="st-meta-save">Save</button><span class="status" id="st-meta-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="section-desc">Controls how your site appears in Google search results and social media.</p>
+            <div class="field-group"><label for="st-site-title">Site Title</label><input type="text" id="st-site-title" class="text-input"></div>
+            <div class="field-group"><label for="st-site-desc">Description</label><textarea id="st-site-desc" class="text-input" rows="3" style="resize:vertical;"></textarea><span id="st-desc-counter" style="font-size:0.7rem;color:rgba(0,0,0,0.3);margin-top:0.15rem;"></span></div>
+            <div class="field-group">
+              <label>Share Image</label><p class="field-desc">Cropped to <strong>1200 × 630 px</strong>.</p>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;"><label class="btn btn-outline" style="cursor:pointer;">Upload<input type="file" id="st-og-image-file" accept="image/*" style="display:none;"></label><span class="field-desc" id="st-og-image-status"></span></div>
+              <div id="st-og-image-wrap" class="image-field-preview" style="display:none;"><img id="st-og-image-preview" style="max-width:300px;max-height:160px;"><button type="button" class="image-delete-btn" id="st-og-image-delete">Delete</button></div>
+              <input type="hidden" id="st-og-image">
+            </div>
+            <div class="field-group"><label for="st-og-url">Canonical URL</label><input type="text" id="st-og-url" class="text-input"></div>
+            <div class="field-group">
+              <label>Favicon (32 × 32)</label>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;"><label class="btn btn-outline" style="cursor:pointer;">Upload<input type="file" id="st-favicon-file" accept="image/*" style="display:none;"></label><span class="field-desc" id="st-favicon-status"></span></div>
+              <div id="st-favicon-wrap" class="image-field-preview" style="display:none;"><img id="st-favicon-preview" style="width:32px;height:32px;"><button type="button" class="image-delete-btn" id="st-favicon-delete">Delete</button></div>
+              <input type="hidden" id="st-favicon-url">
+            </div>
+            <div class="field-group">
+              <label>Apple Touch Icon (180 × 180)</label>
+              <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;"><label class="btn btn-outline" style="cursor:pointer;">Upload<input type="file" id="st-apple-icon-file" accept="image/*" style="display:none;"></label><span class="field-desc" id="st-apple-icon-status"></span></div>
+              <div id="st-apple-icon-wrap" class="image-field-preview" style="display:none;"><img id="st-apple-icon-preview" style="width:48px;height:48px;"><button type="button" class="image-delete-btn" id="st-apple-icon-delete">Delete</button></div>
+              <input type="hidden" id="st-apple-icon-url">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== CONTACT ==================== -->
+      <section id="sec-contact" class="admin-section">
+        <div class="toolbar"><h1>Contact</h1><button class="btn" id="st-contact-save">Save</button><span class="status" id="st-contact-status"></span></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="field-desc" style="margin-bottom:1.25rem;">Displayed on the About page and Thank You page. Only filled fields appear.</p>
+            <div class="field-group"><label for="st-contact-email">Email</label><input type="email" id="st-contact-email" class="text-input" placeholder="hello@florezflorez.com"></div>
+            <div class="field-group"><label for="st-contact-phone">Phone / SMS</label><input type="text" id="st-contact-phone" class="text-input" placeholder="+13475551234"></div>
+            <div class="field-group"><label for="st-contact-instagram">Instagram</label><p class="field-desc">Username without @. Opens a DM.</p><input type="text" id="st-contact-instagram" class="text-input" placeholder="florezflorez.studio"></div>
+            <div class="field-group"><label for="st-contact-whatsapp">WhatsApp</label><input type="text" id="st-contact-whatsapp" class="text-input" placeholder="+573001234567"></div>
+            <div class="field-group"><label for="st-contact-tiktok">TikTok</label><p class="field-desc">Username without @. Links to profile.</p><input type="text" id="st-contact-tiktok" class="text-input" placeholder="florezflorez.studio"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== STRIPE ==================== -->
+      <section id="sec-stripe" class="admin-section">
+        <div class="toolbar"><h1>Stripe</h1></div>
+        <div class="settings-page">
+          <div class="settings-section" style="border-top:none;">
+            <p class="section-desc">Set in Vercel under Settings &rarr; Environment Variables.</p>
+            <div class="env-list">
+              <div class="env-item"><span class="env-key">STRIPE_SECRET_KEY</span><span class="env-desc">Starts with <code>sk_live_</code> or <code>sk_test_</code>.</span></div>
+            </div>
+            <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener" class="section-link">Stripe API Keys &rarr;</a>
+            <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" class="section-link">Vercel Dashboard &rarr;</a>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
+  <!-- Product crop modal -->
+  <div class="crop-modal" id="pe-crop-modal">
+    <div class="crop-modal-inner"><img id="pe-crop-image" src="" alt="Crop"></div>
+    <div class="crop-modal-bar">
+      <input type="text" id="pe-crop-alt" class="text-input" placeholder="Alt text">
+      <button class="btn" id="pe-crop-confirm">Add Image</button>
+      <button class="btn btn-outline" id="pe-crop-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Settings crop modal -->
+  <div class="crop-modal" id="st-crop-modal">
+    <div class="crop-modal-inner"><img id="st-crop-image" src="" alt="Crop"></div>
+    <div class="crop-modal-bar">
+      <span class="crop-info" id="st-crop-info"></span>
+      <button class="btn" id="st-crop-confirm">Crop &amp; Upload</button>
+      <button class="btn btn-outline" id="st-crop-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script src="/js/git-batch.js"></script>
   <script>
-    (() => {
-      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      const authScreen = document.getElementById('auth-screen');
-      const authBtn = document.getElementById('auth-btn');
-      const dashboard = document.getElementById('dashboard');
-      const dashboardUser = document.getElementById('dashboard-user');
+  (() => {
+    const REPO = 'taoofdre/florezflorez';
+    const SPECIAL_SECTIONS = ['consulting', 'about'];
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-      function getStoredToken() {
-        return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token');
+    let ghToken = null;
+    let peIsDirty = false;
+    const initialized = {};
+
+    // ==================== SIDEBAR NAV ====================
+    const authScreen = document.getElementById('auth-screen');
+    const authBtn = document.getElementById('auth-btn');
+    const adminLayout = document.getElementById('admin-layout');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const sections = document.querySelectorAll('.admin-section');
+
+    function activateSection(name) {
+      if (peIsDirty && !confirm('You have unsaved product changes. Leave anyway?')) return;
+      sidebarLinks.forEach(l => l.classList.toggle('active', l.dataset.section === name));
+      sections.forEach(s => s.classList.toggle('active', s.id === 'sec-' + name));
+      if (!initialized[name]) {
+        initialized[name] = true;
+        const initFn = sectionInits[name];
+        if (initFn) initFn();
       }
+    }
 
-      function storeToken(token) {
-        sessionStorage.setItem('gh_token', token);
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        activateSection(link.dataset.section);
+      });
+    });
+
+    // ==================== AUTH ====================
+    function getStoredToken() { return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token'); }
+    function storeToken(t) { sessionStorage.setItem('gh_token', t); }
+
+    function showAdmin() {
+      authScreen.style.display = 'none';
+      adminLayout.classList.add('show');
+      activateSection('products');
+    }
+
+    // ==================== SHARED HELPERS ====================
+    const contentCache = {}; // in-memory cache: file path → content object
+
+    async function loadGHFile(file) {
+      // Return cached version if available (avoids GitHub propagation lag)
+      if (contentCache[file]) {
+        return { content: JSON.parse(JSON.stringify(contentCache[file])), sha: null };
       }
-
-      function showDashboard(username) {
-        authScreen.style.display = 'none';
-        dashboard.style.display = 'block';
-        if (username) dashboardUser.textContent = username;
+      if (ghToken) {
+        const res = await fetch('https://api.github.com/repos/' + REPO + '/contents/' + file, { headers: { Authorization: 'token ' + ghToken } });
+        if (!res.ok) throw new Error('Failed to load ' + file);
+        const f = await res.json();
+        const content = JSON.parse(atob(f.content.replace(/\n/g, '')));
+        contentCache[file] = JSON.parse(JSON.stringify(content));
+        return { content, sha: f.sha };
+      } else {
+        const res = await fetch('/' + file + '?t=' + Date.now());
+        if (!res.ok) throw new Error('Failed to load ' + file);
+        const content = await res.json();
+        contentCache[file] = JSON.parse(JSON.stringify(content));
+        return { content, sha: null };
       }
+    }
 
-      async function verifyToken(token) {
+    async function uploadToR2(blob, filename) {
+      const buffer = await blob.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ghToken }, body: JSON.stringify({ filename, content: base64 }) });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Upload failed'); }
+      return (await res.json()).path;
+    }
+
+    // ==================== SETTINGS (shared across settings sections) ====================
+    let settingsLoaded = false;
+    let settingsData = {};
+
+    async function loadSettings() {
+      if (settingsLoaded) return;
+      try {
+        const res = await fetch('/content/settings.json?t=' + Date.now());
+        if (res.ok) settingsData = await res.json();
+      } catch (e) {}
+      settingsLoaded = true;
+      populateSettingsForms();
+    }
+
+    function populateSettingsForms() {
+      const d = settingsData;
+      // Metadata
+      document.getElementById('st-site-title').value = d.site_title || '';
+      document.getElementById('st-site-desc').value = d.site_description || '';
+      document.getElementById('st-og-image').value = d.og_image || '';
+      if (d.og_image) { document.getElementById('st-og-image-preview').src = d.og_image; document.getElementById('st-og-image-wrap').style.display = ''; }
+      document.getElementById('st-og-url').value = d.og_url || '';
+      document.getElementById('st-favicon-url').value = d.favicon_url || '';
+      if (d.favicon_url) { document.getElementById('st-favicon-preview').src = d.favicon_url; document.getElementById('st-favicon-wrap').style.display = ''; }
+      document.getElementById('st-apple-icon-url').value = d.apple_icon_url || '';
+      if (d.apple_icon_url) { document.getElementById('st-apple-icon-preview').src = d.apple_icon_url; document.getElementById('st-apple-icon-wrap').style.display = ''; }
+      // Marketing
+      document.getElementById('st-pixel-id').value = d.meta_pixel_id || '';
+      const feedUrlEl = document.getElementById('st-feed-url');
+      if (feedUrlEl && d.og_url) feedUrlEl.value = d.og_url.replace(/\/$/, '') + '/api/meta-feed';
+      // CTA
+      const cta = d.secondary_cta || {};
+      document.getElementById('st-cta-button-text').value = cta.button_text || '';
+      document.getElementById('st-cta-message-template').value = cta.message_template || '';
+      if (cta.desktop) { document.getElementById('st-cta-desktop-channel').value = cta.desktop.channel || 'instagram'; document.getElementById('st-cta-desktop-handle').value = cta.desktop.handle || ''; }
+      if (cta.mobile) { document.getElementById('st-cta-mobile-channel').value = cta.mobile.channel || 'instagram'; document.getElementById('st-cta-mobile-handle').value = cta.mobile.handle || ''; }
+      // Shipping
+      const ship = d.shipping || {};
+      document.getElementById('st-shipping-method').value = ship.method || 'free';
+      document.getElementById('st-shipping-free-threshold').value = ship.free_threshold || '';
+      document.getElementById('st-shipping-pickup-address').value = ship.pickup_address || '';
+      document.getElementById('st-shipping-pickup-hours').value = ship.pickup_hours || '';
+      document.getElementById('st-delivery-days').value = ship.delivery_days || '';
+      document.getElementById('st-returns-policy').value = ship.returns_policy || '';
+      updateShippingFields();
+      // Contact
+      const contact = d.contact || {};
+      document.getElementById('st-contact-email').value = contact.email || '';
+      document.getElementById('st-contact-phone').value = contact.phone || '';
+      document.getElementById('st-contact-instagram').value = contact.instagram || '';
+      document.getElementById('st-contact-whatsapp').value = contact.whatsapp || '';
+      document.getElementById('st-contact-tiktok').value = contact.tiktok || '';
+      // Thank you
+      const ty = d.thank_you || {};
+      document.getElementById('st-ty-primary').value = ty.primary || '';
+      document.getElementById('st-ty-secondary').value = ty.secondary || '';
+    }
+
+    function gatherSettings() {
+      return {
+        site_title: document.getElementById('st-site-title').value.trim(),
+        site_description: document.getElementById('st-site-desc').value.trim(),
+        og_image: document.getElementById('st-og-image').value.trim(),
+        og_url: document.getElementById('st-og-url').value.trim(),
+        favicon_url: document.getElementById('st-favicon-url').value.trim(),
+        apple_icon_url: document.getElementById('st-apple-icon-url').value.trim(),
+        meta_pixel_id: document.getElementById('st-pixel-id').value.trim(),
+        secondary_cta: {
+          button_text: document.getElementById('st-cta-button-text').value.trim(),
+          message_template: document.getElementById('st-cta-message-template').value.trim(),
+          desktop: { channel: document.getElementById('st-cta-desktop-channel').value, handle: document.getElementById('st-cta-desktop-handle').value.trim() },
+          mobile: { channel: document.getElementById('st-cta-mobile-channel').value, handle: document.getElementById('st-cta-mobile-handle').value.trim() },
+        },
+        shipping: {
+          method: document.getElementById('st-shipping-method').value,
+          stripe_rate_id: document.getElementById('st-shipping-rate-id').value || null,
+          free_threshold: document.getElementById('st-shipping-free-threshold').value.trim() ? parseFloat(document.getElementById('st-shipping-free-threshold').value) : null,
+          pickup_address: document.getElementById('st-shipping-pickup-address').value.trim(),
+          pickup_hours: document.getElementById('st-shipping-pickup-hours').value.trim(),
+          delivery_days: document.getElementById('st-delivery-days').value.trim(),
+          returns_policy: document.getElementById('st-returns-policy').value.trim(),
+        },
+        contact: {
+          email: document.getElementById('st-contact-email').value.trim(),
+          phone: document.getElementById('st-contact-phone').value.trim(),
+          instagram: document.getElementById('st-contact-instagram').value.trim(),
+          whatsapp: document.getElementById('st-contact-whatsapp').value.trim(),
+          tiktok: document.getElementById('st-contact-tiktok').value.trim(),
+        },
+        thank_you: {
+          primary: document.getElementById('st-ty-primary').value.trim(),
+          secondary: document.getElementById('st-ty-secondary').value.trim(),
+        },
+      };
+    }
+
+    function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function buildMetaBlock(s) {
+      const t = s.site_title || 'Florez Florez';
+      const parts = ['<!-- META:START -->', '  <title>' + escHtml(t) + '</title>'];
+      if (s.site_description) parts.push('  <meta name="description" content="' + escHtml(s.site_description) + '">');
+      if (s.favicon_url) parts.push('  <link rel="icon" type="image/png" href="' + escHtml(s.favicon_url) + '">');
+      if (s.apple_icon_url) parts.push('  <link rel="apple-touch-icon" href="' + escHtml(s.apple_icon_url) + '">');
+      parts.push('  <meta property="og:type" content="website">');
+      parts.push('  <meta property="og:title" content="' + escHtml(t) + '">');
+      if (s.site_description) parts.push('  <meta property="og:description" content="' + escHtml(s.site_description) + '">');
+      if (s.og_image) parts.push('  <meta property="og:image" content="' + escHtml(s.og_image) + '">');
+      if (s.og_url) parts.push('  <meta property="og:url" content="' + escHtml(s.og_url) + '">');
+      parts.push('  <meta name="twitter:card" content="summary_large_image">');
+      parts.push('  <meta name="twitter:title" content="' + escHtml(t) + '">');
+      if (s.site_description) parts.push('  <meta name="twitter:description" content="' + escHtml(s.site_description) + '">');
+      if (s.og_image) parts.push('  <meta name="twitter:image" content="' + escHtml(s.og_image) + '">');
+      parts.push('  <!-- META:END -->');
+      return parts.join('\n');
+    }
+
+    async function saveSettings(statusEl) {
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'status';
+      try {
+        const settings = gatherSettings();
+        const batch = new GitBatch(REPO, ghToken);
+        batch.addJSON('content/settings.json', settings);
+        // Update index.html meta block
+        const indexRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/index.html', { headers: { Authorization: 'token ' + ghToken } });
+        if (indexRes.ok) {
+          const indexFile = await indexRes.json();
+          const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
+          const newMeta = buildMetaBlock(settings);
+          let updated = indexContent;
+          if (/<!-- META:START -->[\s\S]*?<!-- META:END -->/.test(indexContent)) {
+            updated = indexContent.replace(/<!-- META:START -->[\s\S]*?<!-- META:END -->/, newMeta);
+          }
+          batch.addText('index.html', updated);
+        }
+        await batch.commit('Update site settings');
+        settingsData = settings;
+        statusEl.textContent = 'Saved — site will update in about 1 minute';
+        statusEl.className = 'status success';
+      } catch (e) {
+        statusEl.textContent = 'Error: ' + e.message;
+        statusEl.className = 'status error';
+      }
+    }
+
+    // Shipping fields toggle
+    function updateShippingFields() {
+      const m = document.getElementById('st-shipping-method').value;
+      document.getElementById('st-shipping-flat-fields').style.display = m === 'flat' ? '' : 'none';
+      document.getElementById('st-shipping-pickup-fields').style.display = m === 'pickup' ? '' : 'none';
+      document.getElementById('st-delivery-days-field').style.display = m === 'pickup' ? 'none' : '';
+    }
+    document.getElementById('st-shipping-method').addEventListener('change', updateShippingFields);
+
+    // CTA channel hints
+    const channelHints = { instagram: 'Instagram username without @', whatsapp: 'Phone with country code (e.g. +573001234567)', sms: 'Phone with country code (e.g. +13475551234)', email: 'Email address' };
+    function bindHint(selId, descId) { const s = document.getElementById(selId); const d = document.getElementById(descId); s.addEventListener('change', () => { d.textContent = channelHints[s.value] || ''; }); }
+    bindHint('st-cta-desktop-channel', 'st-cta-desktop-desc');
+    bindHint('st-cta-mobile-channel', 'st-cta-mobile-desc');
+
+    // Desc counter
+    document.getElementById('st-site-desc').addEventListener('input', function() {
+      const c = document.getElementById('st-desc-counter');
+      c.textContent = this.value.length + ' / 155';
+      c.style.color = this.value.length > 155 ? '#c44' : 'rgba(0,0,0,0.3)';
+    });
+
+    // Copy feed URL
+    document.getElementById('st-copy-feed').addEventListener('click', () => {
+      const f = document.getElementById('st-feed-url');
+      navigator.clipboard.writeText(f.value).catch(() => { f.select(); document.execCommand('copy'); });
+    });
+
+    // Settings save buttons (all call the same saveSettings)
+    ['st-ship-save', 'st-cta-save', 'st-ty-save', 'st-mkt-save', 'st-meta-save', 'st-contact-save'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', () => {
+        const statusEl = btn.closest('.toolbar').querySelector('.status');
+        saveSettings(statusEl);
+      });
+    });
+
+    // Settings crop modal
+    let stCropper = null;
+    let stPendingCrop = null;
+    const stCropModal = document.getElementById('st-crop-modal');
+    const stCropImage = document.getElementById('st-crop-image');
+    const stCropInfo = document.getElementById('st-crop-info');
+
+    function openStCropModal(src, w, h, cfg) {
+      stPendingCrop = cfg;
+      stCropInfo.textContent = w + ' × ' + h + ' px';
+      stCropModal.classList.add('open');
+      stCropImage.src = src;
+      if (stCropper) stCropper.destroy();
+      stCropper = new Cropper(stCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: w / h, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false });
+    }
+
+    function closeStCropModal() { stCropModal.classList.remove('open'); if (stCropper) { stCropper.destroy(); stCropper = null; } stPendingCrop = null; }
+
+    document.getElementById('st-crop-cancel').addEventListener('click', closeStCropModal);
+
+    document.getElementById('st-crop-confirm').addEventListener('click', async () => {
+      if (!stCropper || !stPendingCrop) return;
+      const cfg = stPendingCrop;
+      const confirmBtn = document.getElementById('st-crop-confirm');
+      const canvas = stCropper.getCroppedCanvas({ width: cfg.w, height: cfg.h, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+      if (!canvas) return;
+      confirmBtn.disabled = true; confirmBtn.textContent = 'Uploading...';
+      canvas.toBlob(async (blob) => {
         try {
-          const res = await fetch('https://api.github.com/user', {
-            headers: { 'Authorization': 'token ' + token }
+          const path = await uploadToR2(blob, cfg.filename);
+          cfg.hiddenInput.value = path;
+          cfg.previewEl.src = path;
+          cfg.wrapEl.style.display = '';
+          cfg.statusEl.textContent = 'Uploaded';
+          cfg.statusEl.style.color = '#3a3';
+        } catch (e) {
+          cfg.statusEl.textContent = 'Error: ' + e.message;
+          cfg.statusEl.style.color = '#c44';
+        }
+        confirmBtn.disabled = false; confirmBtn.textContent = 'Crop & Upload';
+        closeStCropModal();
+      }, 'image/png');
+    });
+
+    function bindSettingsImage(fileId, hiddenId, previewId, wrapId, statusId, deleteId, filename, w, h) {
+      const fileEl = document.getElementById(fileId);
+      const hiddenEl = document.getElementById(hiddenId);
+      const previewEl = document.getElementById(previewId);
+      const wrapEl = document.getElementById(wrapId);
+      const statusEl = document.getElementById(statusId);
+      const deleteEl = document.getElementById(deleteId);
+      fileEl.addEventListener('change', () => {
+        const file = fileEl.files[0]; if (!file) return; fileEl.value = '';
+        const reader = new FileReader();
+        reader.onload = (ev) => { openStCropModal(ev.target.result, w, h, { hiddenInput: hiddenEl, previewEl, wrapEl, statusEl, filename, w, h }); };
+        reader.readAsDataURL(file);
+      });
+      deleteEl.addEventListener('click', () => { hiddenEl.value = ''; previewEl.src = ''; wrapEl.style.display = 'none'; statusEl.textContent = ''; });
+    }
+    bindSettingsImage('st-og-image-file', 'st-og-image', 'st-og-image-preview', 'st-og-image-wrap', 'st-og-image-status', 'st-og-image-delete', 'og-share-image.png', 1200, 630);
+    bindSettingsImage('st-favicon-file', 'st-favicon-url', 'st-favicon-preview', 'st-favicon-wrap', 'st-favicon-status', 'st-favicon-delete', 'favicon-32.png', 32, 32);
+    bindSettingsImage('st-apple-icon-file', 'st-apple-icon-url', 'st-apple-icon-preview', 'st-apple-icon-wrap', 'st-apple-icon-status', 'st-apple-icon-delete', 'apple-touch-icon.png', 180, 180);
+
+    // Stripe shipping rates
+    async function loadStripeShippingRates() {
+      if (!ghToken) return;
+      const sel = document.getElementById('st-shipping-rate-id');
+      try {
+        const res = await fetch('/api/shipping-rates', { headers: { Authorization: 'Bearer ' + ghToken } });
+        if (!res.ok) return;
+        const data = await res.json();
+        sel.innerHTML = '';
+        (data.rates || []).forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.display_name + (r.amount != null ? ' — $' + (r.amount / 100).toFixed(2) : '');
+          sel.appendChild(opt);
+        });
+        if (settingsData.shipping && settingsData.shipping.stripe_rate_id) sel.value = settingsData.shipping.stripe_rate_id;
+      } catch (e) { sel.innerHTML = '<option value="">Could not load rates</option>'; }
+    }
+
+    // Coupons
+    async function loadCoupons() {
+      const listEl = document.getElementById('st-coupons-list');
+      const statusEl = document.getElementById('st-coupon-status');
+      try {
+        const res = await fetch('/api/coupons', { headers: ghToken ? { Authorization: 'Bearer ' + ghToken } : {} });
+        if (!res.ok) return;
+        const data = await res.json();
+        listEl.innerHTML = '';
+        (data.codes || []).forEach(code => {
+          const item = document.createElement('div');
+          item.className = 'coupon-item';
+          item.innerHTML = '<span class="coupon-code">' + escHtml(code.code) + '</span><span class="coupon-detail">' + escHtml(code.coupon_name || '') + '</span>';
+          const deactBtn = document.createElement('button');
+          deactBtn.className = 'coupon-deactivate';
+          deactBtn.textContent = 'Deactivate';
+          deactBtn.addEventListener('click', async () => {
+            if (!confirm('Deactivate coupon ' + code.code + '?')) return;
+            try {
+              await fetch('/api/coupons', { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...(ghToken ? { Authorization: 'Bearer ' + ghToken } : {}) }, body: JSON.stringify({ promotion_code_id: code.id }) });
+              loadCoupons();
+            } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.className = 'status error'; }
           });
-          if (res.ok) {
-            const data = await res.json();
-            return data.login;
+          item.appendChild(deactBtn);
+          listEl.appendChild(item);
+        });
+      } catch (e) {}
+    }
+
+    document.getElementById('st-coupon-create-btn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('st-coupon-status');
+      const code = document.getElementById('st-coupon-code').value.trim().toUpperCase();
+      const name = document.getElementById('st-coupon-name').value.trim();
+      const type = document.getElementById('st-coupon-type').value;
+      const amount = document.getElementById('st-coupon-amount').value.trim();
+      const max = document.getElementById('st-coupon-max').value.trim();
+      const expires = document.getElementById('st-coupon-expires').value.trim();
+      if (!code || !amount) { statusEl.textContent = 'Code and amount required'; statusEl.className = 'status error'; return; }
+      try {
+        const body = { code, name: name || code, discount_type: type, amount: parseFloat(amount) };
+        if (max) body.max_redemptions = parseInt(max);
+        if (expires) body.expires_days = parseInt(expires);
+        const res = await fetch('/api/coupons', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(ghToken ? { Authorization: 'Bearer ' + ghToken } : {}) }, body: JSON.stringify(body) });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Failed'); }
+        document.getElementById('st-coupon-code').value = '';
+        document.getElementById('st-coupon-name').value = '';
+        document.getElementById('st-coupon-amount').value = '';
+        document.getElementById('st-coupon-max').value = '';
+        document.getElementById('st-coupon-expires').value = '';
+        statusEl.textContent = 'Coupon created';
+        statusEl.className = 'status success';
+        loadCoupons();
+      } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.className = 'status error'; }
+    });
+
+    // ==================== PRODUCTS ====================
+    let peFileCache = {};
+    let peImages = [];
+    let peSizes = [];
+    let peCropper = null;
+    let peOriginalPiece = null;
+    let peCurrentCat = null;
+    let peCurrentId = null;
+    let peIsNew = false;
+    let peSECTIONS = {};
+    let plAllProducts = [];
+    let plActiveFilter = 'all';
+
+    function plSetStatus(msg, type) { const el = document.getElementById('pl-status'); el.textContent = msg; el.className = 'status' + (type ? ' ' + type : ''); }
+    function peSetStatus(msg, type) { const el = document.getElementById('pe-status'); el.textContent = msg; el.className = 'status' + (type ? ' ' + type : ''); }
+
+    function peMarkDirty() {
+      peIsDirty = true;
+      document.getElementById('pe-save-btn').disabled = false;
+    }
+
+    function showProductEditor(cat, id) {
+      document.getElementById('pl-view').style.display = 'none';
+      document.getElementById('pe-view').style.display = '';
+      peCurrentCat = cat;
+      peCurrentId = id;
+      peIsNew = !id;
+      peIsDirty = false;
+      peOriginalPiece = null;
+      peImages = [];
+      peSizes = [];
+      peFileCache = {};
+      // Reset fields
+      document.getElementById('pe-title').textContent = peIsNew ? 'New Product' : 'Edit Product';
+      document.getElementById('pe-title-field').value = '';
+      document.getElementById('pe-desc').value = '';
+      document.getElementById('pe-price').value = '';
+      document.getElementById('pe-forsale').checked = false;
+      document.getElementById('pe-forsale-label').textContent = 'Hidden';
+      document.getElementById('pe-stock').value = '';
+      document.getElementById('pe-stock-group').style.display = '';
+      document.getElementById('pe-sizes-list').innerHTML = '';
+      document.getElementById('pe-image-list').innerHTML = '';
+      document.getElementById('pe-stripe-section').style.display = 'none';
+      document.getElementById('pe-stripe-ids').textContent = '';
+      document.getElementById('pe-delete-btn').style.display = peIsNew ? 'none' : '';
+      document.getElementById('pe-save-btn').disabled = peIsNew ? false : true;
+      peSetStatus('');
+      if (!peIsNew) loadProductForEdit(cat, id);
+    }
+
+    function hideProductEditor() {
+      document.getElementById('pe-view').style.display = 'none';
+      document.getElementById('pl-view').style.display = '';
+      peIsDirty = false;
+      plLoadAll();
+    }
+
+    async function loadProductForEdit(cat, id) {
+      try {
+        const { content } = await loadGHFile(peSECTIONS[cat]);
+        peFileCache[peSECTIONS[cat]] = { content };
+        const piece = (content.pieces || []).find(p => p.id === id);
+        if (!piece) throw new Error('Product not found');
+        peOriginalPiece = piece;
+        document.getElementById('pe-cat').value = cat;
+        document.getElementById('pe-title-field').value = piece.title || '';
+        document.getElementById('pe-desc').value = piece.description || '';
+        document.getElementById('pe-price').value = (piece.price_display || '').replace(/[^0-9.]/g, '') || '';
+        document.getElementById('pe-forsale').checked = !!piece.for_sale;
+        document.getElementById('pe-forsale-label').textContent = piece.for_sale ? 'For Sale' : 'Hidden';
+        if (typeof piece.stock === 'number') document.getElementById('pe-stock').value = piece.stock;
+        peSizes = (piece.sizes || []).map(s => ({ label: s.label, stock: typeof s.stock === 'number' ? s.stock : null }));
+        peRenderSizes();
+        peImages = (piece.images || []).map(img => ({ src: img.src, alt: img.alt || '', isNew: false }));
+        peRenderImages();
+        if (piece.stripe_product_id || piece.stripe_price_id) {
+          document.getElementById('pe-stripe-section').style.display = '';
+          const parts = [];
+          if (piece.stripe_product_id) parts.push('Product: ' + piece.stripe_product_id);
+          if (piece.stripe_price_id) parts.push('Price: ' + piece.stripe_price_id);
+          document.getElementById('pe-stripe-ids').textContent = parts.join('\n');
+        }
+      } catch (e) { peSetStatus('Error: ' + e.message, 'error'); }
+    }
+
+    function peRenderImages() {
+      const listEl = document.getElementById('pe-image-list');
+      listEl.innerHTML = '';
+      let dragIdx = null;
+      peImages.forEach((img, i) => {
+        const card = document.createElement('div'); card.className = 'image-card'; card.draggable = true;
+        card.addEventListener('dragstart', () => { dragIdx = i; card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragIdx = null; listEl.querySelectorAll('.image-card').forEach(c => c.classList.remove('drag-over')); });
+        card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drag-over'); });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); if (dragIdx === null || dragIdx === i) return; const m = peImages.splice(dragIdx, 1)[0]; peImages.splice(i, 0, m); peRenderImages(); peMarkDirty(); });
+        const imgEl = document.createElement('img'); imgEl.src = img.isNew ? img.previewUrl : img.src; imgEl.alt = img.alt; card.appendChild(imgEl);
+        if (img.isNew) { const badge = document.createElement('span'); badge.className = 'image-new-badge'; badge.textContent = 'New'; card.appendChild(badge); }
+        const removeBtn = document.createElement('button'); removeBtn.className = 'image-remove'; removeBtn.textContent = '\u00d7';
+        removeBtn.addEventListener('click', (e) => { e.stopPropagation(); if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); peImages.splice(i, 1); peRenderImages(); peMarkDirty(); });
+        card.appendChild(removeBtn);
+        const altInput = document.createElement('input'); altInput.className = 'image-alt'; altInput.type = 'text'; altInput.placeholder = 'Alt text'; altInput.value = img.alt;
+        altInput.addEventListener('input', () => { peImages[i].alt = altInput.value; });
+        card.appendChild(altInput);
+        listEl.appendChild(card);
+      });
+    }
+
+    function peRenderSizes() {
+      const stockGroup = document.getElementById('pe-stock-group');
+      const stockField = document.getElementById('pe-stock');
+      stockGroup.style.display = peSizes.length > 0 ? 'none' : '';
+      if (peSizes.length > 0) stockField.value = '';
+      const listEl = document.getElementById('pe-sizes-list');
+      listEl.innerHTML = '';
+      peSizes.forEach((s, i) => {
+        const row = document.createElement('div'); row.className = 'size-item';
+        const label = document.createElement('span'); label.className = 'size-label'; label.textContent = s.label; row.appendChild(label);
+        const stockLabel = document.createElement('span'); stockLabel.className = 'size-stock-label'; stockLabel.textContent = 'Stock'; row.appendChild(stockLabel);
+        const stockInput = document.createElement('input'); stockInput.className = 'size-stock'; stockInput.type = 'number'; stockInput.min = '0'; stockInput.step = '1'; stockInput.placeholder = '\u221e';
+        if (typeof s.stock === 'number') stockInput.value = s.stock;
+        stockInput.addEventListener('input', () => { peSizes[i].stock = stockInput.value.trim() !== '' ? parseInt(stockInput.value) : null; peMarkDirty(); });
+        row.appendChild(stockInput);
+        const removeBtn = document.createElement('button'); removeBtn.className = 'size-remove'; removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => { peSizes.splice(i, 1); peRenderSizes(); peMarkDirty(); });
+        row.appendChild(removeBtn);
+        listEl.appendChild(row);
+      });
+    }
+
+    // Product crop modal
+    const peCropModal = document.getElementById('pe-crop-modal');
+    const peCropImage = document.getElementById('pe-crop-image');
+    const OUTPUT_SIZE = 1000;
+
+    document.getElementById('pe-image-input').addEventListener('change', (e) => {
+      const file = e.target.files[0]; if (!file) return; e.target.value = '';
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const testImg = new Image();
+        testImg.onload = () => {
+          if (testImg.naturalWidth < OUTPUT_SIZE || testImg.naturalHeight < OUTPUT_SIZE) { alert('Image must be at least ' + OUTPUT_SIZE + 'x' + OUTPUT_SIZE + ' px.'); return; }
+          peCropModal.classList.add('open');
+          document.getElementById('pe-crop-alt').value = '';
+          peCropImage.src = ev.target.result;
+          if (peCropper) peCropper.destroy();
+          peCropper = new Cropper(peCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: 1, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false });
+        };
+        testImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('pe-crop-cancel').addEventListener('click', () => { peCropModal.classList.remove('open'); if (peCropper) { peCropper.destroy(); peCropper = null; } });
+
+    document.getElementById('pe-crop-confirm').addEventListener('click', () => {
+      if (!peCropper) return;
+      const canvas = peCropper.getCroppedCanvas({ width: OUTPUT_SIZE, height: OUTPUT_SIZE, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+      if (!canvas) return;
+      canvas.toBlob((blob) => {
+        peImages.push({ src: '', alt: document.getElementById('pe-crop-alt').value.trim(), isNew: true, blob, previewUrl: URL.createObjectURL(blob) });
+        peRenderImages(); peMarkDirty();
+        peCropModal.classList.remove('open'); if (peCropper) { peCropper.destroy(); peCropper = null; }
+      }, 'image/webp', 0.85);
+    });
+
+    // Product save
+    document.getElementById('pe-save-btn').addEventListener('click', async () => {
+      const titleField = document.getElementById('pe-title-field');
+      const title = titleField.value.trim();
+      if (!title) { peSetStatus('Title is required', 'error'); return; }
+      const forSale = document.getElementById('pe-forsale').checked;
+      const price = document.getElementById('pe-price').value.trim();
+      if (forSale && !price) { peSetStatus('Price is required for items for sale', 'error'); return; }
+      document.getElementById('pe-save-btn').disabled = true;
+      peSetStatus('Saving...');
+      try {
+        const cat = document.getElementById('pe-cat').value;
+        const file = peSECTIONS[cat];
+        // Upload new images
+        for (let i = 0; i < peImages.length; i++) {
+          const img = peImages[i]; if (!img.isNew) continue;
+          peSetStatus('Uploading image ' + (i + 1) + '...');
+          const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          const result = await uploadToR2(img.blob, slug + '-' + Date.now() + '-' + i + '.webp');
+          img.src = result; img.isNew = false;
+          if (img.previewUrl) { URL.revokeObjectURL(img.previewUrl); delete img.previewUrl; } delete img.blob;
+        }
+        // Stripe sync
+        let stripeProductId = peOriginalPiece ? peOriginalPiece.stripe_product_id : null;
+        let stripePriceId = peOriginalPiece ? peOriginalPiece.stripe_price_id : null;
+        if (forSale && price) {
+          peSetStatus('Syncing with Stripe...');
+          const imagePath = peImages.length > 0 ? peImages[0].src : null;
+          const action = (stripeProductId || stripePriceId) ? 'update' : 'create';
+          const res = await fetch('/api/stripe-sync', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(ghToken ? { Authorization: 'Bearer ' + ghToken } : {}) }, body: JSON.stringify({ action, product: { title, description: document.getElementById('pe-desc').value.trim(), price_display: price, image_path: imagePath, stripe_price_id: stripePriceId || null, stripe_product_id: stripeProductId || null } }) });
+          const syncData = await res.json(); if (!res.ok) throw new Error(syncData.error || 'Stripe sync failed');
+          stripeProductId = syncData.stripe_product_id; stripePriceId = syncData.stripe_price_id;
+        }
+        peSetStatus('Saving to GitHub...');
+        const piece = {
+          id: peIsNew ? (stripeProductId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) : peCurrentId,
+          title, description: document.getElementById('pe-desc').value.trim(), for_sale: forSale, price_display: price,
+          stripe_price_id: stripePriceId || '', stripe_product_id: stripeProductId || '',
+          images: peImages.map(img => ({ src: img.src, alt: img.alt })),
+        };
+        const stockVal = document.getElementById('pe-stock').value.trim();
+        if (stockVal !== '') piece.stock = parseInt(stockVal, 10);
+        if (peSizes.length > 0) piece.sizes = peSizes.map(s => { const o = { label: s.label }; if (typeof s.stock === 'number') o.stock = s.stock; return o; });
+
+        const categoryChanged = !peIsNew && peCurrentCat && cat !== peCurrentCat;
+        const batch = new GitBatch(REPO, ghToken);
+        if (categoryChanged) {
+          const oldFile = peSECTIONS[peCurrentCat];
+          const { content: oldContent } = await loadGHFile(oldFile);
+          const oldIdx = oldContent.pieces.findIndex(p => p.id === peCurrentId);
+          if (oldIdx !== -1) oldContent.pieces.splice(oldIdx, 1);
+          batch.addJSON(oldFile, oldContent);
+          contentCache[oldFile] = JSON.parse(JSON.stringify(oldContent));
+          const { content: newContent } = await loadGHFile(file);
+          newContent.pieces.push(piece);
+          batch.addJSON(file, newContent);
+          contentCache[file] = JSON.parse(JSON.stringify(newContent));
+        } else {
+          const { content } = await loadGHFile(file);
+          if (peIsNew) content.pieces.push(piece);
+          else { const idx = content.pieces.findIndex(p => p.id === peCurrentId); if (idx === -1) throw new Error('Product not found'); content.pieces[idx] = piece; }
+          batch.addJSON(file, content);
+          contentCache[file] = JSON.parse(JSON.stringify(content));
+        }
+        await batch.commit((peIsNew ? 'Add' : 'Update') + ' product: ' + title);
+        peIsDirty = false;
+        hideProductEditor();
+      } catch (e) { peSetStatus('Error: ' + e.message, 'error'); document.getElementById('pe-save-btn').disabled = false; }
+    });
+
+    // Product delete
+    document.getElementById('pe-delete-btn').addEventListener('click', async () => {
+      if (!confirm('Delete this product? This cannot be undone.')) return;
+      document.getElementById('pe-delete-btn').disabled = true;
+      peSetStatus('Deleting...');
+      try {
+        const file = peSECTIONS[peCurrentCat];
+        const { content } = await loadGHFile(file);
+        const idx = content.pieces.findIndex(p => p.id === peCurrentId);
+        if (idx === -1) throw new Error('Product not found');
+        content.pieces.splice(idx, 1);
+        const batch = new GitBatch(REPO, ghToken);
+        batch.addJSON(file, content);
+        await batch.commit('Delete product: ' + (peOriginalPiece ? peOriginalPiece.title : peCurrentId));
+        contentCache[file] = JSON.parse(JSON.stringify(content));
+        peIsDirty = false;
+        hideProductEditor();
+      } catch (e) { peSetStatus('Error: ' + e.message, 'error'); document.getElementById('pe-delete-btn').disabled = false; }
+    });
+
+    // Product back button
+    document.getElementById('pe-back').addEventListener('click', () => {
+      if (peIsDirty && !confirm('You have unsaved changes. Leave anyway?')) return;
+      peIsDirty = false;
+      hideProductEditor();
+    });
+
+    // Product add size
+    document.getElementById('pe-add-size').addEventListener('click', () => {
+      const input = document.getElementById('pe-new-size');
+      const label = input.value.trim(); if (!label) return;
+      if (peSizes.some(s => s.label === label)) return;
+      peSizes.push({ label, stock: null }); input.value = '';
+      peRenderSizes(); peMarkDirty();
+    });
+
+    // Product field change listeners
+    ['pe-title-field', 'pe-desc', 'pe-price', 'pe-stock'].forEach(id => document.getElementById(id).addEventListener('input', peMarkDirty));
+    ['pe-forsale', 'pe-cat'].forEach(id => document.getElementById(id).addEventListener('change', peMarkDirty));
+    document.getElementById('pe-forsale').addEventListener('change', () => {
+      document.getElementById('pe-forsale-label').textContent = document.getElementById('pe-forsale').checked ? 'For Sale' : 'Hidden';
+    });
+
+    // Product list
+    function plFormatPrice(v) { const n = (v || '').toString().replace(/[^0-9.]/g, ''); return n ? '$' + n : ''; }
+
+    function plRenderList() {
+      const filtered = plActiveFilter === 'all' ? plAllProducts : plAllProducts.filter(p => p._cat === plActiveFilter);
+      const page = document.getElementById('pl-page');
+      page.innerHTML = '';
+      if (filtered.length === 0) { page.innerHTML = '<p class="empty-msg">No products found.</p>'; return; }
+      filtered.forEach(p => {
+        const row = document.createElement('div'); row.className = 'product-row';
+        row.addEventListener('click', () => showProductEditor(p._cat, p.id));
+        if (p.images && p.images.length > 0) { const img = document.createElement('img'); img.className = 'product-thumb'; img.src = p.images[0].src; img.alt = p.title; row.appendChild(img); }
+        else { const ph = document.createElement('div'); ph.className = 'product-thumb-empty'; row.appendChild(ph); }
+        const name = document.createElement('span'); name.className = 'product-name'; name.textContent = p.title || '(untitled)'; row.appendChild(name);
+        const cat = document.createElement('span'); cat.className = 'product-cat'; cat.textContent = p._catLabel; row.appendChild(cat);
+        const price = document.createElement('span'); price.className = 'pl-product-price'; price.textContent = plFormatPrice(p.price_display) || '\u2014'; row.appendChild(price);
+        const badge = document.createElement('span'); badge.className = 'badge ' + (p.for_sale ? 'badge-active' : 'badge-hidden'); badge.textContent = p.for_sale ? 'For Sale' : 'Hidden'; row.appendChild(badge);
+        page.appendChild(row);
+      });
+    }
+
+    async function plLoadAll() {
+      const page = document.getElementById('pl-page');
+      page.innerHTML = '<div class="loading">Loading products...</div>';
+      plSetStatus('');
+      try {
+        const { content: homepage } = await loadGHFile('content/homepage.json');
+        const cats = (homepage.categories || []).filter(c => !SPECIAL_SECTIONS.includes(c.slug));
+        peSECTIONS = {};
+        cats.forEach(c => { peSECTIONS[c.slug] = 'content/' + c.slug + '.json'; });
+        // Populate category dropdown in editor
+        const catSel = document.getElementById('pe-cat');
+        catSel.innerHTML = '';
+        cats.forEach(c => { const opt = document.createElement('option'); opt.value = c.slug; opt.textContent = c.label.charAt(0) + c.label.slice(1).toLowerCase(); catSel.appendChild(opt); });
+        // Filters
+        const filtersEl = document.getElementById('pl-filters');
+        filtersEl.innerHTML = '<button class="filter-btn active" data-cat="all">All</button>';
+        cats.forEach(c => { const btn = document.createElement('button'); btn.className = 'filter-btn'; btn.dataset.cat = c.slug; btn.textContent = c.label.charAt(0) + c.label.slice(1).toLowerCase(); filtersEl.appendChild(btn); });
+        plActiveFilter = 'all';
+        // Load products
+        const results = await Promise.all(cats.map(c => loadGHFile('content/' + c.slug + '.json').catch(() => ({ content: { pieces: [] } }))));
+        plAllProducts = [];
+        cats.forEach((c, i) => { ((results[i].content || results[i]).pieces || []).forEach(p => { plAllProducts.push({ ...p, _cat: c.slug, _catLabel: c.label.charAt(0) + c.label.slice(1).toLowerCase() }); }); });
+        plRenderList();
+      } catch (e) { page.innerHTML = ''; plSetStatus('Failed to load: ' + e.message, 'error'); }
+    }
+
+    document.getElementById('pl-filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn'); if (!btn) return;
+      document.querySelectorAll('#pl-filters .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); plActiveFilter = btn.dataset.cat; plRenderList();
+    });
+
+    document.getElementById('pl-add-btn').addEventListener('click', () => showProductEditor(null, null));
+
+    // ==================== HOMEPAGE ====================
+    let hpGradients = [];
+    let hpCategories = [];
+
+    let hpDataLoaded = false;
+
+    function hpSetStatus(msg, type) { const el = document.getElementById('hp-status'); el.textContent = msg; el.className = 'status' + (type ? ' ' + type : ''); }
+    function hpCatSetStatus(msg, type) { const el = document.getElementById('hp-cat-status'); el.textContent = msg; el.className = 'status' + (type ? ' ' + type : ''); }
+    function hpMarkDirty() { document.getElementById('hp-save-btn').disabled = false; document.getElementById('hp-cat-save-btn').disabled = false; }
+
+    async function hpEnsureData() {
+      if (hpDataLoaded) return;
+      const { content: data } = await loadGHFile('content/homepage.json');
+      document.getElementById('hp-logo-url').value = data.logo || '';
+      if (data.logo) { document.getElementById('hp-logo-preview').src = data.logo; document.getElementById('hp-logo-preview').style.display = ''; }
+      if (data.font) {
+        const sel = document.getElementById('hp-font-select');
+        if (![...sel.options].some(o => o.value === data.font)) { const opt = document.createElement('option'); opt.value = data.font; opt.textContent = data.font; sel.appendChild(opt); }
+        sel.value = data.font;
+      }
+      hpGradients = data.gradients || [['#834d9b', '#d04ed6']];
+      hpCategories = data.categories || [];
+      hpDataLoaded = true;
+    }
+
+    async function hpLoad() {
+      try {
+        await hpEnsureData();
+        hpRenderGradients();
+        document.getElementById('hp-loading').style.display = 'none';
+        document.getElementById('hp-page').style.display = '';
+      } catch (e) { document.getElementById('hp-loading').textContent = 'Error: ' + e.message; }
+    }
+
+    async function hpLoadCategories() {
+      try {
+        await hpEnsureData();
+        hpRenderCategories();
+        document.getElementById('hp-cat-loading').style.display = 'none';
+        document.getElementById('hp-cat-page').style.display = '';
+      } catch (e) { document.getElementById('hp-cat-loading').textContent = 'Error: ' + e.message; }
+    }
+
+    // Logo upload
+    document.getElementById('hp-logo-file').addEventListener('change', async function() {
+      const file = this.files[0]; if (!file) return; this.value = '';
+      const statusEl = document.getElementById('hp-logo-status');
+      statusEl.textContent = 'Uploading...'; statusEl.style.color = '';
+      try {
+        const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+        const path = await uploadToR2(file, safeName);
+        document.getElementById('hp-logo-url').value = path;
+        document.getElementById('hp-logo-preview').src = path;
+        document.getElementById('hp-logo-preview').style.display = '';
+        statusEl.textContent = 'Uploaded'; statusEl.style.color = '#3a3'; hpMarkDirty();
+      } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#c44'; }
+    });
+
+    // Font upload
+    document.getElementById('hp-font-file').addEventListener('change', async function() {
+      const file = this.files[0]; if (!file) return; this.value = '';
+      const statusEl = document.getElementById('hp-font-status');
+      statusEl.textContent = 'Uploading...'; statusEl.style.color = '';
+      try {
+        const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+        // Fonts go to GitHub (served from /fonts/ by CSS)
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer); let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        const path = 'fonts/' + safeName;
+        let sha = null;
+        if (ghToken) { const r = await fetch('https://api.github.com/repos/' + REPO + '/contents/' + path + '?ref=main', { headers: { Authorization: 'token ' + ghToken } }); if (r.ok) sha = (await r.json()).sha; }
+        const body = { message: 'Upload: ' + safeName, content: base64, branch: 'main' }; if (sha) body.sha = sha;
+        const r = await fetch('https://api.github.com/repos/' + REPO + '/contents/' + path, { method: 'PUT', headers: { Authorization: 'token ' + ghToken, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!r.ok) throw new Error('Upload failed');
+        const fontName = safeName.replace(/\.(ttf|woff2)$/, '').replace(/[-_](regular|bold|semibold|medium|light|italic|thin|black|extra)/gi, '').replace(/-+$/, '');
+        const displayName = fontName.charAt(0).toUpperCase() + fontName.slice(1);
+        const sel = document.getElementById('hp-font-select');
+        if (![...sel.options].some(o => o.value === displayName)) { const opt = document.createElement('option'); opt.value = displayName; opt.textContent = displayName; sel.appendChild(opt); }
+        sel.value = displayName;
+        statusEl.textContent = 'Uploaded "' + displayName + '"'; statusEl.style.color = '#3a3'; hpMarkDirty();
+      } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#c44'; }
+    });
+
+    document.getElementById('hp-font-select').addEventListener('change', hpMarkDirty);
+
+    // Gradients
+    let hpGradDragIdx = null;
+    function hpRenderGradients() {
+      const listEl = document.getElementById('hp-gradient-list');
+      listEl.innerHTML = '';
+      hpGradients.forEach((pair, i) => {
+        const row = document.createElement('div'); row.className = 'gradient-pair'; row.draggable = true;
+        row.addEventListener('dragstart', () => { hpGradDragIdx = i; row.style.opacity = '0.4'; });
+        row.addEventListener('dragend', () => { row.style.opacity = ''; hpGradDragIdx = null; });
+        row.addEventListener('dragover', (e) => { e.preventDefault(); row.style.outline = '2px solid #333'; row.style.outlineOffset = '2px'; });
+        row.addEventListener('dragleave', () => { row.style.outline = ''; });
+        row.addEventListener('drop', (e) => { e.preventDefault(); row.style.outline = ''; if (hpGradDragIdx === null || hpGradDragIdx === i) return; const m = hpGradients.splice(hpGradDragIdx, 1)[0]; hpGradients.splice(i, 0, m); hpRenderGradients(); hpMarkDirty(); });
+        const handle = document.createElement('span'); handle.style.cssText = 'color:rgba(0,0,0,0.2);font-size:1rem;cursor:grab;flex-shrink:0;'; handle.textContent = '\u2261'; row.appendChild(handle);
+        const c1 = document.createElement('input'); c1.type = 'color'; c1.value = pair[0]; c1.addEventListener('input', () => { hpGradients[i][0] = c1.value; row.querySelector('.gradient-preview').style.background = 'linear-gradient(135deg, ' + hpGradients[i][0] + ', ' + hpGradients[i][1] + ')'; hpMarkDirty(); }); row.appendChild(c1);
+        const c2 = document.createElement('input'); c2.type = 'color'; c2.value = pair[1]; c2.addEventListener('input', () => { hpGradients[i][1] = c2.value; row.querySelector('.gradient-preview').style.background = 'linear-gradient(135deg, ' + hpGradients[i][0] + ', ' + hpGradients[i][1] + ')'; hpMarkDirty(); }); row.appendChild(c2);
+        const preview = document.createElement('div'); preview.className = 'gradient-preview'; preview.style.background = 'linear-gradient(135deg, ' + pair[0] + ', ' + pair[1] + ')'; row.appendChild(preview);
+        if (hpGradients.length > 1) { const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove'; rm.addEventListener('click', () => { hpGradients.splice(i, 1); hpRenderGradients(); hpMarkDirty(); }); row.appendChild(rm); }
+        listEl.appendChild(row);
+      });
+    }
+    document.getElementById('hp-add-gradient').addEventListener('click', () => { hpGradients.push(['#333333', '#666666']); hpRenderGradients(); hpMarkDirty(); });
+
+    // Categories
+    let hpCatDragIdx = null;
+    function hpRenderCategories() {
+      const listEl = document.getElementById('hp-cat-list');
+      listEl.innerHTML = '';
+      hpCategories.forEach((cat, i) => {
+        const row = document.createElement('div'); row.className = 'cat-item'; row.draggable = true;
+        row.addEventListener('dragstart', () => { hpCatDragIdx = i; row.classList.add('dragging'); });
+        row.addEventListener('dragend', () => { row.classList.remove('dragging'); hpCatDragIdx = null; listEl.querySelectorAll('.cat-item').forEach(c => c.classList.remove('drag-over')); });
+        row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+        row.addEventListener('drop', (e) => { e.preventDefault(); row.classList.remove('drag-over'); if (hpCatDragIdx === null || hpCatDragIdx === i) return; const m = hpCategories.splice(hpCatDragIdx, 1)[0]; hpCategories.splice(i, 0, m); hpRenderCategories(); hpMarkDirty(); });
+        const handle = document.createElement('span'); handle.className = 'cat-handle'; handle.textContent = '\u2261'; row.appendChild(handle);
+        const slug = document.createElement('span'); slug.className = 'cat-slug'; slug.textContent = cat.slug; row.appendChild(slug);
+        const labelInput = document.createElement('input'); labelInput.className = 'cat-label-input'; labelInput.type = 'text'; labelInput.value = cat.label;
+        labelInput.addEventListener('input', () => { hpCategories[i].label = labelInput.value; hpMarkDirty(); }); row.appendChild(labelInput);
+        const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove';
+        rm.addEventListener('click', async () => {
+          let count = 0;
+          try { const { content: d } = await loadGHFile('content/' + cat.slug + '.json'); count = (d.pieces || []).length; } catch (e) {}
+          let msg = 'Remove category "' + cat.label + '"?';
+          if (count > 0) msg = 'This category has ' + count + ' product' + (count !== 1 ? 's' : '') + '.\n\nRemove "' + cat.label + '"?';
+          if (!confirm(msg)) return;
+          hpCategories.splice(i, 1); hpRenderCategories(); hpMarkDirty();
+        });
+        row.appendChild(rm);
+        listEl.appendChild(row);
+      });
+    }
+
+    document.getElementById('hp-add-cat').addEventListener('click', () => {
+      const statusEl = document.getElementById('hp-add-cat-status');
+      statusEl.style.color = '#c44';
+      const slug = document.getElementById('hp-new-cat-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const label = document.getElementById('hp-new-cat-label').value.trim().toUpperCase();
+      if (!slug) { statusEl.textContent = 'Enter a slug'; return; }
+      if (!label) { statusEl.textContent = 'Enter a label'; return; }
+      if (hpCategories.some(c => c.slug === slug)) { statusEl.textContent = 'Slug already exists'; return; }
+      hpCategories.push({ slug, label });
+      document.getElementById('hp-new-cat-slug').value = '';
+      document.getElementById('hp-new-cat-label').value = '';
+      statusEl.textContent = '';
+      hpRenderCategories(); hpMarkDirty();
+    });
+
+    // Homepage save (shared by branding and categories)
+    async function hpSave(statusFn) {
+      statusFn('Saving...');
+      try {
+        const batch = new GitBatch(REPO, ghToken);
+        let oldData = {};
+        try { const { content } = await loadGHFile('content/homepage.json'); oldData = content; } catch (e) {}
+        const data = { ...oldData, logo: document.getElementById('hp-logo-url').value.trim(), font: document.getElementById('hp-font-select').value, gradients: hpGradients, categories: hpCategories };
+        batch.addJSON('content/homepage.json', data);
+        // Create new category files
+        for (const cat of hpCategories) {
+          if (SPECIAL_SECTIONS.includes(cat.slug)) continue;
+          try { const r = await fetch('https://api.github.com/repos/' + REPO + '/contents/content/' + cat.slug + '.json?ref=main', { headers: { Authorization: 'token ' + ghToken } }); if (r.status === 404) batch.addJSON('content/' + cat.slug + '.json', { pieces: [] }); } catch (e) {}
+        }
+        // Update index.html
+        const indexRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/index.html', { headers: { Authorization: 'token ' + ghToken } });
+        if (indexRes.ok) {
+          const indexFile = await indexRes.json();
+          let updated = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
+          const panelsHtml = hpCategories.map(c => '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>').join('\n');
+          const linksHtml = hpCategories.map(c => '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>').join('\n') + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
+          updated = updated.replace(/(<canvas id="home-gradient"><\/canvas>\n)([\s\S]*?)(\n  <\/div>\n\n  <!-- TOP HEADER NAV)/, '$1' + panelsHtml + '\n$3');
+          updated = updated.replace(/(<div class="header-links" id="header-links">\n)([\s\S]*?)(\n\s*<\/div>\n\s*<button class="cart-toggle")/, '$1' + linksHtml + '\n$3');
+          if (hpGradients.length > 0) { const g = hpGradients[0]; updated = updated.replace(/(<div id="home" class="home" style="background:)[^"]*(")/,'$1linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ');$2'); }
+          batch.addText('index.html', updated);
+        }
+        // Update 404.html
+        try {
+          const fourRes = await fetch('https://api.github.com/repos/' + REPO + '/contents/404.html', { headers: { Authorization: 'token ' + ghToken } });
+          if (fourRes.ok) {
+            const fourFile = await fourRes.json();
+            const fourContent = decodeURIComponent(escape(atob(fourFile.content.replace(/\n/g, ''))));
+            const updated404 = fourContent.replace(/background:\s*linear-gradient\(135deg,[^)]*\)/, 'background: linear-gradient(135deg, ' + hpGradients.flat().join(', ') + ')');
+            batch.addText('404.html', updated404);
           }
         } catch (e) {}
-        return null;
-      }
+        await batch.commit('Update homepage settings');
+        contentCache['content/homepage.json'] = JSON.parse(JSON.stringify(data));
+        statusFn('Saved — site will update in about 1 minute', 'success');
+      } catch (e) { statusFn('Error: ' + e.message, 'error'); }
+      document.getElementById('hp-save-btn').disabled = false;
+      document.getElementById('hp-cat-save-btn').disabled = false;
+    }
 
-      async function init() {
-        if (isLocal) {
-          showDashboard('local');
-          return;
-        }
+    document.getElementById('hp-save-btn').addEventListener('click', () => hpSave(hpSetStatus));
+    document.getElementById('hp-cat-save-btn').addEventListener('click', () => hpSave(hpCatSetStatus));
 
-        const stored = getStoredToken();
-        if (stored) {
-          const username = await verifyToken(stored);
-          if (username) {
-            showDashboard(username);
-            return;
-          }
-          // Token expired
-          sessionStorage.removeItem('gh_token');
-          localStorage.removeItem('gh_token');
-        }
+    // ==================== SECTION INIT REGISTRY ====================
+    const sectionInits = {
+      products: () => { plLoadAll(); },
+      branding: () => { hpLoad(); },
+      categories: () => { hpLoadCategories(); },
+      shipping: () => { loadSettings().then(() => loadStripeShippingRates()); },
+      'secondary-cta': () => { loadSettings(); },
+      coupons: () => { loadSettings(); loadCoupons(); },
+      thankyou: () => { loadSettings(); },
+      marketing: () => { loadSettings(); },
+      metadata: () => { loadSettings(); },
+      contact: () => { loadSettings(); },
+      stripe: () => {},
+    };
 
-        // Show auth
-        authScreen.style.display = '';
+    // beforeunload for dirty product editor
+    window.addEventListener('beforeunload', (e) => { if (peIsDirty) e.preventDefault(); });
+
+    // ==================== INIT AUTH ====================
+    if (isLocal) { showAdmin(); }
+    else {
+      const stored = getStoredToken();
+      if (stored) { ghToken = stored; showAdmin(); }
+      else {
         authBtn.addEventListener('click', () => {
           const popup = window.open('/api/auth', 'github-auth', 'width=600,height=700');
-
-          window.addEventListener('message', function onMessage(e) {
+          window.addEventListener('message', function onMsg(e) {
             if (typeof e.data !== 'string') return;
             if (e.data.startsWith('authorization:github:success:')) {
               const payload = JSON.parse(e.data.replace('authorization:github:success:', ''));
-              storeToken(payload.token);
-              authScreen.style.display = 'none';
-              window.removeEventListener('message', onMessage);
+              ghToken = payload.token;
+              storeToken(ghToken);
+              window.removeEventListener('message', onMsg);
               if (popup) popup.close();
-              verifyToken(payload.token).then(username => showDashboard(username));
+              showAdmin();
             }
           });
-
-          const interval = setInterval(() => {
-            if (popup && !popup.closed) {
-              popup.postMessage('authorizing:github', '*');
-            } else {
-              clearInterval(interval);
-            }
-          }, 250);
+          const interval = setInterval(() => { if (popup && !popup.closed) popup.postMessage('authorizing:github', '*'); else clearInterval(interval); }, 250);
         });
       }
+    }
 
-      init();
-    })();
+  })();
   </script>
 </body>
 </html>
