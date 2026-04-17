@@ -30,6 +30,18 @@
   let shippingConfig = {};
   const dataCache = {};
 
+  function buildContactLinksHtml(c) {
+    var links = [];
+    if (c.email) links.push({ label: 'Email', href: 'mailto:' + c.email });
+    if (c.phone) links.push({ label: 'Text / SMS', href: 'sms:' + c.phone.replace(/[^+\d]/g, '') });
+    if (c.instagram) links.push({ label: 'Instagram', href: 'https://ig.me/m/' + c.instagram });
+    if (c.whatsapp) links.push({ label: 'WhatsApp', href: 'https://wa.me/' + c.whatsapp.replace(/[^+\d]/g, '') });
+    if (c.tiktok) links.push({ label: 'TikTok', href: 'https://tiktok.com/@' + c.tiktok });
+    return links.map(function(l) {
+      return '<a href="' + l.href + '" target="_blank" rel="noopener">' + l.label + '</a>';
+    }).join('');
+  }
+
   // ---- Settings ----
   const settingsPromise = fetch('/content/settings.json?t=' + Date.now())
     .then(r => r.ok ? r.json() : {})
@@ -53,19 +65,11 @@
       if (tySecondary && settings.thank_you.secondary) tySecondary.textContent = settings.thank_you.secondary;
     }
     if (settings.contact) {
-      var contactEl = document.getElementById('about-contact');
-      if (contactEl) {
-        var links = [];
-        var c = settings.contact;
-        if (c.email) links.push({ label: 'Email', href: 'mailto:' + c.email });
-        if (c.phone) links.push({ label: 'Text / SMS', href: 'sms:' + c.phone.replace(/[^+\d]/g, '') });
-        if (c.instagram) links.push({ label: 'Instagram', href: 'https://ig.me/m/' + c.instagram });
-        if (c.whatsapp) links.push({ label: 'WhatsApp', href: 'https://wa.me/' + c.whatsapp.replace(/[^+\d]/g, '') });
-        if (c.tiktok) links.push({ label: 'TikTok', href: 'https://tiktok.com/@' + c.tiktok });
-        contactEl.innerHTML = links.map(function(l) {
-          return '<a href="' + l.href + '" target="_blank" rel="noopener">' + l.label + '</a>';
-        }).join('');
-      }
+      var contactHtml = buildContactLinksHtml(settings.contact);
+      var aboutContactEl = document.getElementById('about-contact');
+      if (aboutContactEl) aboutContactEl.innerHTML = contactHtml;
+      var tyContactEl = document.getElementById('thankyou-contact');
+      if (tyContactEl) tyContactEl.innerHTML = contactHtml;
     }
     updateCartUI();
   });
