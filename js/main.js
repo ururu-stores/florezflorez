@@ -147,11 +147,18 @@
         if (shippingConfig.pickup_address) noteLines.push(shippingConfig.pickup_address);
         if (shippingConfig.pickup_hours) noteLines.push(shippingConfig.pickup_hours);
       } else {
-        noteLines.push('Shipping to USA only');
         if (shippingConfig.method === 'free') {
-          noteLines.push('Free shipping');
-        } else if (shippingConfig.method === 'flat' && shippingConfig.free_threshold) {
-          noteLines.push('Free shipping on orders over $' + shippingConfig.free_threshold);
+          noteLines.push('Free shipping, USA only');
+        } else if (shippingConfig.method === 'flat') {
+          noteLines.push('Shipping to USA only');
+          if (shippingConfig.free_threshold) {
+            noteLines.push('Free shipping on orders over $' + shippingConfig.free_threshold);
+          }
+        } else {
+          noteLines.push('Shipping to USA only');
+        }
+        if (shippingConfig.delivery_days) {
+          noteLines.push('Arrives in ' + shippingConfig.delivery_days + ' days');
         }
       }
       note.innerHTML = noteLines.map(function(l) { return '<p>' + l + '</p>'; }).join('');

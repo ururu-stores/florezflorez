@@ -555,6 +555,16 @@
           <input type="text" id="shipping-pickup-hours" class="text-input" placeholder="e.g. Mon–Fri 10am–6pm">
         </div>
       </div>
+      <div class="field-group" id="shipping-delivery-days-field">
+        <label for="shipping-delivery-days">Delivery Time</label>
+        <p class="field-desc">How many days after shipping for the package to arrive (e.g. "3–4").</p>
+        <input type="text" id="shipping-delivery-days" class="text-input" placeholder="e.g. 3–4">
+      </div>
+      <div class="field-group">
+        <label for="shipping-returns-policy">Returns Policy</label>
+        <p class="field-desc">Displayed on the Shipping &amp; Returns page. Plain text.</p>
+        <textarea id="shipping-returns-policy" class="text-input" rows="5" placeholder="e.g. If you are not satisfied with your purchase, you may return it within 10 days of delivery for a full refund. Items must be in their original, unworn condition. The buyer is responsible for return shipping costs." style="resize:vertical;"></textarea>
+      </div>
     </div>
 
     <!-- Stripe -->
@@ -723,12 +733,16 @@
       const shippingFreeThresholdInput = document.getElementById('shipping-free-threshold');
       const shippingPickupAddressInput = document.getElementById('shipping-pickup-address');
       const shippingPickupHoursInput = document.getElementById('shipping-pickup-hours');
+      const shippingDeliveryDaysInput = document.getElementById('shipping-delivery-days');
+      const shippingDeliveryDaysField = document.getElementById('shipping-delivery-days-field');
+      const shippingReturnsPolicyInput = document.getElementById('shipping-returns-policy');
       let stripeShippingRates = [];
 
       function updateShippingFields() {
         const method = shippingMethodInput.value;
         shippingFlatFields.style.display = method === 'flat' ? '' : 'none';
         shippingPickupFields.style.display = method === 'pickup' ? '' : 'none';
+        shippingDeliveryDaysField.style.display = method === 'pickup' ? 'none' : '';
       }
       shippingMethodInput.addEventListener('change', updateShippingFields);
 
@@ -1010,6 +1024,8 @@
             shippingFreeThresholdInput.value = ship.free_threshold || '';
             shippingPickupAddressInput.value = ship.pickup_address || '';
             shippingPickupHoursInput.value = ship.pickup_hours || '';
+            shippingDeliveryDaysInput.value = ship.delivery_days || '';
+            shippingReturnsPolicyInput.value = ship.returns_policy || '';
             updateShippingFields();
             await loadStripeShippingRates();
             if (ship.stripe_rate_id) shippingRateIdInput.value = ship.stripe_rate_id;
@@ -1063,6 +1079,8 @@
             free_threshold: shippingFreeThresholdInput.value.trim() ? parseFloat(shippingFreeThresholdInput.value) : null,
             pickup_address: shippingPickupAddressInput.value.trim(),
             pickup_hours: shippingPickupHoursInput.value.trim(),
+            delivery_days: shippingDeliveryDaysInput.value.trim(),
+            returns_policy: shippingReturnsPolicyInput.value.trim(),
           },
         };
 
