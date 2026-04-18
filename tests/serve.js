@@ -26,6 +26,13 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   let filePath = path.join(ROOT, url.pathname);
 
+  // /api/* — Vercel functions don't run under this static dev server
+  if (url.pathname.startsWith('/api/')) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'API routes are not available in local dev — deploy to test.' }));
+    return;
+  }
+
   // Directory: resolve to index.html inside it (mirrors Vercel's behavior)
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     const dirIndex = path.join(filePath, 'index.html');

@@ -37,8 +37,11 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // Sanitize filename
-  const safeName = filename.replace(/[^a-z0-9._\-]/gi, '-');
+  // Sanitize filename — allow forward slashes so callers can nest under a path
+  const safeName = filename
+    .replace(/^\/+/, '')
+    .replace(/\.\.+/g, '.')
+    .replace(/[^a-z0-9._\-\/]/gi, '-');
 
   // Determine content type from extension
   const ext = safeName.split('.').pop().toLowerCase();

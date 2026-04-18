@@ -586,6 +586,11 @@
     const wrap = document.createElement('div');
     wrap.className = 'buy-actions';
 
+    // Hide all purchase actions (buy + secondary CTA) when product isn't for sale.
+    // Default to true for legacy products that don't carry the purchasable field.
+    const isPurchasable = piece.purchasable !== false;
+    if (!isPurchasable) return wrap;
+
     const hasSizes = piece.sizes && piece.sizes.length > 0;
     const isSoldOut = !hasSizes && typeof piece.stock === 'number' && piece.stock === 0;
     const allSizesSoldOut = hasSizes && piece.sizes.every(s => typeof s.stock === 'number' && s.stock === 0);
@@ -863,7 +868,7 @@
     titleEl.className = 'product-title';
     text(titleEl, piece.title);
     headerRow.appendChild(titleEl);
-    if (piece.for_sale && piece.price_display) {
+    if (piece.for_sale && piece.purchasable !== false && piece.price_display) {
       const priceEl = document.createElement('span');
       priceEl.className = 'product-price';
       text(priceEl, formatPrice(piece.price_display));
@@ -914,7 +919,7 @@
     mobileTitle.className = 'product-title-mobile';
     text(mobileTitle, piece.title);
     mobileHeader.appendChild(mobileTitle);
-    if (piece.for_sale && piece.price_display) {
+    if (piece.for_sale && piece.purchasable !== false && piece.price_display) {
       const mobilePrice = document.createElement('span');
       mobilePrice.className = 'product-price-mobile';
       text(mobilePrice, formatPrice(piece.price_display));
@@ -975,7 +980,105 @@
   }
 
   async function renderAbout() {
-    // About section is static HTML (policy links)
+    try {
+      const data = await fetchJSON('/content/about.json');
+      const textEl = document.getElementById('about-text');
+      const contentEl = document.getElementById('about-content');
+      if (!textEl || !contentEl) return;
+
+      textEl.innerHTML = renderMarkdown(data.text || '');
+
+      // Clear previous content (in case of re-render) but keep nothing — we own this container
+      contentEl.innerHTML = '';
+
+      const images = Array.isArray(data.images) ? data.images : [];
+
+      if (images.length > 0) {
+        // Desktop: vertical stack
+        const stack = document.createElement('div');
+        stack.className = 'product-stack about-stack';
+        images.forEach((img, i) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'product-stack-image';
+          const imgEl = document.createElement('img');
+          imgEl.src = img.src;
+          imgEl.alt = img.alt || '';
+          imgEl.loading = i === 0 ? 'eager' : 'lazy';
+          wrap.appendChild(imgEl);
+          wrap.addEventListener('click', () => {
+            if (window.innerWidth > 768) openLightbox(images, i);
+          });
+          stack.appendChild(wrap);
+        });
+        contentEl.appendChild(stack);
+
+        // Mobile: carousel
+        const carousel = buildCarousel(images);
+        carousel.classList.add('about-carousel');
+        contentEl.appendChild(carousel);
+
+        // Desktop scroll chevron — only when more than one image
+        if (images.length > 1) {
+          const indicator = document.createElement('div');
+          indicator.className = 'scroll-indicator product-scroll-indicator about-scroll-indicator';
+          indicator.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+          contentEl.appendChild(indicator);
+
+          contentEl.addEventListener('scroll', () => {
+            if (contentEl.scrollTop > 50) indicator.classList.add('hidden');
+            else indicator.classList.remove('hidden');
+          }, { passive: true });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load about content:', e);
+    }
+  }
+
+  // ---- Tiny markdown renderer ----
+  // Supports: paragraphs, **bold**, *italic*, [text](url), # / ## headings, - lists, line breaks within paragraphs
+  function renderMarkdown(src) {
+    if (!src) return '';
+    function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function inline(s) {
+      // Escape first, then re-introduce inline formatting
+      let out = esc(s);
+      // Links [text](url) — only allow http(s), mailto, tel, or relative
+      out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_, label, url) {
+        if (!/^(https?:\/\/|mailto:|tel:|\/)/i.test(url)) return label;
+        return '<a href="' + url + '" rel="noopener"' + (/^https?:/i.test(url) ? ' target="_blank"' : '') + '>' + label + '</a>';
+      });
+      // Bold **text**
+      out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      // Italic *text*
+      out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      return out;
+    }
+
+    const blocks = src.replace(/\r\n?/g, '\n').split(/\n{2,}/);
+    const html = [];
+    blocks.forEach(function (block) {
+      const trimmed = block.trim();
+      if (!trimmed) return;
+      // Heading
+      const h = trimmed.match(/^(#{1,3})\s+(.+)$/);
+      if (h) {
+        const level = h[1].length;
+        html.push('<h' + level + '>' + inline(h[2].trim()) + '</h' + level + '>');
+        return;
+      }
+      // List — block where every line starts with "- "
+      const lines = trimmed.split('\n');
+      if (lines.every(function (l) { return /^\s*-\s+/.test(l); })) {
+        html.push('<ul>' + lines.map(function (l) {
+          return '<li>' + inline(l.replace(/^\s*-\s+/, '')) + '</li>';
+        }).join('') + '</ul>');
+        return;
+      }
+      // Paragraph — single newlines become <br>
+      html.push('<p>' + lines.map(inline).join('<br>') + '</p>');
+    });
+    return html.join('');
   }
 
   // ---- Section management ----

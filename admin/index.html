@@ -126,8 +126,10 @@
     /* Crop modal */
     .crop-modal { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(255,255,255,0.97); flex-direction: column; align-items: center; padding: 2rem; overflow: hidden; }
     .crop-modal.open { display: flex; }
-    .crop-modal-inner { max-width: 600px; width: 100%; flex: 1; min-height: 0; }
+    .crop-modal-inner { max-width: 600px; width: 100%; flex: 1; min-height: 0; position: relative; }
     .crop-modal-inner img { display: block; max-width: 100%; }
+    .crop-min-warning { position: absolute; top: 0.75rem; left: 50%; transform: translateX(-50%); background: rgba(196,68,68,0.95); color: #fff; padding: 0.4rem 0.9rem; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 100; white-space: nowrap; }
+    .crop-min-warning.visible { opacity: 1; }
     .crop-modal-bar { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; flex-shrink: 0; max-width: 600px; width: 100%; }
     .crop-modal-bar .text-input { width: 200px; margin-top: 0; }
     .crop-modal-bar .crop-info { font-size: 0.75rem; color: rgba(0,0,0,0.4); margin-right: auto; }
@@ -217,6 +219,7 @@
         <a class="sidebar-link active" data-section="products">Products</a>
         <a class="sidebar-link" data-section="branding">Branding</a>
         <a class="sidebar-link" data-section="categories">Categories</a>
+        <a class="sidebar-link" data-section="about">About</a>
       </div>
       <div class="sidebar-group">
         <div class="sidebar-group-label">Checkout</div>
@@ -264,8 +267,9 @@
               <div class="field-group"><label for="pe-cat">Category</label><select id="pe-cat" class="text-input"></select></div>
               <div class="field-group"><label for="pe-title-field">Title</label><input type="text" id="pe-title-field" class="text-input" placeholder="Product title"></div>
               <div class="field-group"><label for="pe-desc">Description</label><textarea id="pe-desc" class="text-input" placeholder="Product description"></textarea></div>
-              <div class="field-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="0" step="0.01"></div>
-              <div class="field-group"><label>For Sale</label><label class="toggle-row"><input type="checkbox" id="pe-forsale"><div class="toggle-track"></div><span class="toggle-label" id="pe-forsale-label">Hidden</span></label></div>
+              <div class="field-group"><label>For Sale</label><label class="toggle-row"><input type="checkbox" id="pe-purchasable" checked><div class="toggle-track"></div><span class="toggle-label" id="pe-purchasable-label">For Sale</span></label></div>
+              <div class="field-group" id="pe-price-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="0" step="0.01"></div>
+              <div class="field-group"><label>Visible</label><label class="toggle-row"><input type="checkbox" id="pe-forsale"><div class="toggle-track"></div><span class="toggle-label" id="pe-forsale-label">Hidden</span></label></div>
               <div class="field-group" id="pe-stock-group"><label for="pe-stock">Stock</label><p class="field-desc">Leave blank for unlimited. Set to 0 for Sold Out.</p><input type="number" id="pe-stock" class="text-input" placeholder="Unlimited" min="0" step="1"></div>
             </div>
             <div class="editor-section">
@@ -301,7 +305,7 @@
               <label>Upload Logo</label>
               <p class="field-desc">PNG with transparent background. Displayed at 80px on the site.</p>
               <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;">
-                <label class="btn btn-outline" style="cursor:pointer;">Choose File<input type="file" id="hp-logo-file" accept="image/png,image/svg+xml" style="display:none;"></label>
+                <label class="btn btn-outline" style="cursor:pointer;">Choose File<input type="file" id="hp-logo-file" accept="image/*" style="display:none;"></label>
                 <span class="field-desc" id="hp-logo-status"></span>
               </div>
               <img id="hp-logo-preview" class="logo-preview" src="" alt="Logo preview" style="display:none;">
@@ -483,6 +487,27 @@
         </div>
       </section>
 
+      <!-- ==================== ABOUT ==================== -->
+      <section id="sec-about" class="admin-section">
+        <div class="toolbar"><h1>About</h1><button class="btn" id="ab-save-btn" disabled>Save</button><span class="status" id="ab-status"></span></div>
+        <div class="settings-page" id="ab-page" style="display:none;">
+          <div class="settings-section" style="border-top:none;">
+            <div class="field-group">
+              <label for="ab-text">About Text</label>
+              <p class="field-desc">Supports basic markdown: <code>**bold**</code>, <code>*italic*</code>, <code>[link](https://...)</code>, <code># Heading</code>, <code>- list item</code>. Blank line separates paragraphs.</p>
+              <textarea id="ab-text" class="text-input" rows="14" style="resize:vertical;"></textarea>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h2>Images</h2>
+            <p class="field-desc" style="margin-bottom:1rem;">Drag to reorder. Images are cropped to 1000&times;1000 and saved as webp.</p>
+            <div class="image-list" id="ab-image-list"></div>
+            <label class="add-image-label">Add Image<input type="file" id="ab-image-input" accept="image/*"></label>
+          </div>
+        </div>
+        <div class="loading" id="ab-loading">Loading...</div>
+      </section>
+
       <!-- ==================== STRIPE ==================== -->
       <section id="sec-stripe" class="admin-section">
         <div class="toolbar"><h1>Stripe</h1></div>
@@ -503,7 +528,7 @@
 
   <!-- Product crop modal -->
   <div class="crop-modal" id="pe-crop-modal">
-    <div class="crop-modal-inner"><img id="pe-crop-image" src="" alt="Crop"></div>
+    <div class="crop-modal-inner"><div class="crop-min-warning" id="pe-min-warning">Minimum 1000 &times; 1000</div><img id="pe-crop-image" src="" alt="Crop"></div>
     <div class="crop-modal-bar">
       <input type="text" id="pe-crop-alt" class="text-input" placeholder="Alt text">
       <button class="btn" id="pe-crop-confirm">Add Image</button>
@@ -513,11 +538,21 @@
 
   <!-- Settings crop modal -->
   <div class="crop-modal" id="st-crop-modal">
-    <div class="crop-modal-inner"><img id="st-crop-image" src="" alt="Crop"></div>
+    <div class="crop-modal-inner"><div class="crop-min-warning" id="st-min-warning"></div><img id="st-crop-image" src="" alt="Crop"></div>
     <div class="crop-modal-bar">
       <span class="crop-info" id="st-crop-info"></span>
       <button class="btn" id="st-crop-confirm">Crop &amp; Upload</button>
       <button class="btn btn-outline" id="st-crop-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- About crop modal -->
+  <div class="crop-modal" id="ab-crop-modal">
+    <div class="crop-modal-inner"><div class="crop-min-warning" id="ab-min-warning">Minimum 1000 &times; 1000</div><img id="ab-crop-image" src="" alt="Crop"></div>
+    <div class="crop-modal-bar">
+      <input type="text" id="ab-crop-alt" class="text-input" placeholder="Alt text">
+      <button class="btn" id="ab-crop-confirm">Add Image</button>
+      <button class="btn btn-outline" id="ab-crop-cancel">Cancel</button>
     </div>
   </div>
 
@@ -812,10 +847,24 @@
     function openStCropModal(src, w, h, cfg) {
       stPendingCrop = cfg;
       stCropInfo.textContent = w + ' × ' + h + ' px';
+      const stWarning = document.getElementById('st-min-warning');
+      stWarning.textContent = 'Minimum ' + w + ' \u00d7 ' + h;
+      stWarning.classList.remove('visible');
       stCropModal.classList.add('open');
       stCropImage.src = src;
       if (stCropper) stCropper.destroy();
-      stCropper = new Cropper(stCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: w / h, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false });
+      stCropper = new Cropper(stCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: w / h, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false,
+        cropmove: function () {
+          const d = stCropper.getData();
+          if (d.width < w || d.height < h) {
+            stCropper.setData({ x: d.x, y: d.y, width: w, height: h });
+            stWarning.classList.add('visible');
+          } else {
+            stWarning.classList.remove('visible');
+          }
+        },
+        cropend: function () { stWarning.classList.remove('visible'); },
+      });
     }
 
     function closeStCropModal() { stCropModal.classList.remove('open'); if (stCropper) { stCropper.destroy(); stCropper = null; } stPendingCrop = null; }
@@ -834,9 +883,10 @@
           const path = await uploadToR2(blob, cfg.filename);
           cfg.hiddenInput.value = path;
           cfg.previewEl.src = path;
-          cfg.wrapEl.style.display = '';
+          if (cfg.wrapEl) cfg.wrapEl.style.display = '';
           cfg.statusEl.textContent = 'Uploaded';
           cfg.statusEl.style.color = '#3a3';
+          if (typeof cfg.onSuccess === 'function') cfg.onSuccess(path);
         } catch (e) {
           cfg.statusEl.textContent = 'Error: ' + e.message;
           cfg.statusEl.style.color = '#c44';
@@ -856,7 +906,17 @@
       fileEl.addEventListener('change', () => {
         const file = fileEl.files[0]; if (!file) return; fileEl.value = '';
         const reader = new FileReader();
-        reader.onload = (ev) => { openStCropModal(ev.target.result, w, h, { hiddenInput: hiddenEl, previewEl, wrapEl, statusEl, filename, w, h }); };
+        reader.onload = (ev) => {
+          const testImg = new Image();
+          testImg.onload = () => {
+            if (testImg.naturalWidth < w || testImg.naturalHeight < h) {
+              alert('Image must be at least ' + w + ' \u00d7 ' + h + ' px.');
+              return;
+            }
+            openStCropModal(ev.target.result, w, h, { hiddenInput: hiddenEl, previewEl, wrapEl, statusEl, filename, w, h });
+          };
+          testImg.src = ev.target.result;
+        };
         reader.readAsDataURL(file);
       });
       deleteEl.addEventListener('click', () => { hiddenEl.value = ''; previewEl.src = ''; wrapEl.style.display = 'none'; statusEl.textContent = ''; });
@@ -976,6 +1036,9 @@
       document.getElementById('pe-title-field').value = '';
       document.getElementById('pe-desc').value = '';
       document.getElementById('pe-price').value = '';
+      document.getElementById('pe-purchasable').checked = true;
+      document.getElementById('pe-purchasable-label').textContent = 'For Sale';
+      document.getElementById('pe-price-group').style.display = '';
       document.getElementById('pe-forsale').checked = false;
       document.getElementById('pe-forsale-label').textContent = 'Hidden';
       document.getElementById('pe-stock').value = '';
@@ -1008,8 +1071,12 @@
         document.getElementById('pe-title-field').value = piece.title || '';
         document.getElementById('pe-desc').value = piece.description || '';
         document.getElementById('pe-price').value = (piece.price_display || '').replace(/[^0-9.]/g, '') || '';
+        const isPurchasable = piece.purchasable !== false;
+        document.getElementById('pe-purchasable').checked = isPurchasable;
+        document.getElementById('pe-purchasable-label').textContent = isPurchasable ? 'For Sale' : 'Not For Sale';
+        document.getElementById('pe-price-group').style.display = isPurchasable ? '' : 'none';
         document.getElementById('pe-forsale').checked = !!piece.for_sale;
-        document.getElementById('pe-forsale-label').textContent = piece.for_sale ? 'For Sale' : 'Hidden';
+        document.getElementById('pe-forsale-label').textContent = piece.for_sale ? 'Visible' : 'Hidden';
         if (typeof piece.stock === 'number') document.getElementById('pe-stock').value = piece.stock;
         peSizes = (piece.sizes || []).map(s => ({ label: s.label, stock: typeof s.stock === 'number' ? s.stock : null }));
         peRenderSizes();
@@ -1086,7 +1153,20 @@
           document.getElementById('pe-crop-alt').value = '';
           peCropImage.src = ev.target.result;
           if (peCropper) peCropper.destroy();
-          peCropper = new Cropper(peCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: 1, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false });
+          const peWarning = document.getElementById('pe-min-warning');
+          peCropper = new Cropper(peCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: 1, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false,
+            cropmove: function () {
+              const d = peCropper.getData();
+              if (d.width < OUTPUT_SIZE || d.height < OUTPUT_SIZE) {
+                const size = Math.max(OUTPUT_SIZE, d.width, d.height);
+                peCropper.setData({ x: d.x, y: d.y, width: size, height: size });
+                peWarning.classList.add('visible');
+              } else {
+                peWarning.classList.remove('visible');
+              }
+            },
+            cropend: function () { peWarning.classList.remove('visible'); },
+          });
         };
         testImg.src = ev.target.result;
       };
@@ -1112,8 +1192,9 @@
       const title = titleField.value.trim();
       if (!title) { peSetStatus('Title is required', 'error'); return; }
       const forSale = document.getElementById('pe-forsale').checked;
-      const price = document.getElementById('pe-price').value.trim();
-      if (forSale && !price) { peSetStatus('Price is required for items for sale', 'error'); return; }
+      const purchasable = document.getElementById('pe-purchasable').checked;
+      const price = purchasable ? document.getElementById('pe-price').value.trim() : '';
+      if (purchasable && !price) { peSetStatus('Price is required when For Sale is on', 'error'); return; }
       document.getElementById('pe-save-btn').disabled = true;
       peSetStatus('Saving...');
       try {
@@ -1128,10 +1209,10 @@
           img.src = result; img.isNew = false;
           if (img.previewUrl) { URL.revokeObjectURL(img.previewUrl); delete img.previewUrl; } delete img.blob;
         }
-        // Stripe sync
+        // Stripe sync — only when product is For Sale
         let stripeProductId = peOriginalPiece ? peOriginalPiece.stripe_product_id : null;
         let stripePriceId = peOriginalPiece ? peOriginalPiece.stripe_price_id : null;
-        if (forSale && price) {
+        if (purchasable && price) {
           peSetStatus('Syncing with Stripe...');
           const imagePath = peImages.length > 0 ? peImages[0].src : null;
           const action = (stripeProductId || stripePriceId) ? 'update' : 'create';
@@ -1142,7 +1223,7 @@
         peSetStatus('Saving to GitHub...');
         const piece = {
           id: peIsNew ? (stripeProductId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) : peCurrentId,
-          title, description: document.getElementById('pe-desc').value.trim(), for_sale: forSale, price_display: price,
+          title, description: document.getElementById('pe-desc').value.trim(), for_sale: forSale, purchasable, price_display: price,
           stripe_price_id: stripePriceId || '', stripe_product_id: stripeProductId || '',
           images: peImages.map(img => ({ src: img.src, alt: img.alt })),
         };
@@ -1207,9 +1288,14 @@
 
     // Product field change listeners
     ['pe-title-field', 'pe-desc', 'pe-price', 'pe-stock'].forEach(id => document.getElementById(id).addEventListener('input', peMarkDirty));
-    ['pe-forsale', 'pe-cat'].forEach(id => document.getElementById(id).addEventListener('change', peMarkDirty));
+    ['pe-forsale', 'pe-purchasable', 'pe-cat'].forEach(id => document.getElementById(id).addEventListener('change', peMarkDirty));
     document.getElementById('pe-forsale').addEventListener('change', () => {
-      document.getElementById('pe-forsale-label').textContent = document.getElementById('pe-forsale').checked ? 'For Sale' : 'Hidden';
+      document.getElementById('pe-forsale-label').textContent = document.getElementById('pe-forsale').checked ? 'Visible' : 'Hidden';
+    });
+    document.getElementById('pe-purchasable').addEventListener('change', () => {
+      const on = document.getElementById('pe-purchasable').checked;
+      document.getElementById('pe-purchasable-label').textContent = on ? 'For Sale' : 'Not For Sale';
+      document.getElementById('pe-price-group').style.display = on ? '' : 'none';
     });
 
     // Product list
@@ -1228,7 +1314,7 @@
         const name = document.createElement('span'); name.className = 'product-name'; name.textContent = p.title || '(untitled)'; row.appendChild(name);
         const cat = document.createElement('span'); cat.className = 'product-cat'; cat.textContent = p._catLabel; row.appendChild(cat);
         const price = document.createElement('span'); price.className = 'pl-product-price'; price.textContent = plFormatPrice(p.price_display) || '\u2014'; row.appendChild(price);
-        const badge = document.createElement('span'); badge.className = 'badge ' + (p.for_sale ? 'badge-active' : 'badge-hidden'); badge.textContent = p.for_sale ? 'For Sale' : 'Hidden'; row.appendChild(badge);
+        const badge = document.createElement('span'); badge.className = 'badge ' + (p.for_sale ? 'badge-active' : 'badge-hidden'); badge.textContent = p.for_sale ? 'Visible' : 'Hidden'; row.appendChild(badge);
         page.appendChild(row);
       });
     }
@@ -1310,19 +1396,32 @@
       } catch (e) { document.getElementById('hp-cat-loading').textContent = 'Error: ' + e.message; }
     }
 
-    // Logo upload
-    document.getElementById('hp-logo-file').addEventListener('change', async function() {
+    // Logo upload (uses settings cropper at 80x80 minimum)
+    document.getElementById('hp-logo-file').addEventListener('change', function() {
       const file = this.files[0]; if (!file) return; this.value = '';
-      const statusEl = document.getElementById('hp-logo-status');
-      statusEl.textContent = 'Uploading...'; statusEl.style.color = '';
-      try {
-        const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
-        const path = await uploadToR2(file, safeName);
-        document.getElementById('hp-logo-url').value = path;
-        document.getElementById('hp-logo-preview').src = path;
-        document.getElementById('hp-logo-preview').style.display = '';
-        statusEl.textContent = 'Uploaded'; statusEl.style.color = '#3a3'; hpMarkDirty();
-      } catch (e) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#c44'; }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const testImg = new Image();
+        testImg.onload = () => {
+          if (testImg.naturalWidth < 80 || testImg.naturalHeight < 80) {
+            alert('Image must be at least 80 \u00d7 80 px.');
+            return;
+          }
+          const statusEl = document.getElementById('hp-logo-status');
+          const previewEl = document.getElementById('hp-logo-preview');
+          const hiddenEl = document.getElementById('hp-logo-url');
+          openStCropModal(ev.target.result, 80, 80, {
+            hiddenInput: hiddenEl,
+            previewEl,
+            statusEl,
+            filename: 'logo-' + Date.now() + '.png',
+            w: 80, h: 80,
+            onSuccess: () => { previewEl.style.display = ''; hpMarkDirty(); },
+          });
+        };
+        testImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     });
 
     // Font upload
@@ -1468,11 +1567,146 @@
     document.getElementById('hp-save-btn').addEventListener('click', () => hpSave(hpSetStatus));
     document.getElementById('hp-cat-save-btn').addEventListener('click', () => hpSave(hpCatSetStatus));
 
+    // ==================== ABOUT ====================
+    let abImages = [];
+    let abLoaded = false;
+    let abCropper = null;
+
+    function abSetStatus(msg, type) {
+      const el = document.getElementById('ab-status');
+      el.textContent = msg; el.className = 'status' + (type ? ' ' + type : '');
+    }
+    function abMarkDirty() { document.getElementById('ab-save-btn').disabled = false; }
+
+    async function abLoad() {
+      if (abLoaded) return;
+      try {
+        const { content } = await loadGHFile('content/about.json');
+        document.getElementById('ab-text').value = (content && typeof content.text === 'string') ? content.text : '';
+        abImages = Array.isArray(content && content.images)
+          ? content.images.map(img => ({ src: img.src, alt: img.alt || '', isNew: false }))
+          : [];
+        abRenderImages();
+        document.getElementById('ab-loading').style.display = 'none';
+        document.getElementById('ab-page').style.display = '';
+        abLoaded = true;
+      } catch (e) {
+        document.getElementById('ab-loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function abRenderImages() {
+      const listEl = document.getElementById('ab-image-list');
+      listEl.innerHTML = '';
+      let dragIdx = null;
+      abImages.forEach((img, i) => {
+        const card = document.createElement('div'); card.className = 'image-card'; card.draggable = true;
+        card.addEventListener('dragstart', () => { dragIdx = i; card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragIdx = null; listEl.querySelectorAll('.image-card').forEach(c => c.classList.remove('drag-over')); });
+        card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drag-over'); });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); if (dragIdx === null || dragIdx === i) return; const m = abImages.splice(dragIdx, 1)[0]; abImages.splice(i, 0, m); abRenderImages(); abMarkDirty(); });
+        const imgEl = document.createElement('img'); imgEl.src = img.isNew ? img.previewUrl : img.src; imgEl.alt = img.alt; card.appendChild(imgEl);
+        if (img.isNew) { const badge = document.createElement('span'); badge.className = 'image-new-badge'; badge.textContent = 'New'; card.appendChild(badge); }
+        const removeBtn = document.createElement('button'); removeBtn.className = 'image-remove'; removeBtn.textContent = '\u00d7';
+        removeBtn.addEventListener('click', (e) => { e.stopPropagation(); if (img.previewUrl) URL.revokeObjectURL(img.previewUrl); abImages.splice(i, 1); abRenderImages(); abMarkDirty(); });
+        card.appendChild(removeBtn);
+        const altInput = document.createElement('input'); altInput.className = 'image-alt'; altInput.type = 'text'; altInput.placeholder = 'Alt text'; altInput.value = img.alt;
+        altInput.addEventListener('input', () => { abImages[i].alt = altInput.value; abMarkDirty(); });
+        card.appendChild(altInput);
+        listEl.appendChild(card);
+      });
+    }
+
+    // About crop modal
+    const abCropModal = document.getElementById('ab-crop-modal');
+    const abCropImage = document.getElementById('ab-crop-image');
+    const AB_OUTPUT_SIZE = 1000;
+
+    document.getElementById('ab-image-input').addEventListener('change', (e) => {
+      const file = e.target.files[0]; if (!file) return; e.target.value = '';
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const testImg = new Image();
+        testImg.onload = () => {
+          if (testImg.naturalWidth < AB_OUTPUT_SIZE || testImg.naturalHeight < AB_OUTPUT_SIZE) { alert('Image must be at least ' + AB_OUTPUT_SIZE + 'x' + AB_OUTPUT_SIZE + ' px.'); return; }
+          abCropModal.classList.add('open');
+          document.getElementById('ab-crop-alt').value = '';
+          abCropImage.src = ev.target.result;
+          if (abCropper) abCropper.destroy();
+          const abWarning = document.getElementById('ab-min-warning');
+          abCropper = new Cropper(abCropImage, { viewMode: 1, dragMode: 'move', aspectRatio: 1, autoCropArea: 1, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: false,
+            cropmove: function () {
+              const d = abCropper.getData();
+              if (d.width < AB_OUTPUT_SIZE || d.height < AB_OUTPUT_SIZE) {
+                const size = Math.max(AB_OUTPUT_SIZE, d.width, d.height);
+                abCropper.setData({ x: d.x, y: d.y, width: size, height: size });
+                abWarning.classList.add('visible');
+              } else {
+                abWarning.classList.remove('visible');
+              }
+            },
+            cropend: function () { abWarning.classList.remove('visible'); },
+          });
+        };
+        testImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('ab-crop-cancel').addEventListener('click', () => { abCropModal.classList.remove('open'); if (abCropper) { abCropper.destroy(); abCropper = null; } });
+
+    document.getElementById('ab-crop-confirm').addEventListener('click', () => {
+      if (!abCropper) return;
+      const canvas = abCropper.getCroppedCanvas({ width: AB_OUTPUT_SIZE, height: AB_OUTPUT_SIZE, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+      if (!canvas) return;
+      canvas.toBlob((blob) => {
+        abImages.push({ src: '', alt: document.getElementById('ab-crop-alt').value.trim(), isNew: true, blob, previewUrl: URL.createObjectURL(blob) });
+        abRenderImages(); abMarkDirty();
+        abCropModal.classList.remove('open'); if (abCropper) { abCropper.destroy(); abCropper = null; }
+      }, 'image/webp', 0.85);
+    });
+
+    document.getElementById('ab-text').addEventListener('input', abMarkDirty);
+
+    document.getElementById('ab-save-btn').addEventListener('click', async () => {
+      const saveBtn = document.getElementById('ab-save-btn');
+      saveBtn.disabled = true;
+      abSetStatus('Saving...');
+      try {
+        // Upload new images
+        for (let i = 0; i < abImages.length; i++) {
+          const img = abImages[i]; if (!img.isNew) continue;
+          abSetStatus('Uploading image ' + (i + 1) + '...');
+          const filename = 'images/about/' + Date.now() + '-' + i + '.webp';
+          const result = await uploadToR2(img.blob, filename);
+          img.src = result; img.isNew = false;
+          if (img.previewUrl) { URL.revokeObjectURL(img.previewUrl); delete img.previewUrl; }
+          delete img.blob;
+        }
+        abSetStatus('Saving to GitHub...');
+        const data = {
+          text: document.getElementById('ab-text').value,
+          images: abImages.map(img => ({ src: img.src, alt: img.alt })),
+        };
+        const batch = new GitBatch(REPO, ghToken);
+        batch.addJSON('content/about.json', data);
+        await batch.commit('Update about page');
+        contentCache['content/about.json'] = JSON.parse(JSON.stringify(data));
+        abRenderImages();
+        abSetStatus('Saved \u2014 site will update in about 1 minute', 'success');
+      } catch (e) {
+        abSetStatus('Error: ' + e.message, 'error');
+        saveBtn.disabled = false;
+      }
+    });
+
     // ==================== SECTION INIT REGISTRY ====================
     const sectionInits = {
       products: () => { plLoadAll(); },
       branding: () => { hpLoad(); },
       categories: () => { hpLoadCategories(); },
+      about: () => { abLoad(); },
       shipping: () => { loadSettings().then(() => loadStripeShippingRates()); },
       'secondary-cta': () => { loadSettings(); },
       coupons: () => { loadSettings(); loadCoupons(); },
