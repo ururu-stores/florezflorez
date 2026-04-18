@@ -349,6 +349,7 @@
               <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,0,0,0.35);margin-bottom:1rem;">Add Category</p>
               <div class="field-group"><label for="hp-new-cat-slug">Slug</label><p class="field-desc">URL path (lowercase, no spaces).</p><input type="text" id="hp-new-cat-slug" class="text-input" placeholder="e.g. earrings"></div>
               <div class="field-group"><label for="hp-new-cat-label">Label</label><input type="text" id="hp-new-cat-label" class="text-input" placeholder="e.g. EARRINGS" style="text-transform:uppercase;"></div>
+              <div class="field-group"><label>Visible</label><p class="field-desc">Hidden categories don't appear in the homepage panels or top nav, but their URLs still work. You can edit visibility after creating a category.</p><label class="toggle-row"><input type="checkbox" id="hp-new-cat-visible" checked><div class="toggle-track"></div><span class="toggle-label" id="hp-new-cat-visible-label">Visible</span></label></div>
               <button class="btn btn-outline" id="hp-add-cat" type="button" style="margin-top:0.5rem;">Add Category</button>
               <span class="field-desc" id="hp-add-cat-status" style="margin-left:0.75rem;"></span>
             </div>
@@ -1491,6 +1492,20 @@
         const slug = document.createElement('span'); slug.className = 'cat-slug'; slug.textContent = cat.slug; row.appendChild(slug);
         const labelInput = document.createElement('input'); labelInput.className = 'cat-label-input'; labelInput.type = 'text'; labelInput.value = cat.label;
         labelInput.addEventListener('input', () => { hpCategories[i].label = labelInput.value; hpMarkDirty(); }); row.appendChild(labelInput);
+        // Visible toggle
+        const visWrap = document.createElement('label'); visWrap.className = 'toggle-row'; visWrap.style.flexShrink = '0'; visWrap.style.margin = '0';
+        const visInput = document.createElement('input'); visInput.type = 'checkbox'; visInput.checked = cat.visible !== false;
+        const visTrack = document.createElement('div'); visTrack.className = 'toggle-track';
+        const visLabel = document.createElement('span'); visLabel.className = 'toggle-label';
+        visLabel.style.width = '4.5em'; visLabel.style.display = 'inline-block';
+        visLabel.textContent = visInput.checked ? 'Visible' : 'Hidden';
+        visInput.addEventListener('change', () => {
+          hpCategories[i].visible = visInput.checked;
+          visLabel.textContent = visInput.checked ? 'Visible' : 'Hidden';
+          hpMarkDirty();
+        });
+        visWrap.appendChild(visInput); visWrap.appendChild(visTrack); visWrap.appendChild(visLabel);
+        row.appendChild(visWrap);
         const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove';
         rm.addEventListener('click', async () => {
           let count = 0;
@@ -1505,17 +1520,25 @@
       });
     }
 
+    document.getElementById('hp-new-cat-visible').addEventListener('change', () => {
+      const on = document.getElementById('hp-new-cat-visible').checked;
+      document.getElementById('hp-new-cat-visible-label').textContent = on ? 'Visible' : 'Hidden';
+    });
+
     document.getElementById('hp-add-cat').addEventListener('click', () => {
       const statusEl = document.getElementById('hp-add-cat-status');
       statusEl.style.color = '#c44';
       const slug = document.getElementById('hp-new-cat-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
       const label = document.getElementById('hp-new-cat-label').value.trim().toUpperCase();
+      const visible = document.getElementById('hp-new-cat-visible').checked;
       if (!slug) { statusEl.textContent = 'Enter a slug'; return; }
       if (!label) { statusEl.textContent = 'Enter a label'; return; }
       if (hpCategories.some(c => c.slug === slug)) { statusEl.textContent = 'Slug already exists'; return; }
-      hpCategories.push({ slug, label });
+      hpCategories.push({ slug, label, visible });
       document.getElementById('hp-new-cat-slug').value = '';
       document.getElementById('hp-new-cat-label').value = '';
+      document.getElementById('hp-new-cat-visible').checked = true;
+      document.getElementById('hp-new-cat-visible-label').textContent = 'Visible';
       statusEl.textContent = '';
       hpRenderCategories(); hpMarkDirty();
     });
@@ -1539,8 +1562,9 @@
         if (indexRes.ok) {
           const indexFile = await indexRes.json();
           let updated = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
-          const panelsHtml = hpCategories.map(c => '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>').join('\n');
-          const linksHtml = hpCategories.map(c => '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>').join('\n') + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
+          const visibleCategories = hpCategories.filter(c => c.visible !== false);
+          const panelsHtml = visibleCategories.map(c => '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>').join('\n');
+          const linksHtml = visibleCategories.map(c => '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>').join('\n') + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
           updated = updated.replace(/(<canvas id="home-gradient"><\/canvas>\n)([\s\S]*?)(\n  <\/div>\n\n  <!-- TOP HEADER NAV)/, '$1' + panelsHtml + '\n$3');
           updated = updated.replace(/(<div class="header-links" id="header-links">\n)([\s\S]*?)(\n\s*<\/div>\n\s*<button class="cart-toggle")/, '$1' + linksHtml + '\n$3');
           if (hpGradients.length > 0) { const g = hpGradients[0]; updated = updated.replace(/(<div id="home" class="home" style="background:)[^"]*(")/,'$1linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ');$2'); }
