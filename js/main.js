@@ -675,7 +675,7 @@
       }
     }
 
-    if (secondaryCta) {
+    if (secondaryCta && piece.secondary_cta_enabled !== false) {
       var isMobile = window.innerWidth <= 768;
       var channelConfig = isMobile ? secondaryCta.mobile : secondaryCta.desktop;
       if (channelConfig && channelConfig.handle) {

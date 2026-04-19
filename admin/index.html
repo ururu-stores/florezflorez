@@ -271,6 +271,7 @@
               <div class="field-group" id="pe-price-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="0" step="0.01"></div>
               <div class="field-group"><label>Visible</label><label class="toggle-row"><input type="checkbox" id="pe-forsale"><div class="toggle-track"></div><span class="toggle-label" id="pe-forsale-label">Hidden</span></label></div>
               <div class="field-group" id="pe-stock-group"><label for="pe-stock">Stock</label><p class="field-desc">Leave blank for unlimited. Set to 0 for Sold Out.</p><input type="number" id="pe-stock" class="text-input" placeholder="Unlimited" min="0" step="1"></div>
+              <div class="field-group"><label>Secondary CTA</label><p class="field-desc">The contact button shown below "Add to Cart" for this product. Configure the button text and channel in Settings.</p><label class="toggle-row"><input type="checkbox" id="pe-secondary-cta" checked><div class="toggle-track"></div><span class="toggle-label" id="pe-secondary-cta-label">Active</span></label></div>
             </div>
             <div class="editor-section">
               <h2>Sizes</h2>
@@ -1042,6 +1043,8 @@
       document.getElementById('pe-price-group').style.display = '';
       document.getElementById('pe-forsale').checked = false;
       document.getElementById('pe-forsale-label').textContent = 'Hidden';
+      document.getElementById('pe-secondary-cta').checked = true;
+      document.getElementById('pe-secondary-cta-label').textContent = 'Active';
       document.getElementById('pe-stock').value = '';
       document.getElementById('pe-stock-group').style.display = '';
       document.getElementById('pe-sizes-list').innerHTML = '';
@@ -1078,6 +1081,9 @@
         document.getElementById('pe-price-group').style.display = isPurchasable ? '' : 'none';
         document.getElementById('pe-forsale').checked = !!piece.for_sale;
         document.getElementById('pe-forsale-label').textContent = piece.for_sale ? 'Visible' : 'Hidden';
+        const secondaryCtaEnabled = piece.secondary_cta_enabled !== false;
+        document.getElementById('pe-secondary-cta').checked = secondaryCtaEnabled;
+        document.getElementById('pe-secondary-cta-label').textContent = secondaryCtaEnabled ? 'Active' : 'Inactive';
         if (typeof piece.stock === 'number') document.getElementById('pe-stock').value = piece.stock;
         peSizes = (piece.sizes || []).map(s => ({ label: s.label, stock: typeof s.stock === 'number' ? s.stock : null }));
         peRenderSizes();
@@ -1224,7 +1230,7 @@
         peSetStatus('Saving to GitHub...');
         const piece = {
           id: peIsNew ? (stripeProductId || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) : peCurrentId,
-          title, description: document.getElementById('pe-desc').value.trim(), for_sale: forSale, purchasable, price_display: price,
+          title, description: document.getElementById('pe-desc').value.trim(), for_sale: forSale, purchasable, secondary_cta_enabled: document.getElementById('pe-secondary-cta').checked, price_display: price,
           stripe_price_id: stripePriceId || '', stripe_product_id: stripeProductId || '',
           images: peImages.map(img => ({ src: img.src, alt: img.alt })),
         };
@@ -1289,7 +1295,7 @@
 
     // Product field change listeners
     ['pe-title-field', 'pe-desc', 'pe-price', 'pe-stock'].forEach(id => document.getElementById(id).addEventListener('input', peMarkDirty));
-    ['pe-forsale', 'pe-purchasable', 'pe-cat'].forEach(id => document.getElementById(id).addEventListener('change', peMarkDirty));
+    ['pe-forsale', 'pe-purchasable', 'pe-secondary-cta', 'pe-cat'].forEach(id => document.getElementById(id).addEventListener('change', peMarkDirty));
     document.getElementById('pe-forsale').addEventListener('change', () => {
       document.getElementById('pe-forsale-label').textContent = document.getElementById('pe-forsale').checked ? 'Visible' : 'Hidden';
     });
@@ -1297,6 +1303,9 @@
       const on = document.getElementById('pe-purchasable').checked;
       document.getElementById('pe-purchasable-label').textContent = on ? 'For Sale' : 'Not For Sale';
       document.getElementById('pe-price-group').style.display = on ? '' : 'none';
+    });
+    document.getElementById('pe-secondary-cta').addEventListener('change', () => {
+      document.getElementById('pe-secondary-cta-label').textContent = document.getElementById('pe-secondary-cta').checked ? 'Active' : 'Inactive';
     });
 
     // Product list
