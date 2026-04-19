@@ -51,6 +51,8 @@
       "title": "GEOMETRIC SILVER",
       "description": "",
       "for_sale": false,
+      "purchasable": false,
+      "secondary_cta_enabled": true,
       "price_display": "",
       "stripe_price_id": "",
       "stripe_product_id": "",
