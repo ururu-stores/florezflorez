@@ -41,6 +41,21 @@
           "alt": ""
         }
       ]
+    },
+    {
+      "id": "geometric-silver",
+      "title": "GEOMETRIC SILVER",
+      "description": "",
+      "for_sale": false,
+      "price_display": "",
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "images": [
+        {
+          "src": "https://img.florezflorez.com/geometric-silver-1776628084865-0.webp",
+          "alt": ""
+        }
+      ]
     }
   ]
 }
