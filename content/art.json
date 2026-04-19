@@ -52,33 +52,6 @@
       "stripe_product_id": "",
       "images": [
         {
-          "src": "https://img.florezflorez.com/geometric-silver-1776628084865-0.webp",
-          "alt": ""
-        },
-        {
-          "src": "https://img.florezflorez.com/geometric-silver-1776630011624-1.webp",
-          "alt": ""
-        },
-        {
-          "src": "https://img.florezflorez.com/geometric-silver-1776630013375-2.webp",
-          "alt": ""
-        },
-        {
-          "src": "https://img.florezflorez.com/geometric-silver-1776630014196-3.webp",
-          "alt": ""
-        }
-      ]
-    },
-    {
-      "id": "geometric-silver",
-      "title": "GEOMETRIC SILVER",
-      "description": "",
-      "for_sale": false,
-      "price_display": "",
-      "stripe_price_id": "",
-      "stripe_product_id": "",
-      "images": [
-        {
           "src": "https://img.florezflorez.com/geometric-silver-1776628314181-0.webp",
           "alt": ""
         },
@@ -122,7 +95,7 @@
     {
       "id": "ans",
       "title": "ANS",
-      "description": "Esta pieza representa el punto de reflexión donde lo lento se vuelve meditación. En el contexto actual, se dice que los procesos manuales y los oficios tradicionales están destinados a desaparecer ante el afán y la inmediatez de una sociedad que todo lo quiere para \"ya\". Como dicen los afanados en mi tierra: \"para ayer es tarde\". \nPara mí, esta obra defiende la idea de que el arte lleva en sí mismo los pensamientos del artista, la sabiduría empírica de sus antepasados, su tradición y, fundamentalmente, su visión única sobre el mundo que conoce.\nVisualmente, la obra plasma este diálogo entre el tiempo, el recuerdo y la resistencia de lo hecho a mano.\n\nMATERIALES: Mostacilla, piedras semipreciosas, hilo.",
+      "description": "Esta pieza representa el punto de reflexiÃ³n donde lo lento se vuelve meditaciÃ³n. En el contexto actual, se dice que los procesos manuales y los oficios tradicionales estÃ¡n destinados a desaparecer ante el afÃ¡n y la inmediatez de una sociedad que todo lo quiere para \"ya\". Como dicen los afanados en mi tierra: \"para ayer es tarde\". \nPara mÃ­, esta obra defiende la idea de que el arte lleva en sÃ­ mismo los pensamientos del artista, la sabidurÃ­a empÃ­rica de sus antepasados, su tradiciÃ³n y, fundamentalmente, su visiÃ³n Ãºnica sobre el mundo que conoce.\nVisualmente, la obra plasma este diÃ¡logo entre el tiempo, el recuerdo y la resistencia de lo hecho a mano.\n\nMATERIALES: Mostacilla, piedras semipreciosas, hilo.",
       "for_sale": false,
       "purchasable": false,
       "secondary_cta_enabled": true,
