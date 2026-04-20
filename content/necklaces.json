@@ -33,8 +33,8 @@
       "for_sale": true,
       "purchasable": true,
       "secondary_cta_enabled": true,
-      "price_display": "100",
-      "stripe_price_id": "price_1TMEsdGZz3PbqlU6v7PNfSLg",
+      "price_display": "140",
+      "stripe_price_id": "price_1TON58GZz3PbqlU64abKnAaE",
       "stripe_product_id": "prod_UKui8UhSX35Qq9",
       "images": [
         {
