@@ -2,9 +2,11 @@
   "pieces": [
     {
       "id": "prod_UMlVU2Xr1870xt",
-      "title": "FLOWER BUD",
+      "title": "Flower bud",
       "description": "",
       "for_sale": true,
+      "purchasable": true,
+      "secondary_cta_enabled": true,
       "price_display": "240",
       "stripe_price_id": "price_1TO1y3GZz3PbqlU63xddIKFG",
       "stripe_product_id": "prod_UMlVU2Xr1870xt",
