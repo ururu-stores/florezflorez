@@ -6,7 +6,7 @@
       "description": "Natural pearls and hand-woven black flowers | 950 silver brooch",
       "for_sale": true,
       "purchasable": false,
-      "secondary_cta_enabled": false,
+      "secondary_cta_enabled": true,
       "price_display": "",
       "stripe_price_id": "price_1TLEMbGZz3PbqlU6mgDgOG0W",
       "stripe_product_id": "prod_UJs640Zim616GA",
@@ -23,7 +23,8 @@
           "src": "https://img.florezflorez.com/pearl-1776217000435-2.png",
           "alt": ""
         }
-      ]
+      ],
+      "stock": 0
     },
     {
       "id": "prod_UKui8UhSX35Qq9",
