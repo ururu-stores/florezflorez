@@ -351,8 +351,8 @@
 
     <!-- Gradient -->
     <div class="section-block">
-      <h2>Background Gradient</h2>
-      <p class="field-desc" style="margin-bottom:1rem;">Color pairs that cycle on the homepage background. Each pair creates a diagonal gradient.</p>
+      <h2>404 Page Gradient</h2>
+      <p class="field-desc" style="margin-bottom:1rem;">Color pairs used for the animated gradient background on the 404 (Page Not Found) page. Each pair blends diagonally.</p>
       <div class="gradient-list" id="gradient-list"></div>
       <button class="btn btn-outline" id="add-gradient" type="button">Add Color Pair</button>
     </div>
@@ -828,7 +828,7 @@
             }
           }
 
-          // 3. Update index.html — panels, header links, gradient
+          // 3. Update index.html — header links only
           const indexRes = await fetch(`https://api.github.com/repos/${REPO}/contents/index.html`, {
             headers: { Authorization: 'token ' + ghToken },
           });
@@ -836,30 +836,15 @@
           const indexFile = await indexRes.json();
           const indexContent = decodeURIComponent(escape(atob(indexFile.content.replace(/\n/g, ''))));
 
-          const panelsHtml = categories.map(c =>
-            '    <div class="panel" data-section="' + c.slug + '">\n      <span class="panel-label">' + c.label + '</span>\n    </div>'
-          ).join('\n');
-
           const linksHtml = categories.map(c =>
             '        <a href="/' + c.slug + '" class="header-link" data-section="' + c.slug + '">' + c.label + '</a>'
           ).join('\n');
           const fullLinksHtml = linksHtml + '\n        <a href="/about" class="header-link" data-section="about">ABOUT</a>';
 
-          let updated = indexContent.replace(
-            /(<canvas id="home-gradient"><\/canvas>\n)([\s\S]*?)(\n  <\/div>\n\n  <!-- TOP HEADER NAV)/,
-            '$1' + panelsHtml + '\n$3'
-          );
-          updated = updated.replace(
+          const updated = indexContent.replace(
             /(<div class="header-links" id="header-links">\n)([\s\S]*?)(\n\s*<\/div>\n\s*<button class="cart-toggle")/,
             '$1' + fullLinksHtml + '\n$3'
           );
-          if (gradients.length > 0) {
-            const g = gradients[0];
-            updated = updated.replace(
-              /(<div id="home" class="home" style="background:)[^"]*(")/,
-              '$1linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ');$2'
-            );
-          }
           batch.addText('index.html', updated);
 
           // 4. Update 404.html gradient

@@ -30,23 +30,10 @@
   <!-- End Meta Pixel -->
 </head>
 <body>
-  <!-- HOMEPAGE LOGO -->
-  <img src="https://img.florezflorez.com/florez-florez-black-logo.png" alt="Florez Florez" id="home-logo" class="home-logo">
-
-  <!-- HOMEPAGE: Panels -->
-  <div id="home" class="home" style="background:linear-gradient(135deg, #fafafa, #f5f4f0);">
-    <canvas id="home-gradient"></canvas>
-    <div class="panel" data-section="rings">
-      <span class="panel-label">RINGS</span>
-    </div>
-    <div class="panel" data-section="necklaces">
-      <span class="panel-label">NECKLACES</span>
-    </div>
-    <div class="panel" data-section="earrings">
-      <span class="panel-label">EARRINGS</span>
-    </div>
-
-  </div>
+  <!-- HOMEPAGE: Product grid (populated by JS) -->
+  <section id="home" class="home">
+    <div class="home-grid" id="home-grid"></div>
+  </section>
 
   <!-- TOP HEADER NAV (visible when a section is open) -->
   <header id="header" class="header">
@@ -191,7 +178,6 @@
     <div class="lightbox-counter"></div>
   </div>
 
-  <script src="https://unpkg.com/granim@2.0.0/dist/granim.min.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>

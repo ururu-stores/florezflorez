@@ -1,13 +1,12 @@
 (() => {
   // ---- DOM refs ----
   const home = document.getElementById('home');
+  const homeGrid = document.getElementById('home-grid');
   const header = document.getElementById('header');
-  const homeLogo = document.getElementById('home-logo');
   const headerLogo = document.getElementById('header-logo');
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('.lightbox-img');
   const lightboxCounter = lightbox.querySelector('.lightbox-counter');
-  const panels = document.querySelectorAll('.panel');
   const headerLinks = document.querySelectorAll('.header-link');
   const headerLinksWrap = document.getElementById('header-links');
   const hamburger = document.getElementById('hamburger');
@@ -448,6 +447,7 @@
 
   let CATEGORY_NAMES = {};
   let productCategories = [];
+  let homepageCategories = [];
 
   // ---- Data loading ----
 
@@ -456,6 +456,7 @@
     try {
       const homepage = await fetchJSON('/content/homepage.json');
       if (homepage.categories) {
+        homepageCategories = homepage.categories;
         homepage.categories.forEach(cat => {
           // Skip non-product sections
           if (cat.slug === 'consulting' || cat.slug === 'about') return;
@@ -695,28 +696,63 @@
 
   // ---- Render: Homepage ----
 
-  async function renderHomepage() {
-    let gradientColors = [['#834d9b', '#d04ed6'], ['#1CD8D2', '#93EDC7'], ['#ee9ca7', '#ffdde1'], ['#2193b0', '#6dd5ed']];
+  async function renderHomeLogo() {
     try {
       const data = await fetchJSON('/content/homepage.json');
-      if (data.logo) {
-        homeLogo.src = data.logo;
-        headerLogo.src = data.logo;
-      }
-      if (data.gradients && data.gradients.length > 0) gradientColors = data.gradients;
+      if (data.logo) headerLogo.src = data.logo;
     } catch (e) {}
+  }
 
-    new Granim({
-      element: '#home-gradient',
-      direction: 'diagonal',
-      isPausedWhenNotInView: true,
-      stateTransitionSpeed: 300,
-      states: {
-        'default-state': {
-          gradients: gradientColors,
-          transitionSpeed: 6000
-        }
+  function interleaveProducts() {
+    const lists = productCategories
+      .filter(slug => {
+        const cat = (homepageCategories || []).find(c => c.slug === slug);
+        return !cat || cat.visible !== false;
+      })
+      .map(slug => ((dataCache[slug] && dataCache[slug].pieces) || []).map(p => ({ piece: p, slug: slug })));
+    const maxLen = lists.reduce((m, l) => Math.max(m, l.length), 0);
+    const result = [];
+    for (let i = 0; i < maxLen; i++) {
+      for (const list of lists) {
+        if (list[i]) result.push(list[i]);
       }
+    }
+    return result;
+  }
+
+  function renderHomeGrid() {
+    homeGrid.innerHTML = '';
+    interleaveProducts().forEach(({ piece, slug }) => {
+      if (!piece.images || piece.images.length === 0) return;
+      const tile = document.createElement('a');
+      tile.className = 'home-tile';
+      tile.href = '/' + slug + '/' + piece.id;
+      tile.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigate('/' + slug + '/' + piece.id);
+      });
+
+      const img = document.createElement('img');
+      img.src = piece.images[0].src;
+      img.alt = piece.images[0].alt || piece.title;
+      img.loading = 'lazy';
+      tile.appendChild(img);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'home-tile-overlay';
+      const titleEl = document.createElement('span');
+      titleEl.className = 'home-tile-title';
+      titleEl.textContent = piece.title;
+      overlay.appendChild(titleEl);
+      if (piece.for_sale && piece.purchasable !== false && piece.price_display) {
+        const priceEl = document.createElement('span');
+        priceEl.className = 'home-tile-price';
+        priceEl.textContent = formatPrice(piece.price_display);
+        overlay.appendChild(priceEl);
+      }
+      tile.appendChild(overlay);
+
+      homeGrid.appendChild(tile);
     });
   }
 
@@ -1085,9 +1121,6 @@
 
   function showSection(name) {
     home.classList.add('hidden');
-    homeLogo.style.display = 'none';
-    setTimeout(() => { home.style.display = 'none'; }, 500);
-    header.classList.add('visible');
 
     document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.classList.remove('product-view'); });
     document.body.classList.remove('product-open');
@@ -1106,10 +1139,7 @@
   function goHome() {
     closeMenu();
     closeCart();
-    home.style.display = 'flex';
-    homeLogo.style.display = '';
-    requestAnimationFrame(() => { home.classList.remove('hidden'); });
-    header.classList.remove('visible');
+    home.classList.remove('hidden');
 
     document.querySelectorAll('.section').forEach(s => { s.classList.remove('active'); s.classList.remove('product-view'); });
     document.querySelectorAll('.header-link').forEach(l => l.classList.remove('active'));
@@ -1183,12 +1213,6 @@
   }
 
   // ---- Event listeners ----
-
-  panels.forEach(panel => {
-    panel.addEventListener('click', () => {
-      navigate('/' + panel.dataset.section);
-    });
-  });
 
   headerLogo.addEventListener('click', () => {
     if (activeSection) navigate('/');
@@ -1307,7 +1331,8 @@
 
   // ---- Init ----
 
-  renderHomepage();
+  header.classList.add('visible');
+  renderHomeLogo();
 
   Promise.all([
     loadAllData(),
@@ -1315,6 +1340,7 @@
     renderAbout(),
     settingsPromise
   ]).then(() => {
+    renderHomeGrid();
     // Route based on current path
     const path = window.location.pathname;
     if (path && path !== '/') {
