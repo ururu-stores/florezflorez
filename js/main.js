@@ -27,7 +27,50 @@
   let activeObserver = null;
   let secondaryCta = null;
   let shippingConfig = {};
+  let siteSettings = {};
   const dataCache = {};
+
+  function ensureMetaTag(selector, attrName, attrValue) {
+    let el = document.head.querySelector(selector);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attrName, attrValue);
+      document.head.appendChild(el);
+    }
+    return el;
+  }
+
+  function ensureLinkTag(rel) {
+    let el = document.head.querySelector('link[rel="' + rel + '"]');
+    if (!el) {
+      el = document.createElement('link');
+      el.setAttribute('rel', rel);
+      document.head.appendChild(el);
+    }
+    return el;
+  }
+
+  function hydrateMetaFromSettings(s) {
+    const title = s.site_title || '';
+    const desc = s.site_description || '';
+    const ogImage = s.og_image || '';
+    const ogUrl = s.og_url || '';
+    if (title) document.title = title;
+    if (desc) ensureMetaTag('meta[name="description"]', 'name', 'description').setAttribute('content', desc);
+    if (title) ensureMetaTag('meta[property="og:title"]', 'property', 'og:title').setAttribute('content', title);
+    if (desc) ensureMetaTag('meta[property="og:description"]', 'property', 'og:description').setAttribute('content', desc);
+    if (ogImage) ensureMetaTag('meta[property="og:image"]', 'property', 'og:image').setAttribute('content', ogImage);
+    if (ogUrl) ensureMetaTag('meta[property="og:url"]', 'property', 'og:url').setAttribute('content', ogUrl);
+    if (title) ensureMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title').setAttribute('content', title);
+    if (desc) ensureMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description').setAttribute('content', desc);
+    if (ogImage) ensureMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image').setAttribute('content', ogImage);
+    if (s.favicon_url) {
+      const fav = ensureLinkTag('icon');
+      fav.setAttribute('type', 'image/png');
+      fav.setAttribute('href', s.favicon_url);
+    }
+    if (s.apple_icon_url) ensureLinkTag('apple-touch-icon').setAttribute('href', s.apple_icon_url);
+  }
 
   function buildContactLinksHtml(c) {
     var links = [];
@@ -47,6 +90,9 @@
     .catch(() => ({}));
 
   settingsPromise.then(settings => {
+    siteSettings = settings || {};
+    hydrateMetaFromSettings(siteSettings);
+    if (siteSettings.site_title && headerLogo && !headerLogo.alt) headerLogo.alt = siteSettings.site_title;
     if (settings.meta_pixel_id && typeof fbq === 'function') {
       fbq('init', settings.meta_pixel_id);
       fbq('track', 'PageView');
@@ -1162,7 +1208,7 @@
 
   function navigate(path, push) {
     if (push !== false) history.pushState(null, '', path);
-    document.title = 'Florez Florez Studio';
+    document.title = siteSettings.site_title || document.title;
 
     const clean = path.replace(/^\//, '').replace(/\/$/, '');
 
@@ -1209,7 +1255,8 @@
 
   function showNotFound() {
     showSection('not-found');
-    document.title = 'Page Not Found — Florez Florez Studio';
+    const base = siteSettings.site_title ? ' — ' + siteSettings.site_title : '';
+    document.title = 'Page Not Found' + base;
   }
 
   // ---- Event listeners ----

@@ -2,7 +2,8 @@ const Stripe = require('stripe');
 const fs = require('fs');
 const path = require('path');
 
-const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const REPO = process.env.GITHUB_REPO;
+if (!REPO) throw new Error('GITHUB_REPO env var is required');
 const SPECIAL_SECTIONS = ['consulting', 'about'];
 
 function loadSettings() {

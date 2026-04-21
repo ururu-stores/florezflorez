@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 
-const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const REPO = process.env.GITHUB_REPO;
+if (!REPO) throw new Error('GITHUB_REPO env var is required');
 const SPECIAL_SECTIONS = ['consulting', 'about'];
 
 function getRawBody(req) {

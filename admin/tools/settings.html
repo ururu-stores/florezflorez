@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Store Settings — Florez Florez</title>
+  <title>Store Settings</title>
   <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
   <style>
     @font-face {
@@ -695,10 +695,11 @@
   </div>
 
   <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script src="/js/admin-config.js"></script>
   <script src="/js/git-batch.js"></script>
   <script>
     (() => {
-      const REPO = 'taoofdre/florezflorez';
+      let REPO = null;
       const SETTINGS_PATH = 'content/settings.json';
       const INDEX_PATH = 'index.html';
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -1006,7 +1007,7 @@
       }
 
       function buildMetaBlock(title, desc, image, url, favicon, appleIcon) {
-        const t = (title || '').trim() || 'Florez Florez';
+        const t = (title || '').trim() || '';
         const d = (desc || '').trim();
         const i = (image || '').trim();
         const u = (url || '').trim();
@@ -1363,7 +1364,12 @@
         });
       });
 
-      initAuth();
+      adminConfig().then(cfg => {
+        REPO = cfg.repo;
+        initAuth();
+      }).catch(e => {
+        alert('Config error: ' + e.message);
+      });
     })();
   </script>
 </body>

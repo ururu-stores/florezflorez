@@ -20,7 +20,10 @@ module.exports = async function handler(req, res) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const siteUrl = (process.env.SITE_URL || 'https://florezflorez.vercel.app').replace(/\/$/, '');
+  if (!process.env.SITE_URL) {
+    return res.status(500).json({ error: 'SITE_URL env var is required' });
+  }
+  const siteUrl = process.env.SITE_URL.replace(/\/$/, '');
 
   const { action, product } = req.body || {};
   if (!action || !product) return res.status(400).json({ error: 'Missing action or product' });

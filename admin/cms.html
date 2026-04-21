@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Content Manager — Florez Florez</title>
+  <title>Content Manager</title>
 </head>
 <body>
   <script>
@@ -11,6 +11,7 @@
     window.CMS_MANUAL_INIT = true;
   </script>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script src="/js/admin-config.js"></script>
   <script>
     var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
@@ -19,9 +20,9 @@
         ? { name: 'git-gateway' }
         : {
             name: 'github',
-            repo: 'taoofdre/florezflorez',
+            repo: '__FROM_API_CONFIG__',
             branch: 'main',
-            base_url: 'https://florezflorez.vercel.app',
+            base_url: '__FROM_API_CONFIG__',
             auth_endpoint: '/api/auth'
           },
       local_backend: isLocal,
@@ -181,7 +182,17 @@
       ]
     };
 
-    CMS.init({ config: config });
+    if (isLocal) {
+      CMS.init({ config: config });
+    } else {
+      adminConfig().then(function (cfg) {
+        config.backend.repo = cfg.repo;
+        config.backend.base_url = cfg.siteUrl;
+        CMS.init({ config: config });
+      }).catch(function (e) {
+        document.body.innerHTML = '<pre style="padding:2rem;font-family:monospace;">Config error: ' + e.message + '</pre>';
+      });
+    }
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homepage — Florez Florez</title>
+  <title>Homepage</title>
   <style>
     @font-face {
       font-family: 'IBM Plex Mono';
@@ -383,10 +383,11 @@
 
   <div class="loading" id="loading">Loading...</div>
 
+  <script src="/js/admin-config.js"></script>
   <script src="/js/git-batch.js"></script>
   <script>
     (() => {
-      const REPO = 'taoofdre/florezflorez';
+      let REPO = null;
       const HOMEPAGE_PATH = 'content/homepage.json';
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
@@ -872,7 +873,12 @@
         }
       });
 
-      initAuth();
+      adminConfig().then(cfg => {
+        REPO = cfg.repo;
+        initAuth();
+      }).catch(e => {
+        loadingEl.textContent = 'Config error: ' + e.message;
+      });
     })();
   </script>
 </body>

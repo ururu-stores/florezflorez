@@ -1,4 +1,5 @@
-const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const REPO = process.env.GITHUB_REPO;
+if (!REPO) throw new Error('GITHUB_REPO env var is required');
 const SPECIAL_SECTIONS = ['consulting', 'about'];
 
 async function fetchJSON(filePath, pat) {
@@ -86,7 +87,7 @@ module.exports = async (req, res) => {
         escapeCSV(price + ' USD'),
         escapeCSV(baseUrl + '/' + category + '/' + piece.id),
         escapeCSV(imageUrl),
-        escapeCSV(settings.site_title || 'Florez Florez'),
+        escapeCSV(settings.site_title || ''),
       ];
 
       rows.push(row.join(','));

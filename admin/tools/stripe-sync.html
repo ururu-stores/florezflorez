@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stripe Sync — Florez Florez</title>
+  <title>Stripe Sync</title>
   <style>
     @font-face {
       font-family: 'IBM Plex Mono';
@@ -249,10 +249,11 @@
     <div class="loading">Loading products...</div>
   </div>
 
+  <script src="/js/admin-config.js"></script>
   <script src="/js/git-batch.js"></script>
   <script>
     (() => {
-      const REPO = 'taoofdre/florezflorez';
+      let REPO = null;
       const SECTIONS = [
         { key: 'art',       label: 'Art',       file: 'content/art.json' },
         { key: 'necklaces', label: 'Necklaces',  file: 'content/necklaces.json' },
@@ -563,7 +564,12 @@
         }
       }
 
-      initAuth();
+      adminConfig().then(cfg => {
+        REPO = cfg.repo;
+        initAuth();
+      }).catch(e => {
+        alert('Config error: ' + e.message);
+      });
     })();
   </script>
 </body>
