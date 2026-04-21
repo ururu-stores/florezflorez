@@ -701,6 +701,26 @@ a {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
+.product-description p,
+.product-description-mobile p { margin-bottom: 1rem; }
+.product-description p:last-child,
+.product-description-mobile p:last-child { margin-bottom: 0; }
+.product-description h1, .product-description h2, .product-description h3,
+.product-description-mobile h1, .product-description-mobile h2, .product-description-mobile h3 {
+  font-weight: 600;
+  color: #333;
+  margin: 1.25rem 0 0.5rem;
+}
+.product-description h1:first-child, .product-description h2:first-child, .product-description h3:first-child,
+.product-description-mobile h1:first-child, .product-description-mobile h2:first-child, .product-description-mobile h3:first-child { margin-top: 0; }
+.product-description h1, .product-description-mobile h1 { font-size: 1rem; }
+.product-description h2, .product-description-mobile h2 { font-size: 0.95rem; }
+.product-description h3, .product-description-mobile h3 { font-size: 0.85rem; }
+.product-description ul, .product-description-mobile ul { margin: 0.5rem 0 1rem 1.5rem; }
+.product-description li, .product-description-mobile li { margin-bottom: 0.25rem; }
+.product-description a, .product-description-mobile a { color: #333; text-decoration: underline; }
+.product-description strong, .product-description-mobile strong { font-weight: 600; }
+.product-description em, .product-description-mobile em { font-style: italic; }
 
 
 .product-media {

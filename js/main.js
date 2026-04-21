@@ -914,9 +914,9 @@
 
     sidebar.appendChild(buildBuyActions(piece));
 
-    const descEl = document.createElement('p');
+    const descEl = document.createElement('div');
     descEl.className = 'product-description';
-    text(descEl, piece.description);
+    descEl.innerHTML = renderMarkdown(piece.description || '');
     sidebar.appendChild(descEl);
 
     productPage.appendChild(sidebar);
@@ -969,9 +969,9 @@
     media.appendChild(mobileBuy);
 
     // Mobile description (below buy actions, hidden on desktop)
-    const mobileDesc = document.createElement('p');
+    const mobileDesc = document.createElement('div');
     mobileDesc.className = 'product-description-mobile';
-    text(mobileDesc, piece.description);
+    mobileDesc.innerHTML = renderMarkdown(piece.description || '');
     media.appendChild(mobileDesc);
 
     // Desktop scroll indicator (chevron) — only when there's more than one image
