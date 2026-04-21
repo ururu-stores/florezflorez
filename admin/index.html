@@ -238,6 +238,7 @@
         <a class="sidebar-link" data-section="stripe">Stripe</a>
       </div>
       <a href="/" class="sidebar-back">&larr; Back to Site</a>
+      <a id="sidebar-signout" class="sidebar-back" style="margin-top: 0; cursor: pointer;">Sign Out</a>
     </nav>
 
     <main id="content-area">
@@ -614,6 +615,15 @@
     // ==================== AUTH ====================
     function getStoredToken() { return sessionStorage.getItem('gh_token') || localStorage.getItem('gh_token'); }
     function storeToken(t) { sessionStorage.setItem('gh_token', t); }
+    function clearStoredToken() { sessionStorage.removeItem('gh_token'); localStorage.removeItem('gh_token'); }
+
+    document.getElementById('sidebar-signout').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (peIsDirty && !confirm('You have unsaved product changes. Sign out anyway?')) return;
+      clearStoredToken();
+      ghToken = null;
+      location.reload();
+    });
 
     function showAdmin() {
       authScreen.style.display = 'none';
