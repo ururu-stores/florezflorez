@@ -587,16 +587,14 @@
     const wrap = document.createElement('div');
     wrap.className = 'buy-actions';
 
-    // Hide all purchase actions (buy + secondary CTA) when product isn't for sale.
     // Default to true for legacy products that don't carry the purchasable field.
     const isPurchasable = piece.purchasable !== false;
-    if (!isPurchasable) return wrap;
 
     const hasSizes = piece.sizes && piece.sizes.length > 0;
     const isSoldOut = !hasSizes && typeof piece.stock === 'number' && piece.stock === 0;
     const allSizesSoldOut = hasSizes && piece.sizes.every(s => typeof s.stock === 'number' && s.stock === 0);
 
-    if (piece.for_sale && piece.stripe_price_id) {
+    if (isPurchasable && piece.for_sale && piece.stripe_price_id) {
       if (isSoldOut || allSizesSoldOut) {
         const btn = document.createElement('button');
         btn.className = 'buy-btn buy-btn-disabled';
