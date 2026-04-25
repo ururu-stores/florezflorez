@@ -12,12 +12,12 @@
       "stripe_product_id": "prod_UKruuoonR8D32S",
       "images": [
         {
-          "src": "https://img.ururu.store/florezflorez/triangle-1776740298812-0.webp",
+          "src": "https://img.ururu.store/florezflorez/triangle-1776740300214-1.webp",
           "alt": ""
         },
         {
-          "src": "https://img.ururu.store/florezflorez/triangle-1776740300214-1.webp",
-          "alt": ""
+          "src": "https://img.ururu.store/florezflorez/triangle-1776740298812-0.webp",
+          "alt": "Triangle ring [smoke]"
         }
       ],
       "sizes": [
@@ -28,6 +28,10 @@
         {
           "label": "9.5",
           "stock": 1
+        },
+        {
+          "label": "10",
+          "stock": 0
         }
       ]
     },
