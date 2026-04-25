@@ -1,10 +1,10 @@
 {
   "site_title": "Florez Florez Studio",
   "site_description": "Handmade rings, necklaces, and earrings. Inquire for custom pieces. Made in Brooklyn and Medellin.",
-  "og_image": "https://img.florezflorez.com/og-share-image.png",
+  "og_image": "https://img.ururu.store/florezflorez/og-share-image.png",
   "og_url": "https://florezflorez.vercel.app",
-  "favicon_url": "https://img.florezflorez.com/favicon-32.png",
-  "apple_icon_url": "https://img.florezflorez.com/apple-touch-icon.png",
+  "favicon_url": "https://img.ururu.store/florezflorez/favicon-32.png",
+  "apple_icon_url": "https://img.ururu.store/florezflorez/apple-touch-icon.png",
   "meta_pixel_id": "3993733700852442",
   "secondary_cta": {
     "button_text": "MAKE ME ONE",
