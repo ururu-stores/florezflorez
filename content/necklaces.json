@@ -8,8 +8,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "220",
-      "stripe_price_id": "price_1TOT5NGZz3PbqlU6XjyyF3Vd",
-      "stripe_product_id": "prod_UJs640Zim616GA",
+      "stripe_price_id": "price_1TRGU2IXKxhklI6B4daXW1bt",
+      "stripe_product_id": "prod_UQ6hiIl25T5R60",
       "images": [
         {
           "src": "https://img.ururu.store/florezflorez/pearl-1776734496702-0.webp",
@@ -30,8 +30,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "140",
-      "stripe_price_id": "price_1TON58GZz3PbqlU64abKnAaE",
-      "stripe_product_id": "prod_UKui8UhSX35Qq9",
+      "stripe_price_id": "price_1TRGU3IXKxhklI6B0sfsFpK6",
+      "stripe_product_id": "prod_UQ6h8hz5EXJW2B",
       "images": [
         {
           "src": "https://img.ururu.store/florezflorez/chameleon-1776697808429-0.webp",
@@ -52,8 +52,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "260",
-      "stripe_price_id": "price_1TON6GGZz3PbqlU6thLePUdg",
-      "stripe_product_id": "prod_UKv1AIJPziK0Wz",
+      "stripe_price_id": "price_1TRGU4IXKxhklI6Bop6bErck",
+      "stripe_product_id": "prod_UQ6h1kMknSxXyw",
       "images": [
         {
           "src": "https://img.ururu.store/florezflorez/lily-1776699020240-0.webp",
@@ -74,8 +74,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "530",
-      "stripe_price_id": "price_1TOJ2RGZz3PbqlU6zwYxyYqE",
-      "stripe_product_id": "prod_UN38k5zBM0NffP",
+      "stripe_price_id": "price_1TRGU5IXKxhklI6BlTpb6QIc",
+      "stripe_product_id": "prod_UQ6h8FotElxHZU",
       "images": [
         {
           "src": "https://img.ururu.store/florezflorez/gardenia-1776696180399-0.webp",

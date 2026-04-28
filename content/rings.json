@@ -8,8 +8,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "510",
-      "stripe_price_id": "price_1TMCAhGZz3PbqlU6v2LBOrA2",
-      "stripe_product_id": "prod_UKruuoonR8D32S",
+      "stripe_price_id": "price_1TRGU6IXKxhklI6BvfO4Ryny",
+      "stripe_product_id": "prod_UQ6hoKmYBnah3s",
       "images": [
         {
           "src": "https://img.florezflorez.com/triangle-1776740298812-0.webp",
@@ -149,8 +149,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "240",
-      "stripe_price_id": "price_1TMCAyGZz3PbqlU6Uej9RG5z",
-      "stripe_product_id": "prod_UKruTfFRR8r0R9",
+      "stripe_price_id": "price_1TRGU7IXKxhklI6Benk7esOc",
+      "stripe_product_id": "prod_UQ6hmvHSew6GLW",
       "images": [
         {
           "src": "https://img.florezflorez.com/labradorita-1776740608847-0.webp",
@@ -221,8 +221,8 @@
       "purchasable": true,
       "secondary_cta_enabled": true,
       "price_display": "310",
-      "stripe_price_id": "price_1TRFYZGZz3PbqlU6T8LwJC1i",
-      "stripe_product_id": "prod_UQ5kjevuX0r8bb",
+      "stripe_price_id": "price_1TRGU8IXKxhklI6BGO4Ks48e",
+      "stripe_product_id": "prod_UQ6hu1ArFEzkhS",
       "images": [
         {
           "src": "https://img.florezflorez.com/seed-ring-1777398237351-0.webp",
