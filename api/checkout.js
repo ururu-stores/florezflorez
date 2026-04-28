@@ -2,7 +2,8 @@
 // The platform owns the API key (PLATFORM_STRIPE_SK); the merchant owns the
 // connected Stripe account (MERCHANT_STRIPE_ACCOUNT_ID). All requests pass
 // `{ stripeAccount }` so the session is created on — and money lands in —
-// the merchant's account directly. The platform takes no per-transaction fee.
+// the merchant's account directly. The platform takes a 1.1% application fee
+// (PLATFORM_FEE_BPS) deducted from the merchant's balance per charge.
 //
 // Both env vars are injected by the platform at provision time (or by the
 // Stripe Connect callback once the merchant authorizes). If either is missing,
@@ -11,6 +12,8 @@
 const Stripe = require('stripe');
 const fs = require('fs');
 const path = require('path');
+
+const PLATFORM_FEE_BPS = 110;
 
 function loadSettings() {
   try {
@@ -82,11 +85,24 @@ module.exports = async function handler(req, res) {
     const settings = loadSettings();
     const shipping = settings.shipping || {};
 
+    const minOrderCents = settings.min_order_cents || 0;
+    if (totalCents < minOrderCents) {
+      res.status(400).json({
+        error: `Order subtotal must be at least $${(minOrderCents / 100).toFixed(2)}.`,
+      });
+      return;
+    }
+
+    const applicationFeeAmount = Math.round((totalCents * PLATFORM_FEE_BPS) / 10000);
+
     const sessionParams = {
       mode: 'payment',
       line_items,
       shipping_address_collection: { allowed_countries: ['US'] },
-      allow_promotion_codes: true,
+      allow_promotion_codes: false,
+      payment_intent_data: {
+        application_fee_amount: applicationFeeAmount,
+      },
       success_url: `${origin}/?checkout=success&total=${total}`,
       cancel_url: `${origin}/?checkout=cancel`,
     };

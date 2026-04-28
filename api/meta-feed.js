@@ -1,4 +1,4 @@
-const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const REPO = process.env.GITHUB_REPO || 'ururu-stores/florezflorez';
 const SPECIAL_SECTIONS = ['consulting', 'about'];
 
 async function fetchJSON(filePath, pat) {

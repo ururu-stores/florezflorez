@@ -1,6 +1,6 @@
 const Stripe = require('stripe');
 
-const REPO = process.env.GITHUB_REPO || 'taoofdre/florezflorez';
+const REPO = process.env.GITHUB_REPO || 'ururu-stores/florezflorez';
 const SPECIAL_SECTIONS = ['consulting', 'about'];
 
 function getRawBody(req) {

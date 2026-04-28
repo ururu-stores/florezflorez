@@ -18,6 +18,7 @@
       "handle": "florezflorez.studio"
     }
   },
+  "min_order_cents": 200,
   "shipping": {
     "method": "free",
     "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
