@@ -27,7 +27,6 @@
   let activeObserver = null;
   let secondaryCta = null;
   let shippingConfig = {};
-  let minOrderCents = 0;
   const dataCache = {};
 
   function buildContactLinksHtml(c) {
@@ -57,9 +56,6 @@
     }
     if (settings.shipping) {
       shippingConfig = settings.shipping;
-    }
-    if (typeof settings.min_order_cents === 'number') {
-      minOrderCents = settings.min_order_cents;
     }
     if (settings.thank_you) {
       var tyPrimary = document.getElementById('thankyou-primary-text');
@@ -267,18 +263,6 @@
     if (footerShipping) {
       footerShipping.innerHTML = buildShippingNoteHtml();
     }
-
-    const subtotalCents = Math.round(
-      cart.reduce((sum, item) => sum + parsePrice(item.price_display) * item.quantity, 0) * 100
-    );
-    const belowMin = minOrderCents > 0 && subtotalCents < minOrderCents;
-    cartCheckoutBtn.disabled = belowMin;
-    if (belowMin) {
-      cartCheckoutBtn.textContent =
-        'MIN ORDER $' + (minOrderCents / 100).toFixed(2);
-    } else {
-      cartCheckoutBtn.textContent = 'CHECKOUT';
-    }
   }
 
   function openCart() {
@@ -303,13 +287,6 @@
 
   cartCheckoutBtn.addEventListener('click', async () => {
     if (cart.length === 0) return;
-    const subtotalCents = Math.round(
-      cart.reduce((sum, item) => sum + parsePrice(item.price_display) * item.quantity, 0) * 100
-    );
-    if (minOrderCents > 0 && subtotalCents < minOrderCents) {
-      alert('Minimum order is $' + (minOrderCents / 100).toFixed(2) + '.');
-      return;
-    }
     if (typeof fbq === 'function') {
       const totalValue = cart.reduce((sum, item) => sum + parsePrice(item.price_display) * item.quantity, 0);
       fbq('track', 'InitiateCheckout', {

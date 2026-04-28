@@ -1,5 +1,7 @@
 const Stripe = require('stripe');
 
+const MIN_PIECE_PRICE_CENTS = 200;
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -51,6 +53,11 @@ module.exports = async function handler(req, res) {
 
     const priceCents = parsePriceCents(price_display);
     if (!priceCents) return res.status(400).json({ error: 'Invalid or missing price' });
+    if (priceCents < MIN_PIECE_PRICE_CENTS) {
+      return res.status(400).json({
+        error: `Minimum price is $${(MIN_PIECE_PRICE_CENTS / 100).toFixed(2)}.`,
+      });
+    }
 
     const imageUrl = absoluteImageUrl(image_path);
     const productFields = {

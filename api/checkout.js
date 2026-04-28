@@ -85,14 +85,6 @@ module.exports = async function handler(req, res) {
     const settings = loadSettings();
     const shipping = settings.shipping || {};
 
-    const minOrderCents = settings.min_order_cents || 0;
-    if (totalCents < minOrderCents) {
-      res.status(400).json({
-        error: `Order subtotal must be at least $${(minOrderCents / 100).toFixed(2)}.`,
-      });
-      return;
-    }
-
     const applicationFeeAmount = Math.round((totalCents * PLATFORM_FEE_BPS) / 10000);
 
     const sessionParams = {

@@ -269,7 +269,7 @@
               <div class="field-group"><label for="pe-title-field">Title</label><input type="text" id="pe-title-field" class="text-input" placeholder="Product title"></div>
               <div class="field-group"><label for="pe-desc">Description</label><p class="field-desc">Supports markdown: **bold**, *italic*, [links](url), # headings, - lists.</p><textarea id="pe-desc" class="text-input" placeholder="Product description"></textarea></div>
               <div class="field-group"><label>For Sale</label><label class="toggle-row"><input type="checkbox" id="pe-purchasable" checked><div class="toggle-track"></div><span class="toggle-label" id="pe-purchasable-label">For Sale</span></label></div>
-              <div class="field-group" id="pe-price-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="0" step="0.01"></div>
+              <div class="field-group" id="pe-price-group"><label for="pe-price">Price</label><p class="field-desc">Enter the number only (e.g. 120). The $ is added automatically. Minimum: $2.00.</p><input type="number" id="pe-price" class="text-input" placeholder="e.g. 120" min="2" step="0.01"></div>
               <div class="field-group"><label>Visible</label><label class="toggle-row"><input type="checkbox" id="pe-forsale"><div class="toggle-track"></div><span class="toggle-label" id="pe-forsale-label">Hidden</span></label></div>
               <div class="field-group" id="pe-stock-group"><label for="pe-stock">Stock</label><p class="field-desc">Leave blank for unlimited. Set to 0 for Sold Out.</p><input type="number" id="pe-stock" class="text-input" placeholder="Unlimited" min="0" step="1"></div>
               <div class="field-group"><label>Secondary CTA</label><p class="field-desc">The contact button shown below "Add to Cart" for this product. Configure the button text and channel in Settings.</p><label class="toggle-row"><input type="checkbox" id="pe-secondary-cta" checked><div class="toggle-track"></div><span class="toggle-label" id="pe-secondary-cta-label">Active</span></label></div>
@@ -1212,6 +1212,7 @@
       const purchasable = document.getElementById('pe-purchasable').checked;
       const price = purchasable ? document.getElementById('pe-price').value.trim() : '';
       if (purchasable && !price) { peSetStatus('Price is required when For Sale is on', 'error'); return; }
+      if (purchasable && parseFloat(price) < 2) { peSetStatus('Minimum price is $2.00', 'error'); return; }
       document.getElementById('pe-save-btn').disabled = true;
       peSetStatus('Saving...');
       try {
