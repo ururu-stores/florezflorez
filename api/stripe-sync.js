@@ -19,7 +19,14 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Could not verify token' });
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const platformSecret = process.env.PLATFORM_STRIPE_SK || process.env.STRIPE_SECRET_KEY;
+  const merchantAccount = process.env.MERCHANT_STRIPE_ACCOUNT_ID;
+  if (!platformSecret || !merchantAccount) {
+    return res.status(503).json({ error: 'Stripe sync is not configured for this store yet.' });
+  }
+
+  const stripe = new Stripe(platformSecret);
+  const opts = { stripeAccount: merchantAccount };
   const siteUrl = (process.env.SITE_URL || 'https://florezflorez.vercel.app').replace(/\/$/, '');
 
   const { action, product } = req.body || {};
@@ -52,49 +59,71 @@ module.exports = async function handler(req, res) {
       images: imageUrl ? [imageUrl] : [],
     };
 
-    // ---- Create ----
-    if (action === 'create') {
-      const stripeProduct = await stripe.products.create(productFields);
+    async function createOnConnectedAccount() {
+      const stripeProduct = await stripe.products.create(productFields, opts);
       const stripePrice = await stripe.prices.create({
         product: stripeProduct.id,
         unit_amount: priceCents,
         currency: 'usd',
-      });
-      return res.status(200).json({
+      }, opts);
+      return {
         stripe_product_id: stripeProduct.id,
         stripe_price_id: stripePrice.id,
-      });
+      };
+    }
+
+    // ---- Create ----
+    if (action === 'create') {
+      return res.status(200).json(await createOnConnectedAccount());
     }
 
     // ---- Update ----
     if (action === 'update') {
       // Migration path: has price_id but not product_id (pre-sync data)
       if (!stripe_product_id && stripe_price_id) {
-        const existingPrice = await stripe.prices.retrieve(stripe_price_id);
-        stripe_product_id = typeof existingPrice.product === 'string'
-          ? existingPrice.product
-          : existingPrice.product.id;
+        try {
+          const existingPrice = await stripe.prices.retrieve(stripe_price_id, opts);
+          stripe_product_id = typeof existingPrice.product === 'string'
+            ? existingPrice.product
+            : existingPrice.product.id;
+        } catch (e) {
+          if (e.code === 'resource_missing') {
+            // Price exists on a different account (legacy pre-Connect sync) —
+            // recover by creating fresh on the connected account.
+            return res.status(200).json(await createOnConnectedAccount());
+          }
+          throw e;
+        }
       }
 
       if (!stripe_product_id) {
         return res.status(400).json({ error: 'No Stripe product ID found — sync as new instead' });
       }
 
-      // Update product metadata
-      await stripe.products.update(stripe_product_id, productFields);
+      // Update product metadata. If the product itself doesn't exist on the
+      // connected account (stranded from a misconfigured earlier sync), fall
+      // through to create.
+      try {
+        await stripe.products.update(stripe_product_id, productFields, opts);
+      } catch (e) {
+        if (e.code === 'resource_missing') {
+          return res.status(200).json(await createOnConnectedAccount());
+        }
+        throw e;
+      }
 
       // Check if price changed; if so, create new price and archive old
-      const existingPrice = await stripe.prices.retrieve(stripe_price_id);
+      const existingPrice = await stripe.prices.retrieve(stripe_price_id, opts);
       if (existingPrice.unit_amount !== priceCents) {
         const newPrice = await stripe.prices.create({
           product: stripe_product_id,
           unit_amount: priceCents,
           currency: 'usd',
-        });
+        }, opts);
         // Stripe refuses to archive a price that's still the product's default_price,
         // so promote the new price to default before archiving the old one.
-        await stripe.products.update(stripe_product_id, { default_price: newPrice.id });
-        await stripe.prices.update(stripe_price_id, { active: false });
+        await stripe.products.update(stripe_product_id, { default_price: newPrice.id }, opts);
+        await stripe.prices.update(stripe_price_id, { active: false }, opts);
         stripe_price_id = newPrice.id;
       }
 
