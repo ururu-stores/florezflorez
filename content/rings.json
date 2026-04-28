@@ -214,27 +214,6 @@
       ]
     },
     {
-      "id": "prod_UQ5JM5BLgQe8je",
-      "title": "Seed Ring",
-      "description": "Garnet | 950 Silver | Size 7 | One of a Kind",
-      "for_sale": true,
-      "purchasable": true,
-      "secondary_cta_enabled": true,
-      "price_display": "290",
-      "stripe_price_id": "price_1TRF8sGZz3PbqlU6TegySHvD",
-      "stripe_product_id": "prod_UQ5JM5BLgQe8je",
-      "images": [
-        {
-          "src": "https://img.florezflorez.com/seed-ring-1777396186556-0.webp",
-          "alt": ""
-        },
-        {
-          "src": "https://img.florezflorez.com/seed-ring-1777396188661-1.webp",
-          "alt": ""
-        }
-      ]
-    },
-    {
       "id": "prod_UQ5JjIWKI2FrE8",
       "title": "Seed Ring",
       "description": "Garnet | 950 Silver | Size 7 | One of a Kind",
