@@ -143,6 +143,34 @@ a {
   }
 }
 
+/* Category sections render a homepage-style grid on desktop, filtered to
+   the one category. The .art-layout sidebar+scroll layout below stays in
+   markup as the mobile fallback (see @media (max-width: 768px)). */
+.section-grid {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .section.active.category-section:not(.product-view) {
+    height: auto;
+    overflow: visible;
+  }
+  .section.active.category-section:not(.product-view) .art-layout {
+    display: none;
+  }
+  .section.active.category-section:not(.product-view) .section-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .section.active.category-section:not(.product-view) .section-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .header-logo {
   width: 80px;
   height: auto;

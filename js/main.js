@@ -756,6 +756,52 @@
 
   // ---- Render: Category listing ----
 
+  // Build a homepage-style grid filtered to one category, attached to the
+  // section. Hidden on mobile via CSS — the art-layout sidebar+scroll layout
+  // is the mobile fallback. Tile markup mirrors renderHomeGrid so the styles
+  // (.home-tile / .home-tile-overlay) carry over without a parallel ruleset.
+  function renderCategoryGrid(section, pieces, categorySlug) {
+    let grid = section.querySelector('.section-grid');
+    if (!grid) {
+      grid = document.createElement('div');
+      grid.className = 'section-grid';
+      section.appendChild(grid);
+    }
+    grid.innerHTML = '';
+    pieces.forEach(piece => {
+      if (!piece.images || piece.images.length === 0) return;
+      const tile = document.createElement('a');
+      tile.className = 'home-tile';
+      tile.href = '/' + categorySlug + '/' + piece.id;
+      tile.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigate('/' + categorySlug + '/' + piece.id);
+      });
+
+      const img = document.createElement('img');
+      img.src = piece.images[0].src;
+      img.alt = piece.images[0].alt || piece.title;
+      img.loading = 'lazy';
+      tile.appendChild(img);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'home-tile-overlay';
+      const titleEl = document.createElement('span');
+      titleEl.className = 'home-tile-title';
+      titleEl.textContent = piece.title;
+      overlay.appendChild(titleEl);
+      if (piece.for_sale && piece.purchasable !== false && piece.price_display) {
+        const priceEl = document.createElement('span');
+        priceEl.className = 'home-tile-price';
+        priceEl.textContent = formatPrice(piece.price_display);
+        overlay.appendChild(priceEl);
+      }
+      tile.appendChild(overlay);
+
+      grid.appendChild(tile);
+    });
+  }
+
   function renderCategoryView(sectionId, pieces, categorySlug) {
     const section = document.getElementById(sectionId);
     const artLayout = section.querySelector('.art-layout');
@@ -767,6 +813,11 @@
     document.body.classList.remove('product-open');
     const existingProduct = section.querySelector('.product-page');
     if (existingProduct) existingProduct.remove();
+
+    // Mark the section so CSS can switch to a homepage-style grid on desktop.
+    // The art-layout below stays in markup as the mobile fallback.
+    section.classList.add('category-section');
+    renderCategoryGrid(section, pieces, categorySlug);
 
     artLayout.style.display = '';
     sidebar.innerHTML = '';
