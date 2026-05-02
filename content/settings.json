@@ -6,6 +6,22 @@
   "favicon_url": "https://img.ururu.store/florezflorez/favicon-32.png",
   "apple_icon_url": "https://img.ururu.store/florezflorez/apple-touch-icon.png",
   "meta_pixel_id": "3993733700852442",
+  "shipping": {
+    "method": "free",
+    "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
+    "free_threshold": null,
+    "pickup_address": "",
+    "pickup_hours": "",
+    "delivery_days": "3-4",
+    "returns_policy": "If you are not satisfied with your purchase, you may return it within 10 days of delivery for a full refund. Items must be in their original, unworn condition. The buyer is responsible for return shipping costs. Contact us to begin the return process."
+  },
+  "contact": {
+    "email": "carolina@florezflorez.com",
+    "phone": "",
+    "instagram": "florezflorez.studio",
+    "whatsapp": "",
+    "tiktok": ""
+  },
   "secondary_cta": {
     "button_text": "MAKE ME ONE",
     "message_template": "Hi! I'm interested in {product}. Can I order a custom version from you?",
@@ -18,13 +34,8 @@
       "handle": "florezflorez.studio"
     }
   },
-  "shipping": {
-    "method": "free",
-    "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
-    "free_threshold": null,
-    "pickup_address": "",
-    "pickup_hours": "",
-    "delivery_days": "3-4",
-    "returns_policy": "If you are not satisfied with your purchase, you may return it within 10 days of delivery for a full refund. Items must be in their original, unworn condition. The buyer is responsible for return shipping costs. Contact us to begin the return process."
+  "thank_you": {
+    "primary": "Thank you for your business. To see what we're making next, or just to have a fun follow, check our our [Instagram](https://www.instagram.com/florezflorez.studio)",
+    "secondary": ""
   }
 }

@@ -56,8 +56,8 @@
       "description": "Rounded ring with garnet stone, 12 grams, size 8 | 950 silver",
       "for_sale": true,
       "price_display": "280",
-      "stripe_price_id": "price_1TMCAnGZz3PbqlU68yLz7Doc",
-      "stripe_product_id": "prod_UKru95hQ4ee2Qd",
+      "stripe_price_id": "price_1TSi77IXKxhklI6BncCXCmGp",
+      "stripe_product_id": "prod_URbJMjcIo0LVOt",
       "images": [
         {
           "src": "https://img.florezflorez.com/ovo-with-stone-1776220933465-0.png",
@@ -214,7 +214,7 @@
       ]
     },
     {
-      "id": "seed-ring",
+      "id": "prod_UQ5kjevuX0r8bb",
       "title": "Seed Ring",
       "description": "Garnet | 950 Silver | Size 7 | One of a Kind",
       "for_sale": true,
