@@ -29,7 +29,8 @@
           "label": "9.5",
           "stock": 1
         }
-      ]
+      ],
+      "weight_oz": 7
     },
     {
       "id": "ring003",
@@ -48,7 +49,8 @@
           "src": "https://img.florezflorez.com/thepeakring_01.png",
           "alt": "peak ring close neutral background"
         }
-      ]
+      ],
+      "weight_oz": 7
     },
     {
       "id": "ring004",
@@ -76,7 +78,8 @@
           "alt": ""
         }
       ],
-      "stock": 0
+      "stock": 0,
+      "weight_oz": 7
     },
     {
       "id": "ring005",
@@ -99,7 +102,8 @@
           "src": "https://img.florezflorez.com/desert-garnet-ring-1776356735802-2.webp",
           "alt": ""
         }
-      ]
+      ],
+      "weight_oz": 7
     },
     {
       "stripe_price_id": "price_1TMCAtGZz3PbqlU6g043SVEf",
@@ -119,7 +123,8 @@
       "id": "ring006",
       "description": "Bubbly ring with multiple false stones, size 6.5, 14 grams | 950 silver",
       "stripe_product_id": "prod_UKrusohOyshCUM",
-      "for_sale": true
+      "for_sale": true,
+      "weight_oz": 7
     },
     {
       "stripe_price_id": "price_1TMCApGZz3PbqlU6InR1mjYG",
@@ -139,7 +144,8 @@
       "id": "ring007",
       "description": "Organic, thin and broad ring, size 10, 7 grams | 950 silver",
       "stripe_product_id": "prod_UKruduih3YRXNz",
-      "for_sale": true
+      "for_sale": true,
+      "weight_oz": 7
     },
     {
       "id": "ring008",
@@ -161,7 +167,8 @@
           "alt": ""
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "weight_oz": 7
     },
     {
       "id": "mis-s-custum-ring",
@@ -232,7 +239,8 @@
           "src": "https://img.florezflorez.com/seed-ring-1777396186556-0.webp",
           "alt": ""
         }
-      ]
+      ],
+      "weight_oz": 7
     }
   ]
 }

@@ -7,12 +7,13 @@
   "apple_icon_url": "https://img.ururu.store/florezflorez/apple-touch-icon.png",
   "meta_pixel_id": "3993733700852442",
   "shipping": {
-    "method": "free",
+    "method": "usps",
     "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
-    "free_threshold": null,
+    "free_threshold": 200,
+    "origin_zip": "11205",
     "pickup_address": "",
     "pickup_hours": "",
-    "delivery_days": "3-4",
+    "delivery_days": "4-6",
     "returns_policy": "If you are not satisfied with your purchase, you may return it within 10 days of delivery for a full refund. Items must be in their original, unworn condition. The buyer is responsible for return shipping costs. Contact us to begin the return process."
   },
   "contact": {

@@ -20,7 +20,8 @@
           "alt": "pearl necklace on white background with a hand drawn pattern"
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "weight_oz": 10
     },
     {
       "id": "chameleon",
@@ -42,7 +43,8 @@
           "alt": ""
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "weight_oz": 10
     },
     {
       "id": "lily",
@@ -64,7 +66,8 @@
           "alt": "necklace being worn 3/4 view"
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "weight_oz": 10
     },
     {
       "id": "gardenia",
@@ -86,7 +89,8 @@
           "alt": ""
         }
       ],
-      "stock": 1
+      "stock": 1,
+      "weight_oz": 12
     }
   ]
 }
