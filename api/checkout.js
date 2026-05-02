@@ -91,7 +91,11 @@ module.exports = async function handler(req, res) {
       mode: 'payment',
       line_items,
       shipping_address_collection: { allowed_countries: ['US'] },
-      allow_promotion_codes: false,
+      // Customer can enter coupon codes the merchant created from the
+      // platform dashboard. Each PromotionCode carries a Stripe-enforced
+      // minimum_amount restriction so a too-small cart can't drive the
+      // total below what platform + Stripe fees need to cover.
+      allow_promotion_codes: true,
       payment_intent_data: {
         application_fee_amount: applicationFeeAmount,
       },
