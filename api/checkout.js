@@ -25,6 +25,11 @@ const fs = require('fs');
 const path = require('path');
 
 const PLATFORM_FEE_BPS = 110;
+// ui_mode='embedded_page' (the variant that supports onShippingDetailsChange)
+// was introduced in the dahlia API release. The installed stripe-node@14 pins
+// 2023-10-16, which rejects the value, so we override Stripe-Version per-call
+// without bumping the SDK (which would touch every other endpoint).
+const STRIPE_API_VERSION = '2026-04-22.dahlia';
 
 function loadSettings() {
   try {
@@ -54,7 +59,7 @@ module.exports = async function handler(req, res) {
   }
 
   const stripe = new Stripe(platformSecret);
-  const opts = { stripeAccount: merchantAccount };
+  const opts = { stripeAccount: merchantAccount, apiVersion: STRIPE_API_VERSION };
 
   const origin =
     req.headers.origin ||
