@@ -1221,6 +1221,35 @@ a {
   padding: 0 1.5rem;
 }
 
+/* ===== EMBEDDED CHECKOUT OVERLAY ===== */
+.checkout-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 1900;
+  overflow-y: auto;
+  padding: 4rem 1rem 2rem;
+}
+
+.checkout-close {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+}
+
+#checkout {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
 /* ===== THANK YOU OVERLAY ===== */
 .thankyou-overlay {
   position: fixed;

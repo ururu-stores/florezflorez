@@ -285,10 +285,31 @@
   cartCloseBtn.addEventListener('click', closeCart);
   cartOverlay.addEventListener('click', closeCart);
 
+  // Embedded checkout state. We tear down + re-mount on each open so the
+  // session reflects the current cart (Stripe doesn't let you mutate
+  // line_items on an existing session).
+  const checkoutOverlay = document.getElementById('checkout-overlay');
+  const checkoutCloseBtn = document.getElementById('checkout-close');
+  let embeddedCheckout = null;
+
+  function closeCheckoutOverlay() {
+    checkoutOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+    if (embeddedCheckout) {
+      embeddedCheckout.destroy();
+      embeddedCheckout = null;
+    }
+  }
+
+  checkoutCloseBtn.addEventListener('click', closeCheckoutOverlay);
+
   cartCheckoutBtn.addEventListener('click', async () => {
     if (cart.length === 0) return;
+    const totalValue = cart.reduce(
+      (sum, item) => sum + parsePrice(item.price_display) * item.quantity,
+      0
+    );
     if (typeof fbq === 'function') {
-      const totalValue = cart.reduce((sum, item) => sum + parsePrice(item.price_display) * item.quantity, 0);
       fbq('track', 'InitiateCheckout', {
         content_ids: cart.map(item => item.price_id),
         content_type: 'product',
@@ -312,29 +333,89 @@
           })),
         }),
       });
-
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
+      if (!res.ok || !data.client_secret) {
         throw new Error(data.error || 'Checkout failed');
       }
+
+      // Stash the cart total under the session id so the post-redirect
+      // success handler can fire the Purchase pixel with the right value.
+      try {
+        sessionStorage.setItem(
+          'ff_checkout_' + data.session_id,
+          JSON.stringify({ total: totalValue, items: cart.slice() })
+        );
+      } catch (_) {}
+
+      const stripe = Stripe(data.publishable_key, {
+        stripeAccount: data.stripe_account,
+      });
+      embeddedCheckout = await stripe.initEmbeddedCheckout({
+        clientSecret: data.client_secret,
+        // Only fires when the session was created with
+        // permissions.update_shipping_details = "server_only" (i.e. USPS mode).
+        onShippingDetailsChange: async ({ shippingDetails }) => {
+          try {
+            const r = await fetch('/api/calculate-shipping-options', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_id: data.session_id,
+                shipping_details: shippingDetails,
+              }),
+            });
+            if (!r.ok) {
+              const body = await r.json().catch(() => ({}));
+              return {
+                type: 'reject',
+                errorMessage: body.error || 'Could not calculate shipping for this address',
+              };
+            }
+            return { type: 'accept' };
+          } catch (e) {
+            return {
+              type: 'reject',
+              errorMessage: 'Network error calculating shipping',
+            };
+          }
+        },
+      });
+
+      // Show the overlay and mount.
+      closeCart();
+      checkoutOverlay.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      embeddedCheckout.mount('#checkout');
     } catch (err) {
       alert('Checkout error: ' + err.message);
+    } finally {
       cartCheckoutBtn.textContent = 'CHECKOUT';
       cartCheckoutBtn.disabled = false;
     }
   });
 
-  // Clear cart and show thank you screen on successful checkout return
+  // Clear cart and show thank you screen on successful checkout return.
+  // Embedded checkout returns to ?checkout=success&session_id=... — the cart
+  // contents at the moment of checkout were stashed in sessionStorage so we
+  // can fire the Purchase pixel with the correct value/contents.
   const params = new URLSearchParams(window.location.search);
   if (params.get('checkout') === 'success') {
-    const orderTotal = parseFloat(params.get('total') || '0');
+    const sessionId = params.get('session_id');
+    let stashed = null;
+    if (sessionId) {
+      try {
+        const raw = sessionStorage.getItem('ff_checkout_' + sessionId);
+        if (raw) stashed = JSON.parse(raw);
+        sessionStorage.removeItem('ff_checkout_' + sessionId);
+      } catch (_) {}
+    }
+    const orderTotal = stashed ? stashed.total : 0;
+    const orderItems = stashed ? stashed.items : cart;
     settingsPromise.then(() => {
       if (typeof fbq === 'function') fbq('track', 'Purchase', {
-        content_ids: cart.map(item => item.price_id),
+        content_ids: orderItems.map(item => item.price_id),
         content_type: 'product',
-        num_items: cart.reduce((sum, item) => sum + item.quantity, 0),
+        num_items: orderItems.reduce((sum, item) => sum + item.quantity, 0),
         value: orderTotal,
         currency: 'USD'
       });

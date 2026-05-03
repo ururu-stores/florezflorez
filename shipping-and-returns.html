@@ -130,6 +130,11 @@
             if (ship.free_threshold) {
               html += '<p>Orders over <strong>$' + ship.free_threshold + '</strong> qualify for free shipping, applied automatically at checkout.</p>';
             }
+          } else if (method === 'usps') {
+            html += '<p>We use <strong>USPS</strong> for domestic shipping. Your rate is calculated at checkout based on the destination and package weight.</p>';
+            if (ship.free_threshold) {
+              html += '<p>Orders over <strong>$' + ship.free_threshold + '</strong> qualify for free shipping, applied automatically at checkout.</p>';
+            }
           }
         }
 
