@@ -280,15 +280,26 @@ module.exports = async function handler(req, res) {
   // doesn't expose stripe.checkout.sessions.update (that method landed in a
   // later major release).
   try {
+    // Delivery estimates per USPS published service standards. Ground
+    // Advantage is 2-5 business days; Priority Mail is 1-3. Stripe renders
+    // these as "2-5 business days" under each option's name.
     const params = {
       'shipping_options[0][shipping_rate_data][display_name]': groundName,
       'shipping_options[0][shipping_rate_data][type]': 'fixed_amount',
       'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(groundCents),
       'shipping_options[0][shipping_rate_data][fixed_amount][currency]': 'usd',
+      'shipping_options[0][shipping_rate_data][delivery_estimate][minimum][unit]': 'business_day',
+      'shipping_options[0][shipping_rate_data][delivery_estimate][minimum][value]': '2',
+      'shipping_options[0][shipping_rate_data][delivery_estimate][maximum][unit]': 'business_day',
+      'shipping_options[0][shipping_rate_data][delivery_estimate][maximum][value]': '5',
       'shipping_options[1][shipping_rate_data][display_name]': priorityName,
       'shipping_options[1][shipping_rate_data][type]': 'fixed_amount',
       'shipping_options[1][shipping_rate_data][fixed_amount][amount]': String(priorityCents),
       'shipping_options[1][shipping_rate_data][fixed_amount][currency]': 'usd',
+      'shipping_options[1][shipping_rate_data][delivery_estimate][minimum][unit]': 'business_day',
+      'shipping_options[1][shipping_rate_data][delivery_estimate][minimum][value]': '1',
+      'shipping_options[1][shipping_rate_data][delivery_estimate][maximum][unit]': 'business_day',
+      'shipping_options[1][shipping_rate_data][delivery_estimate][maximum][value]': '3',
     };
     if (shipping_details.name) {
       params['collected_information[shipping_details][name]'] = shipping_details.name;
