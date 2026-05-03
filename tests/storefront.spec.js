@@ -277,18 +277,32 @@ test.describe('Checkout', () => {
   test('checkout button sends correct payload to /api/checkout', async ({ page }) => {
     let checkoutPayload = null;
 
-    // Intercept the checkout API call
+    // Intercept the checkout API call and return the embedded-checkout shape
+    // (client_secret + publishable_key + stripe_account).
     await page.route('**/api/checkout', async (route) => {
       checkoutPayload = route.request().postDataJSON();
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ url: 'https://checkout.stripe.com/test' }),
+        body: JSON.stringify({
+          client_secret: 'cs_test_secret',
+          session_id: 'cs_test_123',
+          publishable_key: 'pk_test_fake',
+          stripe_account: 'acct_test_fake',
+        }),
       });
     });
 
-    // Prevent navigation to Stripe
-    await page.route('https://checkout.stripe.com/**', route => route.abort());
+    // Stub Stripe.js so initEmbeddedCheckout doesn't try to talk to a real
+    // Stripe iframe (would require valid keys + network).
+    await page.addInitScript(() => {
+      window.Stripe = () => ({
+        initEmbeddedCheckout: async () => ({
+          mount: () => {},
+          destroy: () => {},
+        }),
+      });
+    });
 
     await page.goto('/');
     await page.evaluate(() => {
@@ -328,8 +342,12 @@ test.describe('Checkout', () => {
         image: '',
         quantity: 1,
       }]));
+      sessionStorage.setItem(
+        'ff_checkout_cs_test_done',
+        JSON.stringify({ total: 100, items: [{ price_id: 'price_test', quantity: 1 }] })
+      );
     });
-    await page.goto('/?checkout=success&total=100.00');
+    await page.goto('/?checkout=success&session_id=cs_test_done');
     const overlay = page.locator('#thankyou-overlay');
     await expect(overlay).toBeVisible();
 

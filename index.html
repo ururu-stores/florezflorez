@@ -19,6 +19,7 @@
   <meta name="twitter:image" content="https://img.ururu.store/florezflorez/og-share-image.png">
   <!-- META:END -->
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://js.stripe.com/v3/" defer></script>
   <!-- Meta Pixel base (init called dynamically from content/settings.json) -->
   <script>
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -158,6 +159,12 @@
       <div class="cart-shipping-note" id="cart-footer-shipping"></div>
     </div>
   </aside>
+
+  <!-- EMBEDDED CHECKOUT OVERLAY (Stripe iframe mounts into #checkout) -->
+  <div id="checkout-overlay" class="checkout-overlay" style="display:none;">
+    <button class="checkout-close" id="checkout-close" aria-label="Close checkout">&times;</button>
+    <div id="checkout"></div>
+  </div>
 
   <!-- THANK YOU OVERLAY (shown after successful checkout) -->
   <div id="thankyou-overlay" class="thankyou-overlay" style="display:none;">
