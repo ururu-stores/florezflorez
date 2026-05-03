@@ -142,6 +142,11 @@ module.exports = async function handler(req, res) {
       session_id: session.id,
       publishable_key: platformPublishable,
       stripe_account: merchantAccount,
+      // Surfaces the merchant's shipping mode so the client knows whether to
+      // wire up onShippingDetailsChange. Stripe rejects that handler unless
+      // permissions[update_shipping_details]=server_only is also set on the
+      // session, which only happens in USPS mode above.
+      shipping_method: shipping.method || null,
     });
   } catch (err) {
     console.error('Stripe checkout error:', err.message);
