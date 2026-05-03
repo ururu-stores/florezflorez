@@ -338,8 +338,8 @@
         throw new Error(data.error || 'Checkout failed');
       }
 
-      // Stash the cart total under the session id so the post-redirect
-      // success handler can fire the Purchase pixel with the right value.
+      // Stash the cart total under the session id so the post-return success
+      // handler can fire the Purchase pixel with the right value.
       try {
         sessionStorage.setItem(
           'ff_checkout_' + data.session_id,
@@ -347,28 +347,36 @@
         );
       } catch (_) {}
 
+      // Embedded checkout (ui_mode='embedded_page') is initialized via
+      // createEmbeddedCheckoutPage with a fetchClientSecret callback. The
+      // dahlia stripe.js bundle exposes this method (the older v3 bundle
+      // exposes initEmbeddedCheckout instead, but that variant doesn't
+      // support onShippingDetailsChange).
       const stripe = Stripe(data.publishable_key, {
         stripeAccount: data.stripe_account,
       });
-      embeddedCheckout = await stripe.initEmbeddedCheckout({
-        clientSecret: data.client_secret,
-        // Only fires when the session was created with
+      embeddedCheckout = await stripe.createEmbeddedCheckoutPage({
+        fetchClientSecret: async () => data.client_secret,
+        // Only fires for sessions created with
         // permissions.update_shipping_details = "server_only" (i.e. USPS mode).
-        onShippingDetailsChange: async ({ shippingDetails }) => {
+        onShippingDetailsChange: async (event) => {
           try {
             const r = await fetch('/api/calculate-shipping-options', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                session_id: data.session_id,
-                shipping_details: shippingDetails,
+                checkout_session_id: event.checkoutSessionId,
+                shipping_details: event.shippingDetails,
               }),
             });
-            if (!r.ok) {
-              const body = await r.json().catch(() => ({}));
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok || body.type === 'error') {
               return {
                 type: 'reject',
-                errorMessage: body.error || 'Could not calculate shipping for this address',
+                errorMessage:
+                  body.message ||
+                  body.error ||
+                  'Could not calculate shipping for this address',
               };
             }
             return { type: 'accept' };
