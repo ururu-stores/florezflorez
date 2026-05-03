@@ -9,12 +9,13 @@
 //  2. We retrieve the session (with line_items) on the connected account.
 //  3. For each line item, look up the piece in content/*.json (matched by
 //     stripe_price_id) and sum its weight_oz.
-//  4. Call USPS Prices /base-rates/search for USPS_GROUND_ADVANTAGE to the
-//     buyer's ZIP, get a price in dollars.
+//  4. Call USPS Prices /base-rates/search twice in parallel — once for
+//     USPS_GROUND_ADVANTAGE and once for PRIORITY_MAIL — to the buyer's ZIP.
 //  5. If the cart subtotal >= settings.shipping.free_threshold (when set),
-//     override the price to $0.
-//  6. Update the Checkout Session's shipping_options via the Stripe SDK so
-//     the embedded UI redraws the line.
+//     zero out the Ground Advantage rate. Priority Mail stays at full price
+//     as a paid upgrade buyers can choose even when standard is free.
+//  6. Update the Checkout Session's shipping_options (two entries) via the
+//     Stripe REST API so the embedded UI redraws with both choices.
 
 const Stripe = require('stripe');
 const fs = require('fs');
@@ -79,7 +80,7 @@ function extractZip(rawZip) {
   return match ? match[1] : null;
 }
 
-async function fetchUspsRate({ originZip, destinationZip, weightLbs }) {
+async function fetchUspsRate({ originZip, destinationZip, weightLbs, mailClass }) {
   const body = {
     originZIPCode: originZip,
     destinationZIPCode: destinationZip,
@@ -87,7 +88,7 @@ async function fetchUspsRate({ originZip, destinationZip, weightLbs }) {
     length: DEFAULT_DIMENSIONS_INCHES.length,
     width: DEFAULT_DIMENSIONS_INCHES.width,
     height: DEFAULT_DIMENSIONS_INCHES.height,
-    mailClass: 'USPS_GROUND_ADVANTAGE',
+    mailClass,
     processingCategory: 'MACHINABLE',
     rateIndicator: 'SP',
     destinationEntryFacilityType: 'NONE',
@@ -227,14 +228,25 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  let amountCents;
+  let groundCents;
+  let priorityCents;
   try {
-    const dollars = await fetchUspsRate({
-      originZip,
-      destinationZip,
-      weightLbs,
-    });
-    amountCents = Math.round(dollars * 100);
+    const [groundDollars, priorityDollars] = await Promise.all([
+      fetchUspsRate({
+        originZip,
+        destinationZip,
+        weightLbs,
+        mailClass: 'USPS_GROUND_ADVANTAGE',
+      }),
+      fetchUspsRate({
+        originZip,
+        destinationZip,
+        weightLbs,
+        mailClass: 'PRIORITY_MAIL',
+      }),
+    ]);
+    groundCents = Math.round(groundDollars * 100);
+    priorityCents = Math.round(priorityDollars * 100);
   } catch (err) {
     console.error('USPS rate error:', err.message);
     res
@@ -243,18 +255,20 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // Free-shipping override: subtotal compares against settings.free_threshold
-  // (dollars). amount_subtotal is in cents and excludes shipping/tax.
+  // Free-shipping override applies only to Ground Advantage (the standard
+  // tier). Priority Mail stays at full price as a paid upgrade — buyers who
+  // want faster delivery can opt in even when they qualify for free standard.
   const subtotalCents = session.amount_subtotal || 0;
-  let displayName = `USPS Ground Advantage (~${(weightLbs).toFixed(1)} lb)`;
+  let groundName = `USPS Ground Advantage (~${weightLbs.toFixed(1)} lb)`;
   if (
     typeof shipping.free_threshold === 'number' &&
     shipping.free_threshold > 0 &&
     subtotalCents >= shipping.free_threshold * 100
   ) {
-    amountCents = 0;
-    displayName = 'Free shipping';
+    groundCents = 0;
+    groundName = 'Free shipping (USPS Ground Advantage)';
   }
+  const priorityName = `USPS Priority Mail (~${weightLbs.toFixed(1)} lb)`;
 
   // Per Stripe's "Customize shipping options" docs, the update has to set
   // both shipping_options AND collected_information.shipping_details — when
@@ -267,10 +281,14 @@ module.exports = async function handler(req, res) {
   // later major release).
   try {
     const params = {
-      'shipping_options[0][shipping_rate_data][display_name]': displayName,
+      'shipping_options[0][shipping_rate_data][display_name]': groundName,
       'shipping_options[0][shipping_rate_data][type]': 'fixed_amount',
-      'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(amountCents),
+      'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(groundCents),
       'shipping_options[0][shipping_rate_data][fixed_amount][currency]': 'usd',
+      'shipping_options[1][shipping_rate_data][display_name]': priorityName,
+      'shipping_options[1][shipping_rate_data][type]': 'fixed_amount',
+      'shipping_options[1][shipping_rate_data][fixed_amount][amount]': String(priorityCents),
+      'shipping_options[1][shipping_rate_data][fixed_amount][currency]': 'usd',
     };
     if (shipping_details.name) {
       params['collected_information[shipping_details][name]'] = shipping_details.name;
@@ -312,7 +330,8 @@ module.exports = async function handler(req, res) {
     type: 'object',
     value: {
       succeeded: true,
-      amount_cents: amountCents,
+      ground_cents: groundCents,
+      priority_cents: priorityCents,
       weight_oz: totalWeightOz,
     },
   });
