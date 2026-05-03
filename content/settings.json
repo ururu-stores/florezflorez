@@ -7,7 +7,7 @@
   "apple_icon_url": "https://img.ururu.store/florezflorez/apple-touch-icon.png",
   "meta_pixel_id": "3993733700852442",
   "shipping": {
-    "method": "usps",
+    "method": "free",
     "stripe_rate_id": "shr_1TLE6gGZz3PbqlU6QUzZfFdG",
     "free_threshold": 200,
     "origin_zip": "11205",
