@@ -22,6 +22,9 @@ const path = require('path');
 const { getUspsToken } = require('./usps-token');
 
 const USPS_PRICES_URL = 'https://apis.usps.com/prices/v3/base-rates/search';
+// Match the version used in api/checkout.js so retrieve/update see the same
+// session shape that ui_mode='embedded_page' creates.
+const STRIPE_API_VERSION = '2026-04-22.dahlia';
 
 // Default package dimensions for rate calculation. Most ururu merchants ship
 // small handmade goods (jewelry, prints) in padded mailers; a 9×6×3 inch
@@ -173,7 +176,7 @@ module.exports = async function handler(req, res) {
   }
 
   const stripe = new Stripe(platformSecret);
-  const opts = { stripeAccount: merchantAccount };
+  const opts = { stripeAccount: merchantAccount, apiVersion: STRIPE_API_VERSION };
 
   let session;
   try {
@@ -288,6 +291,7 @@ module.exports = async function handler(req, res) {
           Authorization: `Bearer ${platformSecret}`,
           'Content-Type': 'application/x-www-form-urlencoded',
           'Stripe-Account': merchantAccount,
+          'Stripe-Version': STRIPE_API_VERSION,
         },
         body: formBody.toString(),
       }
