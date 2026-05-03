@@ -133,34 +133,42 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const { session_id, shipping_details } = req.body || {};
-  if (!session_id || !shipping_details || !shipping_details.address) {
-    res.status(400).json({ error: 'Missing session_id or shipping_details.address' });
+  // Stripe's onShippingDetailsChange callback hands us
+  // { checkoutSessionId, shippingDetails }; the client serializes those as
+  // { checkout_session_id, shipping_details }. Accept the older snake-case
+  // session_id too in case any caller still sends it.
+  const checkoutSessionId =
+    (req.body && (req.body.checkout_session_id || req.body.session_id)) || null;
+  const shipping_details = req.body && req.body.shipping_details;
+  if (!checkoutSessionId || !shipping_details || !shipping_details.address) {
+    res
+      .status(400)
+      .json({ type: 'error', message: 'Missing checkout_session_id or shipping_details.address' });
     return;
   }
 
   const settings = loadSettings();
   const shipping = settings.shipping || {};
   if (shipping.method !== 'usps') {
-    res.status(400).json({ error: 'USPS shipping not enabled in settings' });
+    res.status(400).json({ type: 'error', message: 'USPS shipping not enabled in settings' });
     return;
   }
   const originZip = extractZip(shipping.origin_zip);
   if (!originZip) {
-    res.status(503).json({ error: 'Origin ZIP not configured' });
+    res.status(503).json({ type: 'error', message: 'Origin ZIP not configured' });
     return;
   }
 
   const destinationZip = extractZip(shipping_details.address.postal_code);
   if (!destinationZip) {
-    res.status(400).json({ error: 'Destination ZIP missing or malformed' });
+    res.status(400).json({ type: 'error', message: 'Destination ZIP missing or malformed' });
     return;
   }
   if (
     shipping_details.address.country &&
     shipping_details.address.country.toUpperCase() !== 'US'
   ) {
-    res.status(400).json({ error: 'USPS Ground Advantage is US-domestic only' });
+    res.status(400).json({ type: 'error', message: 'USPS Ground Advantage is US-domestic only' });
     return;
   }
 
@@ -170,18 +178,18 @@ module.exports = async function handler(req, res) {
   let session;
   try {
     session = await stripe.checkout.sessions.retrieve(
-      session_id,
+      checkoutSessionId,
       { expand: ['line_items'] },
       opts
     );
   } catch (err) {
-    res.status(404).json({ error: 'Session not found', detail: err.message });
+    res.status(404).json({ type: 'error', message: 'Session not found', detail: err.message });
     return;
   }
 
   const lineItems = session.line_items?.data || [];
   if (lineItems.length === 0) {
-    res.status(400).json({ error: 'Session has no line items' });
+    res.status(400).json({ type: 'error', message: 'Session has no line items' });
     return;
   }
 
@@ -210,7 +218,8 @@ module.exports = async function handler(req, res) {
   const weightLbs = totalWeightOz / 16;
   if (weightLbs > USPS_GROUND_ADVANTAGE_MAX_LBS) {
     res.status(400).json({
-      error: `Cart weight ${weightLbs.toFixed(1)} lb exceeds USPS Ground Advantage limit of ${USPS_GROUND_ADVANTAGE_MAX_LBS} lb`,
+      type: 'error',
+      message: `Cart weight ${weightLbs.toFixed(1)} lb exceeds USPS Ground Advantage limit of ${USPS_GROUND_ADVANTAGE_MAX_LBS} lb`,
     });
     return;
   }
@@ -225,7 +234,9 @@ module.exports = async function handler(req, res) {
     amountCents = Math.round(dollars * 100);
   } catch (err) {
     console.error('USPS rate error:', err.message);
-    res.status(502).json({ error: 'Could not fetch USPS rate', detail: err.message });
+    res
+      .status(502)
+      .json({ type: 'error', message: 'Could not fetch USPS rate', detail: err.message });
     return;
   }
 
@@ -242,39 +253,63 @@ module.exports = async function handler(req, res) {
     displayName = 'Free shipping';
   }
 
-  // The installed stripe-node v14 doesn't expose
-  // stripe.checkout.sessions.update — that method was added in a later major.
-  // Call the REST endpoint directly with the platform secret + Stripe-Account
-  // header so the update lands on the merchant's connected account.
+  // Per Stripe's "Customize shipping options" docs, the update has to set
+  // both shipping_options AND collected_information.shipping_details — when
+  // permissions.update_shipping_details is server_only, the client doesn't
+  // write the buyer's address back to the session, so we mirror it here from
+  // what the callback handed us.
+  //
+  // We call the REST endpoint directly because the installed stripe-node v14
+  // doesn't expose stripe.checkout.sessions.update (that method landed in a
+  // later major release).
   try {
-    const formBody = new URLSearchParams({
+    const params = {
       'shipping_options[0][shipping_rate_data][display_name]': displayName,
       'shipping_options[0][shipping_rate_data][type]': 'fixed_amount',
       'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(amountCents),
       'shipping_options[0][shipping_rate_data][fixed_amount][currency]': 'usd',
-    });
-    const r = await fetch(`https://api.stripe.com/v1/checkout/sessions/${session_id}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${platformSecret}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Stripe-Account': merchantAccount,
-      },
-      body: formBody.toString(),
-    });
+    };
+    if (shipping_details.name) {
+      params['collected_information[shipping_details][name]'] = shipping_details.name;
+    }
+    const addr = shipping_details.address || {};
+    const addrFields = ['line1', 'line2', 'city', 'state', 'postal_code', 'country'];
+    for (const field of addrFields) {
+      if (addr[field]) {
+        params[`collected_information[shipping_details][address][${field}]`] = addr[field];
+      }
+    }
+    const formBody = new URLSearchParams(params);
+    const r = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${checkoutSessionId}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${platformSecret}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Stripe-Account': merchantAccount,
+        },
+        body: formBody.toString(),
+      }
+    );
     if (!r.ok) {
       const text = await r.text().catch(() => '');
       throw new Error(`HTTP ${r.status} ${text}`);
     }
   } catch (err) {
     console.error('Stripe session update error:', err.message);
-    res.status(500).json({ error: 'Failed to update shipping options', detail: err.message });
+    res
+      .status(500)
+      .json({ type: 'error', message: 'Failed to update shipping options', detail: err.message });
     return;
   }
 
   res.status(200).json({
-    ok: true,
-    amount_cents: amountCents,
-    weight_oz: totalWeightOz,
+    type: 'object',
+    value: {
+      succeeded: true,
+      amount_cents: amountCents,
+      weight_oz: totalWeightOz,
+    },
   });
 };
