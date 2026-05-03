@@ -242,22 +242,30 @@ module.exports = async function handler(req, res) {
     displayName = 'Free shipping';
   }
 
+  // The installed stripe-node v14 doesn't expose
+  // stripe.checkout.sessions.update — that method was added in a later major.
+  // Call the REST endpoint directly with the platform secret + Stripe-Account
+  // header so the update lands on the merchant's connected account.
   try {
-    await stripe.checkout.sessions.update(
-      session_id,
-      {
-        shipping_options: [
-          {
-            shipping_rate_data: {
-              display_name: displayName,
-              type: 'fixed_amount',
-              fixed_amount: { amount: amountCents, currency: 'usd' },
-            },
-          },
-        ],
+    const formBody = new URLSearchParams({
+      'shipping_options[0][shipping_rate_data][display_name]': displayName,
+      'shipping_options[0][shipping_rate_data][type]': 'fixed_amount',
+      'shipping_options[0][shipping_rate_data][fixed_amount][amount]': String(amountCents),
+      'shipping_options[0][shipping_rate_data][fixed_amount][currency]': 'usd',
+    });
+    const r = await fetch(`https://api.stripe.com/v1/checkout/sessions/${session_id}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${platformSecret}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Stripe-Account': merchantAccount,
       },
-      opts
-    );
+      body: formBody.toString(),
+    });
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      throw new Error(`HTTP ${r.status} ${text}`);
+    }
   } catch (err) {
     console.error('Stripe session update error:', err.message);
     res.status(500).json({ error: 'Failed to update shipping options', detail: err.message });
