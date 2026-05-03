@@ -355,11 +355,15 @@
       const stripe = Stripe(data.publishable_key, {
         stripeAccount: data.stripe_account,
       });
-      embeddedCheckout = await stripe.createEmbeddedCheckoutPage({
+      // Only attach onShippingDetailsChange when the session was created with
+      // permissions.update_shipping_details = "server_only" — Stripe rejects
+      // the handler otherwise. The server flips that on for USPS mode and
+      // signals it back via shipping_method.
+      const checkoutOpts = {
         fetchClientSecret: async () => data.client_secret,
-        // Only fires for sessions created with
-        // permissions.update_shipping_details = "server_only" (i.e. USPS mode).
-        onShippingDetailsChange: async (event) => {
+      };
+      if (data.shipping_method === 'usps') {
+        checkoutOpts.onShippingDetailsChange = async (event) => {
           try {
             const r = await fetch('/api/calculate-shipping-options', {
               method: 'POST',
@@ -386,8 +390,9 @@
               errorMessage: 'Network error calculating shipping',
             };
           }
-        },
-      });
+        };
+      }
+      embeddedCheckout = await stripe.createEmbeddedCheckoutPage(checkoutOpts);
 
       // Show the overlay and mount.
       closeCart();
