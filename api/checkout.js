@@ -24,7 +24,12 @@ const Stripe = require('stripe');
 const fs = require('fs');
 const path = require('path');
 
-const PLATFORM_FEE_BPS = 110;
+const PLATFORM_FEE_BPS = (() => {
+  const raw = process.env.URURU_PLATFORM_FEE_BPS;
+  if (raw === undefined || raw === '') return 110;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 110;
+})();
 // ui_mode='embedded_page' (the variant that supports onShippingDetailsChange)
 // was introduced in the dahlia API release. The installed stripe-node@14 pins
 // 2023-10-16, which rejects the value, so we override Stripe-Version per-call
